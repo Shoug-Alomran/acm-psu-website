@@ -149,13 +149,15 @@ a:hover { color: var(--text-main); }
 .container {
     max-width: var(--container-width);
     margin: 0 auto;
-    padding: 0 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     position: relative;
     z-index: 1;
 }
 
 section {
-    padding: 8rem 0;
+    padding-top: 8rem;
+    padding-bottom: 8rem;
     border-bottom: 1px solid var(--border-color);
     position: relative;
 }
@@ -758,7 +760,7 @@ nav {
    Team page
    -------------------------------------------------------------------------- */
 
-.roster-section { padding: 6rem 0; border-bottom: none; }
+.roster-section { padding-top: 6rem; padding-bottom: 6rem; border-bottom: none; }
 
 .section-label {
     margin-bottom: 3rem;
@@ -1402,7 +1404,8 @@ input::placeholder, textarea::placeholder { color: var(--text-dark); }
    -------------------------------------------------------------------------- */
 
 .site-footer {
-    padding: 2rem 0;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -1454,8 +1457,8 @@ input::placeholder, textarea::placeholder { color: var(--text-dark); }
 }
 
 @media (max-width: 768px) {
-    section { padding: 5rem 0; }
-    .container { padding: 0 1.25rem; }
+    section { padding-top: 5rem; padding-bottom: 5rem; }
+    .container { padding-left: 1.25rem; padding-right: 1.25rem; }
     .nav-meta { display: none; }
     .nav-toggle { display: inline-flex; }
 
@@ -1530,7 +1533,8 @@ input::placeholder, textarea::placeholder { color: var(--text-dark); }
 }
 
 .archive-body section {
-    padding: 0;
+    padding-top: 0;
+    padding-bottom: 0;
     border-bottom: none;
 }
 
