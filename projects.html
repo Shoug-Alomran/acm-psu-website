@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects Archive — ACM PSU</title>
-    <meta name="description" content="Case studies from the ACM PSU technical collection: AI jams, CTF infrastructure, hackathon platforms, and systems workshops.">
+    <meta name="description" content="What ACM PSU runs: the AI Programming Jam (JAM.26), the ACM/CyberTech CTF 3.0, the CTF 2.0 results archive, and the workshop programme that leads into each competition.">
 
     <link rel="canonical" href="https://acm-psu.shoug-tech.com/projects.html">
     <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
@@ -18,7 +18,7 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="ACM PSU">
     <meta property="og:title" content="Projects Archive — ACM PSU">
-    <meta property="og:description" content="The ACM PSU technical collection.">
+    <meta property="og:description" content="JAM.26, ACM/CyberTech CTF 3.0, and the CTF 2.0 results archive.">
     <meta property="og:url" content="https://acm-psu.shoug-tech.com/projects.html">
     <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
 
@@ -61,10 +61,9 @@
         <div class="controls-row">
             <div class="filter-tabs" role="group" aria-label="Filter projects by category">
                 <button class="tab active" type="button" data-filter="all" aria-pressed="true">ALL</button>
-                <button class="tab" type="button" data-filter="ai-jam" aria-pressed="false">AI-JAM</button>
-                <button class="tab" type="button" data-filter="cyber" aria-pressed="false">CYBER</button>
-                <button class="tab" type="button" data-filter="hackathon" aria-pressed="false">HACKATHON</button>
-                <button class="tab" type="button" data-filter="systems" aria-pressed="false">SYSTEMS</button>
+                <button class="tab" type="button" data-filter="jam" aria-pressed="false">JAM</button>
+                <button class="tab" type="button" data-filter="ctf" aria-pressed="false">CTF</button>
+                <button class="tab" type="button" data-filter="workshops" aria-pressed="false">WORKSHOPS</button>
             </div>
             <div class="terminal-search">
                 <span class="prompt" aria-hidden="true">$</span>
@@ -76,19 +75,19 @@
     <main id="main" class="container">
         <div class="projects-grid">
 
-            <article class="case-study-card" data-category="ai-jam">
+            <article class="case-study-card" data-category="jam">
                 <div class="card-visual">
-                    <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Terminal running model evaluations" loading="lazy">
+                    <img src="assets/img/acm-banner.png" alt="ACM Programming Jam 2026 banner" loading="lazy">
                 </div>
                 <div class="card-body">
                     <div class="card-meta-top">
-                        <span class="mono-meta project-id">ID: 0x26_AI</span>
-                        <span class="mono-meta">YEAR: 2026</span>
+                        <span class="mono-meta project-id">ID: 0x26_JAM</span>
+                        <span class="mono-meta">COMPETITION: 19 SEP 2026</span>
                     </div>
-                    <h2 class="card-title">Neural Nexus AI Jam</h2>
-                    <p class="card-desc">Advanced model evaluation platform for rapid prototyping of LLM agents. Features real-time token tracking and automated benchmarking.</p>
+                    <h2 class="card-title">ACM Programming Jam 2026</h2>
+                    <p class="card-desc">An AI-assisted web engineering competition. Every team gets the same brief, then plans, designs, builds, deploys and presents a working application &mdash; and adapts to a requirement change mid-competition. Scored out of 100 across seven categories.</p>
                     <div class="card-footer">
-                        <span class="tag">AI / ML</span>
+                        <span class="tag">AI / WEB</span>
                         <a href="archive-project.html" class="view-btn">View Case Study
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
@@ -96,60 +95,80 @@
                 </div>
             </article>
 
-            <article class="case-study-card" data-category="cyber">
+            <article class="case-study-card" data-category="ctf">
                 <div class="card-visual">
-                    <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc91?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Server racks powering the CTF infrastructure" loading="lazy">
+                    <img src="assets/img/acm-banner-square.png" alt="ACM/CyberTech CTF 3.0 banner" loading="lazy">
                 </div>
                 <div class="card-body">
                     <div class="card-meta-top">
-                        <span class="mono-meta project-id">ID: 0x25_SEC</span>
-                        <span class="mono-meta">YEAR: 2025</span>
+                        <span class="mono-meta project-id">ID: 0x26_CTF3</span>
+                        <span class="mono-meta">COMPETITION: 24 OCT 2026</span>
                     </div>
-                    <h2 class="card-title">Aegis CTF Engine</h2>
-                    <p class="card-desc">Distributed infrastructure for offensive security competitions. Includes dynamic environment isolation via Kubernetes and binary exploit tracking.</p>
+                    <h2 class="card-title">ACM/CyberTech CTF 3.0</h2>
+                    <p class="card-desc">Three hours, four attack vectors: cryptography, web, forensics and OSINT. Teams of two to three, difficulty scaled Very Easy through Insane, flags submitted as <code>ACM{&hellip;}</code> against a live scoreboard. Auditorium B105, 10:00&ndash;13:00.</p>
                     <div class="card-footer">
                         <span class="tag">CYBERSECURITY</span>
-                        <a href="archive-project.html" class="view-btn">View Case Study
+                        <a href="https://ctf-psu.shoug-tech.com/" class="view-btn" rel="noopener">Open Event Site
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
                     </div>
                 </div>
             </article>
 
-            <article class="case-study-card" data-category="hackathon">
+            <article class="case-study-card" data-category="ctf">
                 <div class="card-visual">
-                    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Workstations set up for a hackathon" loading="lazy">
+                    <img src="assets/img/acm-banner.png" alt="CTF 2.0 final scoreboard" loading="lazy">
                 </div>
                 <div class="card-body">
                     <div class="card-meta-top">
-                        <span class="mono-meta project-id">ID: 0x25_HK</span>
-                        <span class="mono-meta">YEAR: 2025</span>
+                        <span class="mono-meta project-id">ID: 0x25_CTF2</span>
+                        <span class="mono-meta">STATUS: RESULTS VERIFIED</span>
                     </div>
-                    <h2 class="card-title">Global Vision Hack</h2>
-                    <p class="card-desc">Management system for high-throughput coding competitions. Integrated mentoring queue, live hardware inventory, and participant telemetry.</p>
+                    <h2 class="card-title">CTF 2.0 &mdash; Results Archive</h2>
+                    <p class="card-desc">The previous edition, in full: 11 teams, 16+ challenges, 852 flag submissions at a 10.4% solve rate, and a final leaderboard topped by HZ on 3,800 points. Includes per-challenge solve notes and the official competition report.</p>
                     <div class="card-footer">
-                        <span class="tag">HACKATHON</span>
-                        <a href="archive-project.html" class="view-btn">View Case Study
+                        <span class="tag">ARCHIVE</span>
+                        <a href="ctf-archive.html" class="view-btn">View Results
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
                     </div>
                 </div>
             </article>
 
-            <article class="case-study-card" data-category="systems">
+            <article class="case-study-card" data-category="workshops">
                 <div class="card-visual">
-                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Laptop open during a systems programming workshop" loading="lazy">
+                    <img src="assets/img/acm-banner-square.png" alt="JAM.26 workshop programme" loading="lazy">
                 </div>
                 <div class="card-body">
                     <div class="card-meta-top">
-                        <span class="mono-meta project-id">ID: 0x24_SYS</span>
-                        <span class="mono-meta">YEAR: 2024</span>
+                        <span class="mono-meta project-id">ID: 0x26_WS</span>
+                        <span class="mono-meta">RUNS: 15&ndash;17 SEP 2026</span>
                     </div>
-                    <h2 class="card-title">Kernel Labs Workshop</h2>
-                    <p class="card-desc">A deep-dive series into Linux kernel development and systems programming. Over 100 student participants contributing to open source modules.</p>
+                    <h2 class="card-title">JAM.26 Workshop Programme</h2>
+                    <p class="card-desc">Three days that walk through the exact workflow used on competition day: planning and requirements, full-stack build and systematic debugging, then deployment, domains, search indexing and PageSpeed measurement. Developed and taught by Shoug Alomran.</p>
                     <div class="card-footer">
                         <span class="tag">WORKSHOP</span>
-                        <a href="archive-project.html" class="view-btn">View Case Study
+                        <a href="https://ai-programming-jam.shoug-tech.com/workshops.html" class="view-btn" rel="noopener">View Workshops
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="case-study-card" data-category="workshops">
+                <div class="card-visual">
+                    <img src="assets/img/acm-banner.png" alt="CTF 3.0 training workshops" loading="lazy">
+                </div>
+                <div class="card-body">
+                    <div class="card-meta-top">
+                        <span class="mono-meta project-id">ID: 0x26_CTFWS</span>
+                        <span class="mono-meta">RUNS: 21&ndash;22 OCT 2026</span>
+                    </div>
+                    <h2 class="card-title">CTF 3.0 Training Workshops</h2>
+                    <p class="card-desc">Preparation sessions across the four competition categories &mdash; web exploitation, applied cryptography, digital forensics and intelligence gathering &mdash; so first-time competitors arrive with a working toolkit. Titles and instructors to be announced.</p>
+                    <div class="card-footer">
+                        <span class="tag">WORKSHOP</span>
+                        <a href="https://ctf-psu.shoug-tech.com/workshops.html" class="view-btn" rel="noopener">View Workshops
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
                     </div>
@@ -166,7 +185,7 @@
             <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
             <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">
         </div>
-        <div>RECORDS SHOWN: <span class="meta-value" data-result-count>04</span></div>
+        <div>RECORDS SHOWN: <span class="meta-value" data-result-count>05</span></div>
     </footer>
 
     <script src="assets/js/main.js" defer></script>

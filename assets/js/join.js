@@ -1,10 +1,14 @@
 /* Join page — FAQ accordion and membership form submission.
  *
- * GitHub Pages serves static files only, so there is no server to receive the
- * form. Point FORM_ENDPOINT at a form backend that accepts a POST and returns
- * CORS headers (Formspree, Basin, Getform, a Google Apps Script web app, ...).
- * While it is left empty the form stays usable but tells applicants to use the
- * fallback contact link instead of silently dropping their answers.
+ * GitHub Pages serves static files only, so the form posts to a Google Apps
+ * Script web app (see apps-script/Code.gs) that appends each application as a
+ * row in the registration spreadsheet. Paste the /exec URL from the Apps Script
+ * deployment into FORM_ENDPOINT below.
+ *
+ * The request is deliberately sent as text/plain so the browser treats it as a
+ * "simple" request: Apps Script does not answer CORS preflight (OPTIONS), so an
+ * application/json content type would fail before it ever reached the script.
+ * doPost parses the body as JSON regardless of the declared content type.
  */
 
 (function () {
@@ -48,15 +52,25 @@
             return;
         }
 
+        var payload = {};
+        new FormData(form).forEach(function (value, key) {
+            payload[key] = typeof value === 'string' ? value.trim() : value;
+        });
+
         submit.disabled = true;
         setStatus('TRANSMITTING...', 'ok');
 
         fetch(FORM_ENDPOINT, {
             method: 'POST',
-            headers: { Accept: 'application/json' },
-            body: new FormData(form)
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
         }).then(function (response) {
             if (!response.ok) { throw new Error('HTTP ' + response.status); }
+            return response.json();
+        }).then(function (result) {
+            if (!result || result.status !== 'ok') {
+                throw new Error((result && result.message) || 'rejected');
+            }
             form.reset();
             setStatus('HANDSHAKE COMPLETE — application received. We will be in touch.', 'ok');
         }).catch(function () {

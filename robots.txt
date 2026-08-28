@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
 
+# Raw competition report PDFs are mirrored as HTML pages that carry the
+# canonical content. Keep the binaries out of the index so they do not
+# compete with, or outrank, the pages that describe them.
+Disallow: /assets/reports/
+
 Sitemap: https://acm-psu.shoug-tech.com/sitemap.xml

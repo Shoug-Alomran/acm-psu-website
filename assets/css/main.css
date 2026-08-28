@@ -2204,3 +2204,141 @@ input::placeholder, textarea::placeholder { color: var(--text-dark); }
     height: 1px;
     overflow: hidden;
 }
+
+/* ---------------------------------------------------------------------------
+   Results archive — the stat strip, leaderboard table, and note cards used by
+   ctf-archive.html. Built from the same tokens as the rest of the site so a
+   results page reads as part of the archive rather than a bolted-on report.
+   --------------------------------------------------------------------------- */
+
+.stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    margin-bottom: 4rem;
+}
+
+.stat-cell {
+    background: var(--bg-surface);
+    padding: 1.75rem 1.5rem;
+}
+
+.stat-cell .stat-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6rem;
+}
+
+.stat-cell .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.stat-cell--accent .stat-value { color: var(--accent-blue); }
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.results-table caption {
+    caption-side: top;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-bottom: 0.9rem;
+}
+
+.results-table th,
+.results-table td {
+    padding: 0.95rem 1.25rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.results-table thead th {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 400;
+    background: var(--bg-surface);
+}
+
+.results-table tbody tr:hover { background: var(--bg-surface); }
+.results-table tbody tr:last-child td { border-bottom: none; }
+
+.results-table .col-rank {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    width: 5.5rem;
+}
+
+.results-table .col-score {
+    font-family: var(--font-mono);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.results-table .team-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+}
+
+.results-table tbody tr.is-podium .team-name { color: var(--accent-blue); }
+
+.table-scroll { overflow-x: auto; }
+
+.note-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.note-card {
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    padding: 1.75rem;
+}
+
+.note-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin-bottom: 0.85rem;
+}
+
+.note-card p { color: var(--text-muted); line-height: 1.65; }
+
+.note-card ul {
+    list-style: none;
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.note-card li {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 0.55rem;
+}
+
+.note-card li span:last-child { color: var(--text-main); white-space: nowrap; }

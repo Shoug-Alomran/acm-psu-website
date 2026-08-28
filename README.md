@@ -23,6 +23,7 @@ assets/js/projects.js Category tabs + search (projects page)
 assets/js/join.js     FAQ accordion + form submission (join page)
 assets/img/           Logos
 
+apps-script/          Google Apps Script backing the membership form (+ SETUP.md)
 design-template/      Original design mockups. Reference only — not deployed.
 CNAME                 Custom domain for GitHub Pages
 ```
@@ -67,8 +68,13 @@ mockups — swap them for real people and photos before announcing the site.
 
 ## Membership form
 
-GitHub Pages serves static files only, so the form has no server to post to. Set
-`FORM_ENDPOINT` at the top of `assets/js/join.js` to a form backend that accepts
-a POST and returns CORS headers (Formspree, Basin, Getform, a Google Apps Script
-web app, ...). Until that is set, the form tells applicants to email instead of
-silently discarding submissions.
+GitHub Pages serves static files only, so the form posts to a Google Apps Script
+web app that appends each application as a row in the registration spreadsheet.
+The script is `apps-script/Code.gs`; paste its deployed `/exec` URL into
+`FORM_ENDPOINT` at the top of `assets/js/join.js`. Until that is set, the form
+tells applicants to email instead of silently discarding submissions.
+
+Setup is four steps, summarised at the top of `Code.gs`. If you have not
+deployed an Apps Script web app before, or something is not working,
+`apps-script/SETUP.md` walks through it click by click with a troubleshooting
+section.
