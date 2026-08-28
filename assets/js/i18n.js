@@ -2,20 +2,21 @@
  *
  * The site is authored in English; this layer swaps the rendered text at
  * runtime rather than duplicating every page into an /ar directory. It walks
- * the DOM's text nodes and a short list of user-visible attributes, looks each
- * up in the dictionary below, and writes the Arabic in place — keeping the
- * original in a WeakMap so switching back to English is exact.
+ * the DOM's text nodes and the user-visible attributes, looks each up in the
+ * dictionary below, and writes the Arabic in place — keeping the English in a
+ * WeakMap so switching back is exact.
  *
  * Anything absent from the dictionary is left alone on purpose. That is how the
- * terminal-styled tokens (IDs like 0x03, file names, SHA hashes, DIR paths)
- * stay legible in both languages.
+ * terminal-styled tokens (IDs like 0x26_JAM, file names, SHA hashes, DIR paths,
+ * ACM{...} flag format) stay identical in both languages.
  *
- * TO TRANSLATE NEW COPY: add "English source text": "Arabic" to DICT below. The
- * key must match the page text exactly once trimmed. Text split across inline
- * elements is several text nodes, so each fragment needs its own entry.
+ * TO TRANSLATE NEW COPY: add "English source": "Arabic" to DICT below. Matching
+ * ignores surrounding and repeated whitespace, so wrapped paragraphs can be
+ * written on one line here. Text broken up by inline elements (<b>, <span>)
+ * arrives as several separate text nodes, so each fragment needs its own entry.
  *
  * Dynamic content (the team-year roster, project filtering, the archive file
- * browser) is re-rendered by other scripts after this one runs, so a
+ * browser) is rendered by other scripts after this one runs, so a
  * MutationObserver re-applies the translation to anything newly inserted.
  */
 
@@ -26,7 +27,7 @@
 
     var DICT = {
 
-        /* --- Navigation and chrome, shared by every page --- */
+        /* --- Navigation and chrome, shared across pages --- */
         'Skip to content': 'تخطَّ إلى المحتوى',
         'ACM PSU — home': 'ACM PSU — الصفحة الرئيسية',
         'Toggle navigation': 'إظهار القائمة',
@@ -38,74 +39,86 @@
         'SYS.ARCHIVE_': 'الأرشيف_',
         '// ONLINE': '// متصل',
         'SYS.ARCHIVE // 404': 'الأرشيف // 404',
-        'STATUS: ENROLLMENT_OPEN': 'الحالة: التسجيل مفتوح',
+        'STATUS: ENROLLMENT_OPEN': 'الحالة: التسجيل_مفتوح',
 
         /* --- Footer --- */
         'ACM PRINCE SULTAN UNIVERSITY': 'ACM جامعة الأمير سلطان',
         'Prince Sultan University': 'جامعة الأمير سلطان',
         'College of Computer and Information Sciences': 'كلية علوم الحاسب والمعلومات',
+        'College of Computer & Information Sciences': 'كلية علوم الحاسب والمعلومات',
         'RENDERED:': 'وقت العرض:',
-        'DIRECTORY_STATUS:': 'حالة الدليل:',
+        'DIRECTORY_STATUS:': 'حالة_الدليل:',
         'COMMITTED': 'مُثبّت',
         'RECORDS SHOWN:': 'السجلات المعروضة:',
         'AUTH_SESSION:': 'الجلسة:',
         'GUEST_USER': 'زائر',
 
-        /* --- Home page --- */
+        /* --- Home --- */
         'ACM PSU — Digital Archive': 'ACM جامعة الأمير سلطان — الأرشيف الرقمي',
         'ACM.PSU / CURRENT CHAPTER /': 'ACM.PSU / الدفعة الحالية /',
         'Association for Computing Machinery.': 'جمعية آلات الحاسب (ACM).',
-        'A student-led technical collective. We build systems, master algorithms, organize competitions, and engineer the future of software development at PSU. This is our digital archive.':
-            'تجمّع تقني يقوده الطلبة. نبني الأنظمة، ونتقن الخوارزميات، وننظّم المسابقات، ونصنع مستقبل تطوير البرمجيات في جامعة الأمير سلطان. هذا هو أرشيفنا الرقمي.',
-        'Explore Archive': 'تصفّح الأرشيف',
+        'The ACM student chapter at the College of Computer & Information Sciences. We run the AI Programming Jam and the ACM/CyberTech CTF, teach the workshops that lead into them, and keep the record of every chapter that came before. This is our digital archive.':
+            'نادي ACM الطلابي في كلية علوم الحاسب والمعلومات. ننظّم معسكر البرمجة بالذكاء الاصطناعي ومسابقة ACM/CyberTech لالتقاط الأعلام، ونقدّم الورش التي تُهيّئ لهما، ونحفظ سجل كل دفعة سبقتنا. هذا هو أرشيفنا الرقمي.',
+        'Explore Projects': 'تصفّح المشاريع',
         'Join ACM': 'انضم إلى ACM',
 
         'System Focus': 'مجالات تركيزنا',
         'CORE COMPETENCIES // V.26': 'التخصصات الأساسية // إصدار 26',
-        'Software Engineering': 'هندسة البرمجيات',
-        'ARCHITECTURE, FULL-STACK, SYSTEMS': 'بناء المعماريات، التطوير المتكامل، الأنظمة',
-        'Competitive Programming': 'البرمجة التنافسية',
-        'ALGORITHMS, DATA STRUCTURES, ICPC': 'الخوارزميات، هياكل البيانات، ICPC',
+        'AI-Assisted Engineering': 'الهندسة بمساعدة الذكاء الاصطناعي',
+        'PLAN, BUILD, DEBUG, DEPLOY': 'تخطيط، بناء، تصحيح، إطلاق',
+        'Full-Stack Web': 'تطوير الويب المتكامل',
+        'FIREBASE, GITHUB, VERCEL, CLOUDFLARE': 'FIREBASE، GITHUB، VERCEL، CLOUDFLARE',
         'Cybersecurity (CTF)': 'الأمن السيبراني (CTF)',
-        'CRYPTOGRAPHY, REVERSE ENG, FORENSICS': 'التشفير، الهندسة العكسية، التحليل الجنائي',
-        'Hackathons & Jams': 'الهاكاثونات والمعسكرات',
-        'RAPID PROTOTYPING, IDEATION, DEPLOY': 'النمذجة السريعة، توليد الأفكار، الإطلاق',
+        'CRYPTOGRAPHY, WEB, FORENSICS, OSINT': 'التشفير، الويب، التحليل الجنائي، الاستخبارات المفتوحة',
+        'Workshops & Competitions': 'الورش والمسابقات',
+        'TEACH FIRST, THEN COMPETE': 'نُعلّم أولًا، ثم نتنافس',
 
         'Current Generation': 'الدفعة الحالية',
         'STATUS: ACTIVE CHAPTER': 'الحالة: دفعة نشطة',
+        'Muhammad Yawar Hayat': 'محمد ياور حياة',
+        'Shoug Alomran': 'شوق العمران',
         'President': 'رئيس النادي',
-        'VP of Engineering': 'نائبة الرئيس للشؤون الهندسية',
-        'Head of Cyber': 'مسؤول الأمن السيبراني',
+        'Vice President': 'نائبة الرئيس',
         'View Complete Roster': 'عرض القائمة الكاملة',
 
         'Selected Work': 'أعمال مختارة',
         'BUILT BY ACM // PRODUCTION ENV': 'من تنفيذ ACM // بيئة تشغيل فعلية',
         'PROJECT_ID': 'رقم_المشروع',
-        'DEPLOYMENT_YEAR': 'سنة_الإطلاق',
-        'AI Programming Jam Platform': 'منصّة معسكر الذكاء الاصطناعي البرمجي',
-        'A custom-built, real-time evaluation environment designed for the annual PSU AI Jam. Supports automated grading of machine learning models against hidden datasets with live leaderboards.':
-            'بيئة تقييم لحظية مبنية خصيصًا لمعسكر الذكاء الاصطناعي السنوي في جامعة الأمير سلطان. تدعم التصحيح الآلي لنماذج تعلّم الآلة مقابل بيانات مخفية، مع لوحة نتائج مباشرة.',
-        'PSU Capture The Flag Infrastructure': 'البنية التحتية لمسابقة CTF في جامعة الأمير سلطان',
-        'Containerized CTF platform handling 500+ concurrent users. Features dynamic scoring, isolated challenge environments via Docker, and real-time attack-defense visualization metrics.':
-            'منصّة CTF تعمل بالحاويات وتستوعب أكثر من 500 مستخدم في آنٍ واحد. تتضمن احتساب نقاط ديناميكي، وبيئات تحدٍّ معزولة عبر Docker، ومؤشرات مباشرة لعمليات الهجوم والدفاع.',
+        'COMPETITION_DAY': 'يوم_المسابقة',
+        'ACM Programming Jam 2026': 'معسكر ACM للبرمجة 2026',
+        'An AI-assisted web engineering competition. Every team receives the same application brief, then plans it in Excalidraw, designs it, builds it with AI assistants and Firebase, ships it to Vercel behind a real domain, absorbs a mid-competition change request, and presents the result. Three preparation workshop days run 15–17 September; the brief stays locked until competition day.':
+            'مسابقة في هندسة الويب بمساعدة الذكاء الاصطناعي. يستلم كل فريق الوصف نفسه للتطبيق المطلوب، ثم يخطّط له في Excalidraw، ويصمّمه، ويبنيه بأدوات الذكاء الاصطناعي وFirebase، وينشره على Vercel تحت نطاق حقيقي، ويستوعب طلب تغيير في منتصف المسابقة، ثم يقدّم النتيجة. تسبقها ثلاثة أيام من الورش التحضيرية من 15 إلى 17 سبتمبر، ويبقى وصف المشروع سريًا حتى يوم المسابقة.',
         'Case Study': 'دراسة الحالة',
-        'Visit Repo': 'زيارة المستودع',
-        'Live Demo': 'عرض مباشر',
+        'Event Site': 'موقع الفعالية',
+        'ACM/CyberTech CTF 3.0': 'مسابقة ACM/CyberTech CTF 3.0',
+        'A three-hour jeopardy-style Capture The Flag run jointly with the CyberTech Club. Four attack vectors — cryptography, web, forensics and OSINT — scaled from Very Easy to Insane. Teams of two to three submit flags in':
+            'مسابقة التقاط الأعلام على مدى ثلاث ساعات بنظام Jeopardy، تُقام بالشراكة مع نادي CyberTech. أربعة مسارات — التشفير، والويب، والتحليل الجنائي، والاستخبارات مفتوحة المصدر — بمستويات صعوبة تتدرّج من السهل جدًا إلى الجنوني. تتنافس فرق من فردين إلى ثلاثة بإرسال الأعلام بصيغة',
+        'format for points on a live scoreboard. Saturday 24 October 2026, 10:00–13:00, Auditorium B105.':
+            'لكسب النقاط على لوحة نتائج مباشرة. السبت 24 أكتوبر 2026، من 10:00 إلى 13:00، قاعة B105.',
+        'CTF 2.0 Results': 'نتائج CTF 2.0',
 
         'Archive Directory': 'دليل الأرشيف',
         'HISTORICAL DATA // READ-ONLY': 'بيانات تاريخية // للقراءة فقط',
-        'MEMBERS': 'الأعضاء',
-        'EVENTS': 'الفعاليات',
+        'FLAGSHIP EVENTS': 'الفعاليات الرئيسية',
+        'WORKSHOP DAYS': 'أيام الورش',
+        '07 SCHEDULED': '07 مجدولة',
         'LEADERSHIP': 'القيادة',
-        '12 COMMITTED': '12 فعالية مؤكدة',
-        '24 EXECUTED': '24 فعالية منفّذة',
-        '18 EXECUTED': '18 فعالية منفّذة',
+        'M. Y. HAYAT': 'م. ي. حياة',
         'ACTIVE CHAPTER': 'دفعة نشطة',
+        'TEAMS RANKED': 'الفرق المصنّفة',
+        'SUBMISSIONS': 'المحاولات',
+        '852 // 89 CAPTURED': '852 // 89 علمًا',
+        'WINNER': 'الفائز',
+        'HZ — 3,800 PTS': 'HZ — 3,800 نقطة',
+        'RESULTS VERIFIED': 'النتائج موثّقة',
+        'EDITION': 'النسخة',
+        'FIRST ACM/CYBERTECH CTF': 'أول مسابقة ACM/CYBERTECH',
+        'RECORDS': 'السجلات',
+        'NOT YET DIGITISED': 'لم تُؤرشف بعد',
+        'STATUS': 'الحالة',
+        'ARCHIVE PENDING': 'بانتظار الأرشفة',
         'ARCHIVED': 'مؤرشَف',
-        'F. AL-DOSARI': 'ف. الدوسري',
-        'S. AL-AMRI': 'س. العمري',
-        'M. KHAN': 'م. خان',
-        'Query Full Archive Database': 'استعراض قاعدة بيانات الأرشيف كاملة',
+        'Open the CTF 2.0 Results Archive': 'افتح أرشيف نتائج CTF 2.0',
 
         'SYS.MSG: EOF NOT REACHED': 'رسالة النظام: لم نبلغ النهاية بعد',
         "The Archive Isn't Finished.": 'الأرشيف لم يكتمل بعد.',
@@ -113,49 +126,22 @@
             'كودك، وتصاميمك، وقيادتك قد تكون هي الفصل القادم في هذا الأرشيف.',
         'Initialize Membership': 'ابدأ عضويتك',
 
-        /* --- Shared people names --- */
-        'Faisal Al-Dosari': 'فيصل الدوسري',
-        'Nouf Al-Saud': 'نوف آل سعود',
-        'Omar Tariq': 'عمر طارق',
-        'Sara Ibrahim': 'سارة إبراهيم',
-        'Khalid Mansour': 'خالد منصور',
-        'Lina Ahmed': 'لينا أحمد',
-        'Yazeed Fawaz': 'يزيد فواز',
-        'Dana Sultan': 'دانة سلطان',
-        'Hamza Ali': 'حمزة علي',
-        'Reem Khalid': 'ريم خالد',
-        'Portrait of Faisal Al-Dosari': 'صورة فيصل الدوسري',
-        'Portrait of Nouf Al-Saud': 'صورة نوف آل سعود',
-        'Portrait of Omar Tariq': 'صورة عمر طارق',
-        'Portrait of Sara Ibrahim': 'صورة سارة إبراهيم',
-        'Portrait of Khalid Mansour': 'صورة خالد منصور',
-        'Portrait of Lina Ahmed': 'صورة لينا أحمد',
-        'Portrait of Yazeed Fawaz': 'صورة يزيد فواز',
-        'Portrait of Dana Sultan': 'صورة دانة سلطان',
-        'Portrait of Hamza Ali': 'صورة حمزة علي',
-        'Portrait of Reem Khalid': 'صورة ريم خالد',
-
-        /* --- Team page --- */
+        /* --- Team --- */
         'People / 2026 — ACM PSU': 'الأعضاء / 2026 — ACM جامعة الأمير سلطان',
         'DIRECTORY': 'الدليل',
         'PEOPLE': 'الأعضاء',
         'People': 'الأعضاء',
+        'GEN_2026': 'دفعة_2026',
         'Executive Council': 'المجلس التنفيذي',
         'LEVEL_01 // ADMINISTRATION': 'المستوى_01 // الإدارة',
-        'General Assembly': 'الجمعية العمومية',
-        'LEVEL_02 // CONTRIBUTORS [42]': 'المستوى_02 // المساهمون [42]',
         'PRESIDENT': 'رئيس النادي',
-        'VP ENGINEERING': 'نائبة الرئيس للهندسة',
-        'Computer Science // Senior': 'علوم الحاسب // السنة الرابعة',
-        'Software Engineering // Junior': 'هندسة البرمجيات // السنة الثالثة',
-        'Cybersecurity Lead': 'مسؤول الأمن السيبراني',
-        'UI/UX Architect': 'مصمّمة تجربة المستخدم',
-        'Full-Stack Dev': 'مطوّر متكامل',
-        'Algorithmic Lead': 'مسؤولة الخوارزميات',
-        'Systems Admin': 'مسؤول الأنظمة',
-        'DevOps Engineer': 'مهندسة DevOps',
-        'Project Liaison': 'منسّق المشاريع',
-        'Front-end Lead': 'مسؤولة الواجهات الأمامية',
+        'VICE PRESIDENT': 'نائبة الرئيس',
+        'General Assembly': 'الجمعية العمومية',
+        'LEVEL_02 // ROSTER PENDING': 'المستوى_02 // القائمة قيد الإعداد',
+        'Committee roster in progress': 'قائمة اللجان قيد الإعداد',
+        'GEN_2026 // ORGANISING COMMITTEE NOT YET PUBLISHED': 'دفعة_2026 // لم تُنشر اللجنة المنظّمة بعد',
+        'Names and roles for the JAM.26 and CTF 3.0 organising committees are confirmed as each event team is finalised. If you are on a committee and want your entry added, send your name, role and photo to the chapter board.':
+            'تُعتمد أسماء وأدوار اللجان المنظّمة لمعسكر JAM.26 ومسابقة CTF 3.0 فور اكتمال فريق كل فعالية. إذا كنت عضوًا في إحدى اللجان وترغب بإضافة بياناتك، أرسل اسمك ودورك وصورتك إلى مجلس إدارة النادي.',
         'HISTORICAL RECURSION // SELECT PREVIOUS GENERATION': 'أرشيف الدفعات // اختر دفعة سابقة',
         'Select chapter year': 'اختر سنة الدفعة',
         '2026 — CURRENT CHAPTER': '2026 — الدفعة الحالية',
@@ -169,47 +155,63 @@
         'If you have photos or a member list from this chapter, send them to the committee and we will add them.':
             'إذا كان لديك صور أو قائمة بأعضاء هذه الدفعة، أرسلها إلى اللجنة وسنضيفها إلى الأرشيف.',
 
-        /* --- Projects page --- */
+        /* --- Projects --- */
         'Projects Archive — ACM PSU': 'أرشيف المشاريع — ACM جامعة الأمير سلطان',
         'Technical': 'المجموعة',
         'Collection.': 'التقنية.',
         'Filter projects by category': 'تصفية المشاريع حسب التصنيف',
         'ALL': 'الكل',
-        'CYBER': 'الأمن',
-        'HACKATHON': 'هاكاثون',
-        'SYSTEMS': 'أنظمة',
+        'JAM': 'المعسكر',
+        'CTF': 'CTF',
+        'WORKSHOPS': 'الورش',
         'Search projects': 'ابحث في المشاريع',
         'grep search_projects...': 'grep ابحث_في_المشاريع...',
-        'Neural Nexus AI Jam': 'معسكر Neural Nexus للذكاء الاصطناعي',
-        'Advanced model evaluation platform for rapid prototyping of LLM agents. Features real-time token tracking and automated benchmarking.':
-            'منصّة تقييم متقدّمة للنماذج، مخصّصة للنمذجة السريعة لوكلاء النماذج اللغوية. تتضمن تتبّعًا لحظيًا للتوكنات وقياسًا آليًا للأداء.',
-        'Aegis CTF Engine': 'محرّك Aegis لمسابقات CTF',
-        'Distributed infrastructure for offensive security competitions. Includes dynamic environment isolation via Kubernetes and binary exploit tracking.':
-            'بنية تحتية موزّعة لمسابقات الأمن الهجومي. تشمل عزلًا ديناميكيًا للبيئات عبر Kubernetes وتتبّعًا لثغرات الملفات التنفيذية.',
-        'Global Vision Hack': 'هاكاثون Global Vision',
-        'Management system for high-throughput coding competitions. Integrated mentoring queue, live hardware inventory, and participant telemetry.':
-            'نظام إدارة لمسابقات البرمجة عالية الكثافة. يشمل قائمة انتظار للإرشاد، وجردًا مباشرًا للأجهزة، وتتبّعًا لبيانات المشاركين.',
-        'Kernel Labs Workshop': 'ورشة Kernel Labs',
-        'A deep-dive series into Linux kernel development and systems programming. Over 100 student participants contributing to open source modules.':
-            'سلسلة متعمّقة في تطوير نواة لينكس وبرمجة الأنظمة. شارك فيها أكثر من 100 طالب وساهموا في وحدات مفتوحة المصدر.',
-        'View Case Study': 'عرض دراسة الحالة',
+        'COMPETITION: 19 SEP 2026': 'المسابقة: 19 سبتمبر 2026',
+        'COMPETITION: 24 OCT 2026': 'المسابقة: 24 أكتوبر 2026',
+        'STATUS: RESULTS VERIFIED': 'الحالة: النتائج موثّقة',
+        'RUNS: 15–17 SEP 2026': 'تُقام: 15–17 سبتمبر 2026',
+        'RUNS: 21–22 OCT 2026': 'تُقام: 21–22 أكتوبر 2026',
+        'An AI-assisted web engineering competition. Every team gets the same brief, then plans, designs, builds, deploys and presents a working application — and adapts to a requirement change mid-competition. Scored out of 100 across seven categories.':
+            'مسابقة في هندسة الويب بمساعدة الذكاء الاصطناعي. يستلم كل فريق الوصف نفسه، ثم يخطّط ويصمّم ويبني وينشر ويقدّم تطبيقًا يعمل فعليًا، مع التعامل مع تغيير في المتطلبات أثناء المسابقة. التقييم من 100 درجة موزّعة على سبعة معايير.',
+        'Three hours, four attack vectors: cryptography, web, forensics and OSINT. Teams of two to three, difficulty scaled Very Easy through Insane, flags submitted as':
+            'ثلاث ساعات وأربعة مسارات: التشفير، والويب، والتحليل الجنائي، والاستخبارات مفتوحة المصدر. فرق من فردين إلى ثلاثة، بمستويات صعوبة من السهل جدًا إلى الجنوني، وتُرسل الأعلام بصيغة',
+        'against a live scoreboard. Auditorium B105, 10:00–13:00.':
+            'على لوحة نتائج مباشرة. قاعة B105، من 10:00 إلى 13:00.',
+        'CTF 2.0 — Results Archive': 'CTF 2.0 — أرشيف النتائج',
+        'The previous edition, in full: 11 teams, 16+ challenges, 852 flag submissions at a 10.4% solve rate, and a final leaderboard topped by HZ on 3,800 points. Includes per-challenge solve notes and the official competition report.':
+            'النسخة السابقة كاملةً: 11 فريقًا، وأكثر من 16 تحديًا، و852 محاولة إرسال بنسبة حل 10.4٪، ولوحة نتائج نهائية تصدّرها فريق HZ بـ 3,800 نقطة. تتضمن ملاحظات الحل لكل تحدٍّ والتقرير الرسمي للمسابقة.',
+        'JAM.26 Workshop Programme': 'برنامج ورش JAM.26',
+        'Three days that walk through the exact workflow used on competition day: planning and requirements, full-stack build and systematic debugging, then deployment, domains, search indexing and PageSpeed measurement. Developed and taught by Shoug Alomran.':
+            'ثلاثة أيام تمرّ على مسار العمل نفسه المستخدم يوم المسابقة: التخطيط وتحديد المتطلبات، ثم البناء المتكامل والتصحيح المنهجي، ثم النشر والنطاقات وفهرسة محركات البحث وقياس الأداء عبر PageSpeed. من إعداد وتقديم شوق العمران.',
+        'CTF 3.0 Training Workshops': 'ورش التدريب على CTF 3.0',
+        'Preparation sessions across the four competition categories — web exploitation, applied cryptography, digital forensics and intelligence gathering — so first-time competitors arrive with a working toolkit. Titles and instructors to be announced.':
+            'جلسات تحضيرية تغطي مسارات المسابقة الأربعة — استغلال الويب، والتشفير التطبيقي، والتحليل الجنائي الرقمي، وجمع المعلومات — ليصل المتسابقون الجدد بأدوات جاهزة للعمل. تُعلن العناوين والمدرّبون لاحقًا.',
+        'AI / WEB': 'ذكاء اصطناعي / ويب',
         'CYBERSECURITY': 'الأمن السيبراني',
         'WORKSHOP': 'ورشة عمل',
+        'ARCHIVE': 'أرشيف',
+        'View Case Study': 'عرض دراسة الحالة',
+        'Open Event Site': 'افتح موقع الفعالية',
+        'View Results': 'عرض النتائج',
+        'View Workshops': 'عرض الورش',
         'NO RECORDS MATCH THIS QUERY.': 'لا توجد سجلات مطابقة لهذا البحث.',
+        'ACM Programming Jam 2026 banner': 'لافتة معسكر ACM للبرمجة 2026',
+        'ACM/CyberTech CTF 3.0 banner': 'لافتة مسابقة ACM/CyberTech CTF 3.0',
+        'CTF 2.0 final scoreboard': 'لوحة النتائج النهائية لمسابقة CTF 2.0',
 
-        /* --- Join page --- */
+        /* --- Join --- */
         'Initialize Membership — ACM PSU': 'ابدأ عضويتك — ACM جامعة الأمير سلطان',
         '[ ACTION: INITIALIZE_MEMBERSHIP ]': '[ الإجراء: بدء_العضوية ]',
         'Join the Collective': 'انضم إلى التجمّع',
         'ACM PSU is looking for the next generation of engineers, researchers, and hackers. Complete the handshake protocol below to apply for the 2026 cohort.':
             'نادي ACM في جامعة الأمير سلطان يبحث عن الجيل القادم من المهندسين والباحثين والمبرمجين. أكمل النموذج أدناه للتقديم على دفعة 2026.',
         'Full Name': 'الاسم الكامل',
-        'STR_REQ': 'حقل مطلوب',
+        'STR_REQ': 'حقل_مطلوب',
         'e.g. Faisal Al-Dosari': 'مثال: فيصل الدوسري',
         'PSU Email': 'البريد الجامعي',
-        'EMAIL_VALIDATE': 'بريد إلكتروني',
+        'EMAIL_VALIDATE': 'بريد_إلكتروني',
         'Student ID': 'الرقم الجامعي',
-        'ID_REQ': 'رقم مطلوب',
+        'ID_REQ': 'رقم_مطلوب',
         'e.g. 221100234': 'مثال: 221100234',
         'Major': 'التخصص',
         'e.g. Computer Science': 'مثال: علوم الحاسب',
@@ -222,11 +224,14 @@
         'Graduate': 'دراسات عليا',
         'What are you interested in?': 'ما الذي يهمّك؟',
         'Select Core': 'اختر المجال',
+        'Software Engineering': 'هندسة البرمجيات',
+        'Cybersecurity': 'الأمن السيبراني',
         'AI / Data Science': 'الذكاء الاصطناعي / علم البيانات',
+        'Competitive Programming': 'البرمجة التنافسية',
         'UI/UX Design': 'تصميم تجربة المستخدم',
         'LinkedIn / GitHub / Portfolio': 'لينكدإن / GitHub / معرض الأعمال',
         'OPTIONAL': 'اختياري',
-        'What would you like to gain experience in?': 'في أي مجال تود اكتساب الخبرة؟',
+        'What would you like to gain experience in?': 'في أي مجال تودّ اكتساب الخبرة؟',
         'Briefly describe your interests and what you hope to contribute...':
             'اكتب باختصار عن اهتماماتك وما تطمح إلى الإسهام به...',
         'Leave this field empty': 'اترك هذا الحقل فارغًا',
@@ -235,7 +240,7 @@
         'MEMBERSHIP_BENEFITS': 'مزايا_العضوية',
         'Access to': 'الوصول إلى',
         'ACM Lab Hardware': 'أجهزة مختبر ACM',
-        '(GPU clusters, IoT kits).': '(وحدات معالجة رسومية، وأطقم إنترنت الأشياء).',
+        '(GPU clusters, IoT kits).': '(وحدات معالجة رسومية وأطقم إنترنت الأشياء).',
         'Exclusive entry to': 'دخول حصري إلى',
         'Member Jams': 'معسكرات الأعضاء',
         'and regional ICPC training.': 'والتدريب الإقليمي على ICPC.',
@@ -249,7 +254,7 @@
         'Do I need prior experience?': 'هل أحتاج إلى خبرة سابقة؟',
         'No. We look for curiosity and logical aptitude. If you can learn, you can join.':
             'لا. نبحث عن الفضول والقدرة على التفكير المنطقي. إذا كنت مستعدًا للتعلّم، فمكانك معنا.',
-        'What is the time commitment?': 'كم من الوقت يتطلب الالتزام؟',
+        'What is the time commitment?': 'كم يتطلب الالتزام من وقت؟',
         'Standard members commit ~3-5 hours/week for workshops and project sprints.':
             'يخصّص العضو عادةً من 3 إلى 5 ساعات أسبوعيًا للورش ومراحل تنفيذ المشاريع.',
         'Application deadline?': 'ما آخر موعد للتقديم؟',
@@ -264,7 +269,7 @@
 
         'TRANSMITTING...': 'جارٍ الإرسال...',
         'FORM BACKEND NOT CONFIGURED — applications are not being received yet. Please email acm@psu.edu.sa with your answers in the meantime.':
-            'لم يتم ربط النموذج بعد — الطلبات غير مستلمة حاليًا. يرجى إرسال إجاباتك إلى acm@psu.edu.sa في هذه الأثناء.',
+            'لم يُربط النموذج بعد — الطلبات غير مستلمة حاليًا. يرجى إرسال إجاباتك إلى acm@psu.edu.sa في هذه الأثناء.',
         'HANDSHAKE COMPLETE — application received. We will be in touch.':
             'تم الإرسال بنجاح — استلمنا طلبك وسنتواصل معك قريبًا.',
         'TRANSMISSION FAILED — please retry, or email acm@psu.edu.sa.':
@@ -273,7 +278,7 @@
         /* --- 404 --- */
         'Record Not Found': 'الصفحة غير موجودة',
         'The path you requested is not in the archive. It may have been moved, renamed, or never committed.':
-            'المسار الذي طلبته غير موجود في الأرشيف. ربما تم نقله أو تغيير اسمه أو لم يُضف أصلًا.',
+            'المسار الذي طلبته غير موجود في الأرشيف. ربما نُقل أو غُيّر اسمه أو لم يُضف أصلًا.',
         'Return to Index': 'العودة إلى الرئيسية',
 
         /* --- Archive project page --- */
@@ -288,7 +293,6 @@
         'ALL PROJECTS': 'كل المشاريع',
         'Archive sections': 'أقسام الأرشيف',
         'ALL FILES': 'كل الملفات',
-        'WORKSHOPS': 'الورش',
         'WEBSITE': 'الموقع',
         'BRANDING': 'الهوية البصرية',
         'DOCUMENTS': 'المستندات',
@@ -339,52 +343,55 @@
         'OPEN': 'فتح',
         'DOWNLOAD': 'تنزيل',
         'OFFICIAL': 'وثيقة',
-        'DOC': 'رسمية',
-        'Terminal running model evaluations': 'طرفية تعرض تقييم النماذج',
-        'Server racks powering the CTF infrastructure': 'خوادم تشغّل البنية التحتية لمسابقة CTF',
-        'Workstations set up for a hackathon': 'محطات عمل مجهّزة لهاكاثون',
-        'Laptop open during a systems programming workshop': 'حاسب محمول أثناء ورشة برمجة الأنظمة',
-        'Code editor showing the AI Jam evaluation environment': 'محرر أكواد يعرض بيئة تقييم معسكر الذكاء الاصطناعي',
-        'Dashboard of live CTF scoring metrics': 'لوحة تعرض نتائج مسابقة CTF مباشرةً'
+        'DOC': 'رسمية'
     };
 
-    /* Month names appear inside otherwise-untranslatable file dates, so they are
-     * substituted within a string rather than matched whole. */
+    /* Dates like "24 SEP 2026" appear inside file metadata that is otherwise
+     * untranslatable, so months are substituted within the string. */
     var MONTHS = {
-        'JAN': 'يناير', 'FEB': 'فبراير', 'MAR': 'مارس', 'APR': 'أبريل',
-        'MAY': 'مايو', 'JUN': 'يونيو', 'JUL': 'يوليو', 'AUG': 'أغسطس',
-        'SEP': 'سبتمبر', 'OCT': 'أكتوبر', 'NOV': 'نوفمبر', 'DEC': 'ديسمبر'
+        JAN: 'يناير', FEB: 'فبراير', MAR: 'مارس', APR: 'أبريل',
+        MAY: 'مايو', JUN: 'يونيو', JUL: 'يوليو', AUG: 'أغسطس',
+        SEP: 'سبتمبر', OCT: 'أكتوبر', NOV: 'نوفمبر', DEC: 'ديسمبر'
     };
-    var MONTH_RE = /\b(\d{1,2}) (JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) (\d{4})\b/g;
+    var MONTH_RE = /(\d{1,2}) (JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) (\d{4})/g;
 
-    /* Attributes whose values are read by people (or screen readers). */
-    var ATTRS = ['placeholder', 'aria-label', 'title', 'alt', 'label'];
+    /* Attributes whose values are read by people or screen readers. */
+    var ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
+
+    /* Whitespace-normalised lookup, so wrapped source paragraphs match the
+     * single-line keys written above. */
+    var LOOKUP = {};
+    Object.keys(DICT).forEach(function (key) {
+        LOOKUP[key.replace(/\s+/g, ' ').trim()] = DICT[key];
+    });
 
     var originalText = new WeakMap();   // text node -> English source
-    var originalAttr = new WeakMap();   // element  -> { attr: English source }
+    var originalAttr = new WeakMap();   // element   -> { attr: English source }
     var applying = false;
     var current = 'en';
 
     function translate(source) {
-        var key = source.trim();
-        if (!key) { return null; }
+        var parts = /^(\s*)([\s\S]*?)(\s*)$/.exec(source);
+        var lead = parts[1], core = parts[2], trail = parts[3];
+        if (!core) { return null; }
 
-        if (Object.prototype.hasOwnProperty.call(DICT, key)) {
-            return source.replace(key, DICT[key]);
+        var normalised = core.replace(/\s+/g, ' ');
+        if (Object.prototype.hasOwnProperty.call(LOOKUP, normalised)) {
+            return lead + LOOKUP[normalised] + trail;
         }
 
-        // Fall back to date substitution for "24 SEP 2026" style strings.
-        if (MONTH_RE.test(key)) {
-            MONTH_RE.lastIndex = 0;
-            return source.replace(MONTH_RE, function (_, day, mon, year) {
-                return day + ' ' + MONTHS[mon] + ' ' + year;
-            });
-        }
         MONTH_RE.lastIndex = 0;
+        if (MONTH_RE.test(core)) {
+            MONTH_RE.lastIndex = 0;
+            return lead + core.replace(MONTH_RE, function (_, day, month, year) {
+                return day + ' ' + MONTHS[month] + ' ' + year;
+            }) + trail;
+        }
         return null;
     }
 
     function applyToTextNodes(root, lang) {
+        if (!root) { return; }
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode: function (node) {
                 var tag = node.parentNode && node.parentNode.nodeName;
@@ -401,18 +408,17 @@
         while ((node = walker.nextNode())) {
             if (!originalText.has(node)) { originalText.set(node, node.nodeValue); }
             var source = originalText.get(node);
-            var translated = lang === 'ar' ? translate(source) : null;
-            var next = translated || source;
+            var next = (lang === 'ar' && translate(source)) || source;
             if (node.nodeValue !== next) { node.nodeValue = next; }
         }
     }
 
     function applyToAttributes(root, lang) {
+        if (!root || root.nodeType !== 1) { return; }
+
         var selector = ATTRS.map(function (a) { return '[' + a + ']'; }).join(',');
         var elements = Array.prototype.slice.call(root.querySelectorAll(selector));
-        if (root.nodeType === 1 && root.matches && root.matches(selector)) {
-            elements.push(root);
-        }
+        if (root.matches && root.matches(selector)) { elements.push(root); }
 
         elements.forEach(function (el) {
             var cache = originalAttr.get(el);
@@ -422,8 +428,7 @@
                 if (!el.hasAttribute(attr)) { return; }
                 if (!(attr in cache)) { cache[attr] = el.getAttribute(attr); }
                 var source = cache[attr];
-                var translated = lang === 'ar' ? translate(source) : null;
-                el.setAttribute(attr, translated || source);
+                el.setAttribute(attr, (lang === 'ar' && translate(source)) || source);
             });
         });
     }
@@ -443,10 +448,7 @@
         html.dir = current === 'ar' ? 'rtl' : 'ltr';
 
         apply(document.body, current);
-
-        // <title> lives in <head>, outside the body walk.
-        var titleNode = document.querySelector('title');
-        if (titleNode) { apply(titleNode, current); }
+        applyToTextNodes(document.querySelector('title'), current);
 
         var button = document.querySelector('.lang-toggle');
         if (button) {
@@ -461,17 +463,20 @@
         }
     }
 
+    /* The archive page has no <nav>, so the toggle joins its action row. */
     function buildToggle() {
-        var nav = document.querySelector('.nav-inner');
-        if (!nav || document.querySelector('.lang-toggle')) { return; }
+        if (document.querySelector('.lang-toggle')) { return; }
+
+        var host = document.querySelector('.nav-inner') || document.querySelector('.archive-actions');
+        if (!host) { return; }
 
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'lang-toggle mono-meta';
         button.textContent = 'عربي';
 
-        var meta = nav.querySelector('.nav-meta');
-        if (meta) { nav.insertBefore(button, meta); } else { nav.appendChild(button); }
+        var meta = host.querySelector('.nav-meta');
+        if (meta) { host.insertBefore(button, meta); } else { host.appendChild(button); }
 
         button.addEventListener('click', function () {
             setLanguage(current === 'ar' ? 'en' : 'ar', true);

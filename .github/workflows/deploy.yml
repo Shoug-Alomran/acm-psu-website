@@ -31,6 +31,9 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude 'design-template' \
+            --exclude 'tmp' \
+            --exclude 'assets/reports/psu-ctf-competition-report.pdf' \
+            --exclude 'assets/reports/psu-ctf-2-competition-report.pdf' \
             --exclude '_site' \
             ./ _site/
 
