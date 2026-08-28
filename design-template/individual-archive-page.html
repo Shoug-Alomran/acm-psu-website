@@ -1,0 +1,500 @@
+<html lang="en" class="antialiased" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">ACM Archive - AI Programming Jam</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17" vid="5"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" vid="6"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="7">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet" vid="9">
+    
+    <script vid="10">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        archive: {
+                            base: '#050507',
+                            surface: '#0A0A0E',
+                            border: 'rgba(255, 255, 255, 0.1)',
+                            borderhover: 'rgba(255, 255, 255, 0.2)',
+                            blue: '#3B82F6',
+                            text: '#A1A1AA',
+                            textbright: '#F4F4F5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'grid-pattern': 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style vid="11">
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050507;
+            border-left: 1px solid rgba(255,255,255,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+        .file-grid {
+            display: grid;
+            grid-template-columns: minmax(200px, 2fr) 80px 1.5fr 120px 80px 40px;
+            align-items: center;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body class="bg-archive-base text-archive-text font-sans min-h-screen flex flex-col overflow-hidden selection:bg-archive-blue selection:bg-opacity-30 selection:text-white" vid="12">
+
+    
+    <div class="fixed inset-0 z-0 pointer-events-none bg-grid-pattern" style="background-size: 32px 32px;" vid="13"></div>
+    <div class="fixed top-[-10%] left-[20%] w-[60%] h-[500px] bg-blue-600/10 blur-[120px] rounded-full z-0 pointer-events-none" vid="14"></div>
+
+    
+    <div class="relative z-10 w-full h-screen max-w-[1440px] mx-auto flex flex-col p-6 gap-6" vid="15">
+
+        
+        <header class="flex flex-col gap-4 shrink-0" vid="16">
+            
+            <div class="flex justify-between items-end" vid="17">
+                <div class="flex flex-col gap-2" vid="18">
+                    <div class="font-mono text-xs text-archive-blue tracking-widest uppercase flex items-center gap-2" vid="19">
+                        <i class="ph ph-folder-open" vid="20"></i>
+                        <span vid="21">DIR: /PROJECTS/AI-PROGRAMMING-JAM</span>
+                    </div>
+                    <div class="flex items-center gap-4 font-mono text-[10px] text-archive-text/70 uppercase" vid="22">
+                        <span class="flex items-center gap-1 border border-archive-border px-2 py-0.5 bg-white/[0.02]" vid="23">ID: 0x26_AI</span>
+                        <span class="flex items-center gap-1 border border-archive-border px-2 py-0.5 bg-white/[0.02]" vid="24">YEAR: 2026</span>
+                        <span class="flex items-center gap-1 border border-archive-border px-2 py-0.5 bg-white/[0.02]" vid="25">STATUS: ARCHIVED</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 font-mono text-[10px] text-archive-text/50" vid="26">
+                    <span vid="27">34 FILES</span>
+                    <span vid="28">8 DIRECTORIES</span>
+                    <span vid="29">12.4 MB</span>
+                    <span vid="30">LAST UPDATED: 26 SEP 2026</span>
+                </div>
+            </div>
+
+            
+            <div class="flex justify-between items-start border-b border-archive-border pb-6" vid="31">
+                <div class="flex flex-col gap-2 max-w-2xl" vid="32">
+                    <h1 class="font-display text-4xl text-archive-textbright uppercase tracking-tight leading-none" vid="33">AI Programming Jam</h1>
+                    <p class="text-sm leading-relaxed text-archive-text" vid="34">An intensive 48-hour competitive programming event focusing on the implementation of generative models and algorithmic efficiency. Includes workshops, official submissions, and event collateral.</p>
+                </div>
+                <div class="flex items-center gap-3" vid="35">
+                    <button class="font-mono text-xs text-archive-textbright border border-archive-border px-4 py-2 hover:bg-white/[0.05] hover:border-archive-borderhover transition-colors flex items-center gap-2 uppercase" vid="36">
+                        VISIT WEBSITE <i class="ph ph-arrow-up-right" vid="37"></i>
+                    </button>
+                    <button class="font-mono text-xs text-archive-textbright border border-archive-border px-4 py-2 hover:bg-white/[0.05] hover:border-archive-borderhover transition-colors flex items-center gap-2 uppercase" vid="38">
+                        GITHUB <i class="ph ph-arrow-up-right" vid="39"></i>
+                    </button>
+                </div>
+            </div>
+
+            
+            <nav class="flex items-center gap-6 font-mono text-[11px] uppercase tracking-wider" vid="40">
+                <a href="#" class="text-archive-text hover:text-archive-textbright transition-colors pb-2 border-b border-transparent" vid="41">OVERVIEW</a>
+                <a href="#" class="text-archive-blue pb-2 border-b border-archive-blue" vid="42">FILES</a>
+                <a href="#" class="text-archive-text hover:text-archive-textbright transition-colors pb-2 border-b border-transparent" vid="43">WEBSITE</a>
+                <a href="#" class="text-archive-text hover:text-archive-textbright transition-colors pb-2 border-b border-transparent" vid="44">WORKSHOPS</a>
+                <a href="#" class="text-archive-text hover:text-archive-textbright transition-colors pb-2 border-b border-transparent" vid="45">DOCUMENTS</a>
+                <a href="#" class="text-archive-text hover:text-archive-textbright transition-colors pb-2 border-b border-transparent" vid="46">MEDIA</a>
+                <a href="#" class="text-archive-text hover:text-archive-textbright transition-colors pb-2 border-b border-transparent" vid="47">RESULTS</a>
+            </nav>
+        </header>
+
+        
+        <main class="flex-1 flex overflow-hidden border border-archive-border bg-archive-surface/50 backdrop-blur-sm" vid="48">
+            
+            
+            <section class="flex-1 flex flex-col overflow-hidden" vid="49">
+                
+                
+                <div class="flex flex-col border-b border-archive-border bg-black/20" vid="50">
+                    
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-archive-border/50" vid="51">
+                        <div class="font-mono text-xs text-archive-text flex items-center gap-2" vid="52">
+                            <span class="text-archive-text/50" vid="53">PROJECTS /</span>
+                            <span class="text-archive-text/50" vid="54">AI-PROGRAMMING-JAM /</span>
+                            <span class="text-archive-textbright" vid="55">ALL_FILES</span>
+                        </div>
+                        <div class="flex items-center gap-2" vid="56">
+                            <button class="p-1.5 text-archive-blue bg-white/[0.05] border border-archive-border rounded-none" title="LIST VIEW" vid="57">
+                                <i class="ph ph-list text-lg" vid="58"></i>
+                            </button>
+                            <button class="p-1.5 text-archive-text hover:text-archive-textbright border border-transparent hover:bg-white/[0.05] rounded-none transition-colors" title="GRID VIEW" vid="59">
+                                <i class="ph ph-squares-four text-lg" vid="60"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="flex items-center justify-between px-4 py-2" vid="61">
+                        <div class="flex items-center gap-2 flex-1 font-mono text-sm" vid="62">
+                            <span class="text-archive-blue" vid="63">$</span>
+                            <span class="text-archive-text" vid="64">grep</span>
+                            <input type="text" placeholder="search_files..." class="bg-transparent border-none outline-none text-archive-textbright placeholder-archive-text/40 w-full ml-2 focus:ring-0" vid="65">
+                        </div>
+                        <div class="flex items-center gap-3 font-mono text-[10px] uppercase" vid="66">
+                            <button class="text-archive-textbright px-2 py-1 bg-white/[0.05] border border-archive-border" vid="67">ALL</button>
+                            <button class="text-archive-text hover:text-archive-textbright px-2 py-1 border border-transparent hover:border-archive-border transition-colors" vid="68">PDF</button>
+                            <button class="text-archive-text hover:text-archive-textbright px-2 py-1 border border-transparent hover:border-archive-border transition-colors" vid="69">HTML</button>
+                            <button class="text-archive-text hover:text-archive-textbright px-2 py-1 border border-transparent hover:border-archive-border transition-colors" vid="70">MEDIA</button>
+                            <button class="text-archive-text hover:text-archive-textbright px-2 py-1 border border-transparent hover:border-archive-border transition-colors" vid="71">DOCUMENTS</button>
+                            <button class="text-archive-text hover:text-archive-textbright px-2 py-1 border border-transparent hover:border-archive-border transition-colors" vid="72">LINKS</button>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="flex-1 overflow-y-auto pb-8" vid="73">
+                    
+                    
+                    <div class="p-4 border-b border-archive-border/50" vid="74">
+                        <div class="font-mono text-[10px] text-archive-text/50 uppercase mb-3 flex items-center gap-2" vid="75">
+                            <i class="ph ph-push-pin text-archive-text" vid="76"></i> PINNED / 04
+                        </div>
+                        <div class="grid grid-cols-4 gap-4" vid="77">
+                            
+                            <div class="border border-archive-border bg-black/40 p-3 hover:border-archive-borderhover hover:bg-white/[0.02] cursor-pointer transition-all group" vid="78">
+                                <div class="flex justify-between items-start mb-4" vid="79">
+                                    <i class="ph ph-link text-archive-text/70 group-hover:text-archive-blue transition-colors text-xl" vid="80"></i>
+                                    <span class="font-mono text-[9px] px-1 bg-white/5 border border-archive-border text-archive-text/70" vid="81">LINK</span>
+                                </div>
+                                <div class="font-sans text-sm text-archive-textbright font-medium truncate mb-1" vid="82">Official Website</div>
+                                <div class="font-mono text-[10px] text-archive-text/50 truncate" vid="83">ai-jam.acm.org</div>
+                            </div>
+                            
+                            <div class="border border-archive-border bg-black/40 p-3 hover:border-archive-borderhover hover:bg-white/[0.02] cursor-pointer transition-all group" vid="84">
+                                <div class="flex justify-between items-start mb-4" vid="85">
+                                    <i class="ph ph-file-pdf text-archive-text/70 group-hover:text-archive-blue transition-colors text-xl" vid="86"></i>
+                                    <span class="font-mono text-[9px] px-1 bg-white/5 border border-archive-border text-archive-text/70" vid="87">PDF</span>
+                                </div>
+                                <div class="font-sans text-sm text-archive-textbright font-medium truncate mb-1" vid="88">Competition Rules</div>
+                                <div class="font-mono text-[10px] text-archive-text/50 truncate" vid="89">rules_v2.pdf</div>
+                            </div>
+                            
+                            <div class="border border-archive-border bg-black/40 p-3 hover:border-archive-borderhover hover:bg-white/[0.02] cursor-pointer transition-all group" vid="90">
+                                <div class="flex justify-between items-start mb-4" vid="91">
+                                    <i class="ph ph-folder text-archive-text/70 group-hover:text-archive-blue transition-colors text-xl" vid="92"></i>
+                                    <span class="font-mono text-[9px] px-1 bg-white/5 border border-archive-border text-archive-text/70" vid="93">DIR</span>
+                                </div>
+                                <div class="font-sans text-sm text-archive-textbright font-medium truncate mb-1" vid="94">Workshop Material</div>
+                                <div class="font-mono text-[10px] text-archive-text/50 truncate" vid="95">/ WORKSHOPS</div>
+                            </div>
+                            
+                            <div class="border border-archive-border bg-black/40 p-3 hover:border-archive-borderhover hover:bg-white/[0.02] cursor-pointer transition-all group" vid="96">
+                                <div class="flex justify-between items-start mb-4" vid="97">
+                                    <i class="ph ph-file-csv text-archive-text/70 group-hover:text-archive-blue transition-colors text-xl" vid="98"></i>
+                                    <span class="font-mono text-[9px] px-1 bg-white/5 border border-archive-border text-archive-text/70" vid="99">CSV</span>
+                                </div>
+                                <div class="font-sans text-sm text-archive-textbright font-medium truncate mb-1" vid="100">Final Results</div>
+                                <div class="font-mono text-[10px] text-archive-text/50 truncate" vid="101">leaderboard_final.csv</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="flex flex-col" vid="102">
+                        
+                        <div class="file-grid px-4 py-2 border-b border-archive-border bg-black/40 font-mono text-[10px] tracking-wider text-archive-text/70 uppercase" vid="103">
+                            <div vid="104">NAME</div>
+                            <div vid="105">TYPE</div>
+                            <div vid="106">SECTION</div>
+                            <div vid="107">UPDATED</div>
+                            <div vid="108">SIZE</div>
+                            <div class="text-right" vid="109">ACT</div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="110">
+                            <div class="flex items-center gap-3" vid="111">
+                                <i class="ph ph-arrow-u-up-left text-archive-text/50 group-hover:text-archive-textbright transition-colors text-lg" vid="112"></i>
+                                <span class="font-mono text-sm text-archive-text/70 group-hover:text-archive-textbright transition-colors" vid="113">..</span>
+                            </div>
+                            <div vid="114"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-transparent text-archive-text/40" vid="115">PARENT</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/40" vid="116">-</div>
+                            <div class="font-mono text-[11px] text-archive-text/40" vid="117">-</div>
+                            <div class="font-mono text-[11px] text-archive-text/40" vid="118">-</div>
+                            <div class="text-right" vid="119"></div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="120">
+                            <div class="flex items-center gap-3" vid="121">
+                                <i class="ph ph-folder text-archive-text group-hover:text-archive-blue transition-colors text-lg" vid="122"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-archive-blue transition-colors" vid="123">WORKSHOPS</span>
+                            </div>
+                            <div vid="124"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="125">DIR</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="126">ROOT</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="127">20 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="128">12 ITEMS</div>
+                            <div class="text-right flex items-center justify-end gap-2" vid="129">
+                                <button class="text-archive-text/40 hover:text-archive-textbright" vid="130"><i class="ph ph-caret-right" vid="131"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="132">
+                            <div class="flex items-center gap-3" vid="133">
+                                <i class="ph ph-folder text-archive-text group-hover:text-archive-blue transition-colors text-lg" vid="134"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-archive-blue transition-colors" vid="135">WEBSITE</span>
+                            </div>
+                            <div vid="136"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="137">DIR</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="138">ROOT</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="139">18 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="140">45 ITEMS</div>
+                            <div class="text-right flex items-center justify-end gap-2" vid="141">
+                                <button class="text-archive-text/40 hover:text-archive-textbright" vid="142"><i class="ph ph-caret-right" vid="143"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="144">
+                            <div class="flex items-center gap-3" vid="145">
+                                <i class="ph ph-folder text-archive-text group-hover:text-archive-blue transition-colors text-lg" vid="146"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-archive-blue transition-colors" vid="147">BRANDING</span>
+                            </div>
+                            <div vid="148"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="149">DIR</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="150">ROOT</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="151">15 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="152">8 ITEMS</div>
+                            <div class="text-right flex items-center justify-end gap-2" vid="153">
+                                <button class="text-archive-text/40 hover:text-archive-textbright" vid="154"><i class="ph ph-caret-right" vid="155"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="156">
+                            <div class="flex items-center gap-3" vid="157">
+                                <i class="ph ph-folder text-archive-text group-hover:text-archive-blue transition-colors text-lg" vid="158"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-archive-blue transition-colors" vid="159">REGISTRATION</span>
+                            </div>
+                            <div vid="160"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="161">DIR</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="162">ROOT</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="163">22 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="164">2 ITEMS</div>
+                            <div class="text-right flex items-center justify-end gap-2" vid="165">
+                                <button class="text-archive-text/40 hover:text-archive-textbright" vid="166"><i class="ph ph-caret-right" vid="167"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 bg-archive-blue/10 cursor-pointer group relative" vid="168">
+                            <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-archive-blue" vid="169"></div>
+                            <div class="flex items-center gap-3 pl-2" vid="170">
+                                <i class="ph ph-file-pdf text-archive-blue text-lg" vid="171"></i>
+                                <span class="font-sans text-sm text-white" vid="172">competition-rules.pdf</span>
+                            </div>
+                            <div vid="173"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-blue/30 bg-archive-blue/5 text-archive-blue" vid="174">PDF</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/70" vid="175">DOCUMENTS</div>
+                            <div class="font-mono text-[11px] text-archive-text/70" vid="176">24 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/70" vid="177">1.2 MB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-100" vid="178">
+                                <button class="text-archive-blue hover:text-white transition-colors" title="Download" vid="179"><i class="ph ph-download-simple" vid="180"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="181">
+                            <div class="flex items-center gap-3" vid="182">
+                                <i class="ph ph-file-html text-archive-text group-hover:text-white transition-colors text-lg" vid="183"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-white transition-colors" vid="184">day-1-workshop.html</span>
+                            </div>
+                            <div vid="185"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="186">HTML</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="187">WORKSHOPS</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="188">21 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="189">45 KB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" vid="190">
+                                <button class="text-archive-text hover:text-archive-textbright" vid="191"><i class="ph ph-download-simple" vid="192"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="193">
+                            <div class="flex items-center gap-3" vid="194">
+                                <i class="ph ph-image text-archive-text group-hover:text-white transition-colors text-lg" vid="195"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-white transition-colors" vid="196">event-poster.png</span>
+                            </div>
+                            <div vid="197"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="198">IMG</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="199">BRANDING</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="200">10 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="201">4.8 MB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" vid="202">
+                                <button class="text-archive-text hover:text-archive-textbright" vid="203"><i class="ph ph-download-simple" vid="204"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="205">
+                            <div class="flex items-center gap-3" vid="206">
+                                <i class="ph ph-file-xls text-archive-text group-hover:text-white transition-colors text-lg" vid="207"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-white transition-colors" vid="208">registration-sheet.xlsx</span>
+                            </div>
+                            <div vid="209"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="210">XLSX</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="211">REGISTRATION</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="212">25 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="213">128 KB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" vid="214">
+                                <button class="text-archive-text hover:text-archive-textbright" vid="215"><i class="ph ph-download-simple" vid="216"></i></button>
+                            </div>
+                        </div>
+
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="217">
+                            <div class="flex items-center gap-3" vid="218">
+                                <i class="ph ph-link text-archive-text group-hover:text-white transition-colors text-lg" vid="219"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-white transition-colors" vid="220">official-website.url</span>
+                            </div>
+                            <div vid="221"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="222">LINK</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="223">ROOT</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="224">01 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="225">1 KB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" vid="226">
+                                <button class="text-archive-text hover:text-archive-textbright" vid="227"><i class="ph ph-arrow-square-out" vid="228"></i></button>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="229">
+                            <div class="flex items-center gap-3" vid="230">
+                                <i class="ph ph-file-ppt text-archive-text group-hover:text-white transition-colors text-lg" vid="231"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-white transition-colors" vid="232">presentation_final.pptx</span>
+                            </div>
+                            <div vid="233"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="234">PPTX</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="235">RESULTS</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="236">26 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="237">5.6 MB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" vid="238">
+                                <button class="text-archive-text hover:text-archive-textbright" vid="239"><i class="ph ph-download-simple" vid="240"></i></button>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="file-grid px-4 py-3 border-b border-archive-border/30 hover:bg-white/[0.02] cursor-pointer group" vid="241">
+                            <div class="flex items-center gap-3" vid="242">
+                                <i class="ph ph-file-archive text-archive-text group-hover:text-white transition-colors text-lg" vid="243"></i>
+                                <span class="font-sans text-sm text-archive-textbright group-hover:text-white transition-colors" vid="244">source_code.zip</span>
+                            </div>
+                            <div vid="245"><span class="font-mono text-[9px] px-1.5 py-0.5 border border-archive-border bg-white/[0.02] text-archive-text/70" vid="246">ZIP</span></div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="247">RESULTS</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="248">26 SEP 2026</div>
+                            <div class="font-mono text-[11px] text-archive-text/50" vid="249">18.2 MB</div>
+                            <div class="text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" vid="250">
+                                <button class="text-archive-text hover:text-archive-textbright" vid="251"><i class="ph ph-download-simple" vid="252"></i></button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            
+            <aside class="w-[420px] shrink-0 border-l border-archive-border flex flex-col bg-black/60 relative" vid="253">
+                
+                
+                <div class="flex items-center justify-between p-4 border-b border-archive-border shrink-0" vid="254">
+                    <div class="flex flex-col" vid="255">
+                        <span class="font-mono text-[10px] text-archive-text/50 uppercase" vid="256">FILE PREVIEW</span>
+                        <span class="font-sans text-sm text-white font-medium mt-1 truncate max-w-[300px]" vid="257">competition-rules.pdf</span>
+                    </div>
+                    <button class="text-archive-text hover:text-white transition-colors p-1" vid="258">
+                        <i class="ph ph-x" vid="259"></i>
+                    </button>
+                </div>
+
+                
+                <div class="flex-1 p-4 overflow-hidden flex flex-col items-center justify-center bg-archive-base relative border-b border-archive-border" vid="260">
+                    
+                    <div class="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-[#1a1a1f] border border-archive-border px-3 py-1.5 rounded-none z-10 shadow-lg" vid="261">
+                        <button class="text-archive-text hover:text-white" vid="262"><i class="ph ph-minus" vid="263"></i></button>
+                        <span class="font-mono text-xs text-archive-textbright" vid="264">100%</span>
+                        <button class="text-archive-text hover:text-white" vid="265"><i class="ph ph-plus" vid="266"></i></button>
+                        <div class="w-px h-4 bg-archive-border" vid="267"></div>
+                        <span class="font-mono text-xs text-archive-textbright" vid="268">1 / 12</span>
+                    </div>
+                    
+                    
+                    <div class="w-full max-w-[300px] aspect-[1/1.4] bg-white shadow-2xl relative overflow-hidden mt-8 border border-white/20" vid="269">
+                        <div class="p-8 flex flex-col gap-4" vid="270">
+                            
+                            <div class="w-3/4 h-6 bg-gray-200 mb-4" vid="271"></div>
+                            <div class="w-full h-2 bg-gray-100" vid="272"></div>
+                            <div class="w-full h-2 bg-gray-100" vid="273"></div>
+                            <div class="w-5/6 h-2 bg-gray-100" vid="274"></div>
+                            <div class="w-full h-2 bg-gray-100 mt-4" vid="275"></div>
+                            <div class="w-4/5 h-2 bg-gray-100" vid="276"></div>
+                            <div class="w-full h-2 bg-gray-100" vid="277"></div>
+                            
+                            <div class="w-1/2 h-4 bg-gray-200 mt-6 mb-2" vid="278"></div>
+                            <div class="w-full h-2 bg-gray-100" vid="279"></div>
+                            <div class="w-full h-2 bg-gray-100" vid="280"></div>
+                            <div class="w-3/4 h-2 bg-gray-100" vid="281"></div>
+                            
+                            
+                            <div class="absolute bottom-8 right-8 w-16 h-16 border-2 border-red-500/20 rounded-full flex items-center justify-center rotate-[-15deg]" vid="282">
+                                <span class="text-red-500/20 font-bold text-[8px] uppercase tracking-widest text-center leading-tight" vid="283">OFFICIAL<br vid="284">DOC</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="p-4 flex flex-col gap-4 shrink-0 bg-archive-surface/50" vid="285">
+                    
+                    <div class="flex flex-col gap-2 font-mono text-[11px]" vid="286">
+                        <div class="flex justify-between py-1.5 border-b border-archive-border/30" vid="287">
+                            <span class="text-archive-text/50 uppercase" vid="288">Type</span>
+                            <span class="text-archive-textbright" vid="289">Adobe PDF</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-archive-border/30" vid="290">
+                            <span class="text-archive-text/50 uppercase" vid="291">Size</span>
+                            <span class="text-archive-textbright" vid="292">1.2 MB (1,245,184 bytes)</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-archive-border/30" vid="293">
+                            <span class="text-archive-text/50 uppercase" vid="294">Uploaded</span>
+                            <span class="text-archive-textbright" vid="295">24 SEP 2026, 14:32:00 GMT</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-archive-border/30" vid="296">
+                            <span class="text-archive-text/50 uppercase" vid="297">Path</span>
+                            <span class="text-archive-textbright truncate pl-4" vid="298">/DOCUMENTS/competition-rules.pdf</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-archive-border/30" vid="299">
+                            <span class="text-archive-text/50 uppercase" vid="300">SHA-256</span>
+                            <span class="text-archive-textbright truncate pl-4 w-48 text-right" vid="301">e3b0c44298fc1c149afbf4c8996fb924</span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="flex gap-3 mt-2" vid="302">
+                        <button class="flex-1 bg-archive-blue text-white font-mono text-xs uppercase py-2.5 hover:bg-blue-600 transition-colors flex items-center justify-center gap-2" vid="303">
+                            <i class="ph ph-folder-open" vid="304"></i> OPEN
+                        </button>
+                        <button class="flex-1 border border-archive-border text-archive-textbright font-mono text-xs uppercase py-2.5 hover:bg-white/[0.05] transition-colors flex items-center justify-center gap-2" vid="305">
+                            <i class="ph ph-download-simple" vid="306"></i> DOWNLOAD
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+        </main>
+    </div>
+
+
+</body></html>

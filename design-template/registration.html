@@ -1,0 +1,444 @@
+<html vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Initialize Membership | ACM PSU</title>
+    
+    <style vid="5">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+        :root {
+            --bg-base: #050507;
+            --bg-surface: #0a0a0d;
+            --bg-surface-hover: #121218;
+            --text-main: #f8f9fa;
+            --text-muted: #8b949e;
+            --text-dark: #30363d;
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.15);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.15);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --nav-height: 72px;
+            --container-width: 1400px;
+            --radius-sm: 2px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: linear-gradient(to right, var(--border-color) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+            background-size: 100px 100px;
+            mask-image: radial-gradient(circle at center, black 10%, transparent 80%);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.2;
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: -10vh;
+            right: -10vw;
+            width: 50vw;
+            height: 50vh;
+            background: radial-gradient(circle, rgba(29, 78, 216, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(100px);
+        }
+
+        .container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mono-meta {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        nav {
+            position: fixed;
+            top: 0; width: 100%; height: var(--nav-height);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(5, 5, 7, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex; align-items: center;
+        }
+
+        .nav-inner { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { display: flex; align-items: center; gap: 1rem; font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; }
+        .nav-logo .divider { color: var(--border-strong); font-weight: 400; }
+        .nav-links { display: flex; gap: 2.5rem; }
+        .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); }
+
+        .membership-hero {
+            padding-top: calc(var(--nav-height) + 4rem);
+            padding-bottom: 4rem;
+        }
+
+        .page-title {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 4rem;
+            margin-top: 4rem;
+            align-items: start;
+        }
+
+        
+        .terminal-form {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: #1a1a1f;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-strong);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-dots { display: flex; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+        .dot.red { background: #ff5f56; }
+
+        .form-body {
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .label-wrap {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            background: #0d0d12;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            border-radius: var(--radius-sm);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn-submit {
+            background: var(--text-main);
+            color: var(--bg-base);
+            border: none;
+            padding: 1.25rem;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-submit:hover { opacity: 0.9; }
+
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .sidebar-section h3 {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .benefits-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .benefit-item {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .benefit-icon {
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+        }
+
+        .benefit-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .benefit-text b { color: var(--text-main); }
+
+        
+        .faq-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .faq-trigger {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            text-align: left;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .faq-content {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        .faq-item.active .faq-content { display: block; }
+        .faq-item.active .faq-trigger svg { transform: rotate(45deg); }
+
+        footer {
+            margin-top: 8rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .sidebar { order: -1; }
+        }
+    </style>
+</head>
+<body vid="6">
+
+    <div class="ambient-glow" vid="7"></div>
+
+    <nav vid="8">
+        <div class="container nav-inner" vid="9">
+            <div class="nav-logo" vid="10">
+                <span vid="11">ACM</span>
+                <span class="divider" vid="12">/</span>
+                <span vid="13">PSU</span>
+            </div>
+            <div class="nav-links" vid="14">
+                <a href="#" vid="15">About</a>
+                <a href="#" vid="16">Team</a>
+                <a href="#" vid="17">Projects</a>
+                <a href="#" vid="18">Archive</a>
+            </div>
+            <div class="nav-meta mono-meta" vid="19">
+                STATUS: ENROLLMENT_OPEN
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" vid="20">
+        <section class="membership-hero" vid="21">
+            <div class="mono-meta" style="color: var(--accent-blue); margin-bottom: 1rem;" vid="22">[ ACTION: INITIALIZE_MEMBERSHIP ]</div>
+            <h1 class="page-title" vid="23">Join the Collective</h1>
+            <p class="mono-meta" style="max-width: 600px; line-height: 1.6;" vid="24">
+                ACM PSU is looking for the next generation of engineers, researchers, and hackers. 
+                Complete the handshake protocol below to apply for the 2026 cohort.
+            </p>
+
+            <div class="grid-layout" vid="25">
+                
+                <div class="terminal-form" vid="26">
+                    <div class="terminal-header" vid="27">
+                        <div class="terminal-dots" vid="28">
+                            <div class="dot red" vid="29"></div>
+                            <div class="dot" vid="30"></div>
+                            <div class="dot" vid="31"></div>
+                        </div>
+                        <div class="mono-meta" style="font-size: 0.6rem;" vid="32">application_v2.0.sh — 128-bit encryption</div>
+                    </div>
+                    
+                    <form class="form-body" vid="33">
+                        <div class="input-group" vid="34">
+                            <div class="label-wrap" vid="35">
+                                <label vid="36">Full Name</label>
+                                <span class="mono-meta" style="font-size: 0.6rem;" vid="37">STR_REQ</span>
+                            </div>
+                            <input type="text" placeholder="e.g. Faisal Al-Dosari" required="" vid="38">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;" vid="39">
+                            <div class="input-group" vid="40">
+                                <label vid="41">Academic Year</label>
+                                <select required="" vid="42">
+                                    <option value="" disabled="" selected="" vid="43">Select Year</option>
+                                    <option vid="44">Freshman (Y1)</option>
+                                    <option vid="45">Sophomore (Y2)</option>
+                                    <option vid="46">Junior (Y3)</option>
+                                    <option vid="47">Senior (Y4)</option>
+                                    <option vid="48">Graduate</option>
+                                </select>
+                            </div>
+                            <div class="input-group" vid="49">
+                                <label vid="50">Primary Specialization</label>
+                                <select required="" vid="51">
+                                    <option value="" disabled="" selected="" vid="52">Select Core</option>
+                                    <option vid="53">Software Engineering</option>
+                                    <option vid="54">Cybersecurity</option>
+                                    <option vid="55">AI / Data Science</option>
+                                    <option vid="56">Competitive Prog</option>
+                                    <option vid="57">UI/UX Design</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group" vid="58">
+                            <div class="label-wrap" vid="59">
+                                <label vid="60">GitHub / Portfolio URL</label>
+                                <span class="mono-meta" style="font-size: 0.6rem;" vid="61">URL_VALIDATE</span>
+                            </div>
+                            <input type="url" placeholder="github.com/username" required="" vid="62">
+                        </div>
+
+                        <div class="input-group" vid="63">
+                            <label vid="64">Technical Background / Why ACM?</label>
+                            <textarea rows="4" placeholder="Briefly describe your interests and what you hope to contribute..." vid="65"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit" vid="66">Execute Handshake [Enter]</button>
+                    </form>
+                </div>
+
+                
+                <div class="sidebar" vid="67">
+                    <div class="sidebar-section" vid="68">
+                        <h3 vid="69">MEMBERSHIP_BENEFITS</h3>
+                        <ul class="benefits-list" vid="70">
+                            <li class="benefit-item" vid="71">
+                                <span class="benefit-icon" vid="72">01</span>
+                                <span class="benefit-text" vid="73">Access to <b vid="74">ACM Lab Hardware</b> (GPU clusters, IoT kits).</span>
+                            </li>
+                            <li class="benefit-item" vid="75">
+                                <span class="benefit-icon" vid="76">02</span>
+                                <span class="benefit-text" vid="77">Exclusive entry to <b vid="78">Member Jams</b> and regional ICPC training.</span>
+                            </li>
+                            <li class="benefit-item" vid="79">
+                                <span class="benefit-icon" vid="80">03</span>
+                                <span class="benefit-text" vid="81">Professional <b vid="82">Network Tunneling</b> to PSU alumni at tech giants.</span>
+                            </li>
+                            <li class="benefit-item" vid="83">
+                                <span class="benefit-icon" vid="84">04</span>
+                                <span class="benefit-text" vid="85">Contributor credits on <b vid="86">ACM Production Systems</b>.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-section" vid="87">
+                        <h3 vid="88">FAQ_REGISTRY</h3>
+                        <div class="faq-item" vid="89">
+                            <button class="faq-trigger" onclick="this.parentElement.classList.toggle('active')" vid="90">
+                                Do I need prior experience?
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="91"><path d="M12 5v14M5 12h14" vid="92"></path></svg>
+                            </button>
+                            <div class="faq-content" vid="93">
+                                No. We look for curiosity and logical aptitude. If you can learn, you can join.
+                            </div>
+                        </div>
+                        <div class="faq-item" vid="94">
+                            <button class="faq-trigger" onclick="this.parentElement.classList.toggle('active')" vid="95">
+                                What is the time commitment?
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="96"><path d="M12 5v14M5 12h14" vid="97"></path></svg>
+                            </button>
+                            <div class="faq-content" vid="98">
+                                Standard members commit ~3-5 hours/week for workshops and project sprints.
+                            </div>
+                        </div>
+                        <div class="faq-item" vid="99">
+                            <button class="faq-trigger" onclick="this.parentElement.classList.toggle('active')" vid="100">
+                                Application deadline?
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="101"><path d="M12 5v14M5 12h14" vid="102"></path></svg>
+                            </button>
+                            <div class="faq-content" vid="103">
+                                Recruitment cycles happen at the start of every semester. Current cycle ends Oct 15.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section" style="background: var(--accent-blue-dim); padding: 1.5rem; border: 1px solid var(--accent-blue);" vid="104">
+                        <h3 style="border: none; margin-bottom: 0.5rem; color: var(--text-main);" vid="105">PRE_FLIGHT_CHECK</h3>
+                        <div class="mono-meta" style="color: var(--text-main); font-size: 0.65rem; line-height: 1.8;" vid="106">
+                            [✓] ACTIVE PSU STUDENT ID<br vid="107">
+                            [✓] PASSION FOR PROBLEM SOLVING<br vid="108">
+                            [✓] BASIC GIT KNOWLEDGE (PREFERRED)<br vid="109">
+                            [ ] FORM SUBMITTED
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="container mono-meta" vid="110">
+        <div vid="111">© 2026 ACM PRINCE SULTAN UNIVERSITY</div>
+        <div vid="112">AUTH_SESSION: <span style="color: var(--text-main);" vid="113">GUEST_USER_092</span></div>
+    </footer>
+
+</body></html>

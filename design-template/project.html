@@ -1,0 +1,448 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Projects Archive | ACM PSU</title>
+    <style vid="5">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+        :root {
+            --bg-base: #050507;
+            --bg-surface: #0a0a0d;
+            --bg-surface-hover: #121218;
+            --text-main: #f8f9fa;
+            --text-muted: #8b949e;
+            --text-dark: #30363d;
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.15);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.15);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --nav-height: 72px;
+            --radius-sm: 2px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+            background-size: 80px 80px;
+            mask-image: radial-gradient(circle at center, black 10%, transparent 90%);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.2;
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: -10vh;
+            right: 0;
+            width: 50vw;
+            height: 50vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: var(--nav-height);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(5, 5, 7, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-inner {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .nav-links a.active { color: var(--text-main); }
+
+        .mono-meta {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        header.archive-header {
+            padding-top: calc(var(--nav-height) + 4rem);
+            padding-bottom: 4rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            text-transform: uppercase;
+            line-height: 1;
+            margin-bottom: 2rem;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            gap: 2rem;
+        }
+
+        .terminal-search {
+            flex: 1;
+            max-width: 500px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+        }
+
+        .terminal-search span { color: var(--accent-blue); }
+        .terminal-search input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--text-main);
+            color: var(--bg-base);
+            border-color: var(--text-main);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+            padding: 6rem 0;
+        }
+
+        .case-study-card {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s;
+            position: relative;
+        }
+
+        .case-study-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-strong);
+        }
+
+        .card-visual {
+            aspect-ratio: 16/10;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            filter: grayscale(100%);
+            transition: opacity 0.5s, filter 0.5s;
+        }
+
+        .case-study-card:hover .card-visual img {
+            opacity: 0.9;
+            filter: grayscale(0%);
+        }
+
+        .card-body {
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card-meta-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-id {
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 2.25rem;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 90%;
+            margin-bottom: 1rem;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid var(--border-strong);
+            border-radius: 100px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+
+        .view-btn {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .view-btn svg {
+            transition: transform 0.2s;
+        }
+
+        .view-btn:hover svg {
+            transform: translateX(4px);
+        }
+
+        footer {
+            padding: 4rem 0;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 1024px) {
+            .projects-grid { grid-template-columns: 1fr; }
+            .header-title { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body vid="6">
+
+    <div class="ambient-glow" vid="7"></div>
+
+    <nav vid="8">
+        <div class="container nav-inner" vid="9">
+            <div class="nav-logo" vid="10">
+                <span vid="11">ACM</span>
+                <span style="color: var(--border-strong)" vid="12">/</span>
+                <span vid="13">PSU</span>
+            </div>
+            <div class="nav-links" vid="14">
+                <a href="#" vid="15">About</a>
+                <a href="#" vid="16">Team</a>
+                <a href="#" class="active" vid="17">Projects</a>
+                <a href="#" vid="18">Archive</a>
+            </div>
+            <div class="nav-meta mono-meta" vid="19">
+                SYS.ARCHIVE_2026 // ONLINE
+            </div>
+        </div>
+    </nav>
+
+    <header class="archive-header" vid="20">
+        <div class="container" vid="21">
+            <div class="mono-meta" style="margin-bottom: 1rem; color: var(--accent-blue);" vid="22">DIR: /PROJECTS/ARCHIVE</div>
+            <h1 class="header-title" vid="23">Technical <br vid="24">Collection.</h1>
+            
+            <div class="controls-row" vid="25">
+                <div class="filter-tabs" vid="26">
+                    <button class="tab active" vid="27">ALL</button>
+                    <button class="tab" vid="28">AI-JAM</button>
+                    <button class="tab" vid="29">CYBER</button>
+                    <button class="tab" vid="30">HACKATHON</button>
+                    <button class="tab" vid="31">SYSTEMS</button>
+                </div>
+                <div class="terminal-search" vid="32">
+                    <span vid="33">$</span>
+                    <input type="text" placeholder="grep search_projects..." spellcheck="false" vid="34">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" vid="35">
+        <div class="projects-grid" vid="36">
+            
+            
+            <article class="case-study-card" vid="37">
+                <div class="card-visual" vid="38">
+                    <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="AI Platform" vid="39">
+                </div>
+                <div class="card-body" vid="40">
+                    <div class="card-meta-top" vid="41">
+                        <span class="mono-meta project-id" vid="42">ID: 0x26_AI</span>
+                        <span class="mono-meta" vid="43">YEAR: 2026</span>
+                    </div>
+                    <h3 class="card-title" vid="44">Neural Nexus AI Jam</h3>
+                    <p class="card-desc" vid="45">Advanced model evaluation platform for rapid prototyping of LLM agents. Features real-time token tracking and automated benchmarking.</p>
+                    <div class="card-footer" vid="46">
+                        <span class="tag" vid="47">AI / ML</span>
+                        <a href="#" class="view-btn" vid="48">View Case Study <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="49"><path d="M5 12h14M12 5l7 7-7 7" vid="50"></path></svg></a>
+                    </div>
+                </div>
+            </article>
+
+            
+            <article class="case-study-card" vid="51">
+                <div class="card-visual" vid="52">
+                    <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc91?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="CTF Infrastructure" vid="53">
+                </div>
+                <div class="card-body" vid="54">
+                    <div class="card-meta-top" vid="55">
+                        <span class="mono-meta project-id" vid="56">ID: 0x25_SEC</span>
+                        <span class="mono-meta" vid="57">YEAR: 2025</span>
+                    </div>
+                    <h3 class="card-title" vid="58">Aegis CTF Engine</h3>
+                    <p class="card-desc" vid="59">Distributed infrastructure for offensive security competitions. Includes dynamic environment isolation via Kubernetes and binary exploit tracking.</p>
+                    <div class="card-footer" vid="60">
+                        <span class="tag" vid="61">CYBERSECURITY</span>
+                        <a href="#" class="view-btn" vid="62">View Case Study <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="63"><path d="M5 12h14M12 5l7 7-7 7" vid="64"></path></svg></a>
+                    </div>
+                </div>
+            </article>
+
+            
+            <article class="case-study-card" vid="65">
+                <div class="card-visual" vid="66">
+                    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Hackathon" vid="67">
+                </div>
+                <div class="card-body" vid="68">
+                    <div class="card-meta-top" vid="69">
+                        <span class="mono-meta project-id" vid="70">ID: 0x25_HK</span>
+                        <span class="mono-meta" vid="71">YEAR: 2025</span>
+                    </div>
+                    <h3 class="card-title" vid="72">Global Vision Hack</h3>
+                    <p class="card-desc" vid="73">Management system for high-throughput coding competitions. Integrated mentoring queue, live hardware inventory, and participant telemetry.</p>
+                    <div class="card-footer" vid="74">
+                        <span class="tag" vid="75">HACKATHON</span>
+                        <a href="#" class="view-btn" vid="76">View Case Study <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="77"><path d="M5 12h14M12 5l7 7-7 7" vid="78"></path></svg></a>
+                    </div>
+                </div>
+            </article>
+
+            
+            <article class="case-study-card" vid="79">
+                <div class="card-visual" vid="80">
+                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Workshop" vid="81">
+                </div>
+                <div class="card-body" vid="82">
+                    <div class="card-meta-top" vid="83">
+                        <span class="mono-meta project-id" vid="84">ID: 0x24_SYS</span>
+                        <span class="mono-meta" vid="85">YEAR: 2024</span>
+                    </div>
+                    <h3 class="card-title" vid="86">Kernal Labs Workshop</h3>
+                    <p class="card-desc" vid="87">A deep-dive series into Linux kernel development and systems programming. Over 100 student participants contributing to open source modules.</p>
+                    <div class="card-footer" vid="88">
+                        <span class="tag" vid="89">WORKSHOP</span>
+                        <a href="#" class="view-btn" vid="90">View Case Study <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="91"><path d="M5 12h14M12 5l7 7-7 7" vid="92"></path></svg></a>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </main>
+
+    <footer class="container" vid="93">
+        <div class="mono-meta" vid="94">© 2026 ACM PRINCE SULTAN UNIVERSITY</div>
+        <div class="mono-meta" vid="95">STATUS: <span style="color: var(--text-main);" vid="96">FETCHING_DATA_SUCCESS</span></div>
+    </footer>
+
+</body></html>

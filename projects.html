@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects Archive — ACM PSU</title>
+    <meta name="description" content="Case studies from the ACM PSU technical collection: AI jams, CTF infrastructure, hackathon platforms, and systems workshops.">
+
+    <link rel="canonical" href="https://acm-psu.shoug-tech.com/projects.html">
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="/assets/img/favicon-16.png" type="image/png" sizes="16x16">
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#050507">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ACM PSU">
+    <meta property="og:title" content="Projects Archive — ACM PSU">
+    <meta property="og:description" content="The ACM PSU technical collection.">
+    <meta property="og:url" content="https://acm-psu.shoug-tech.com/projects.html">
+    <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="ambient-glow ambient-glow--corner"></div>
+
+    <nav>
+        <div class="container nav-inner">
+            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+                <img src="assets/img/acm.png" alt="">
+                <span>ACM</span>
+                <span class="divider">/</span>
+                <span>PSU</span>
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="index.html#about">About</a>
+                <a href="team.html">Team</a>
+                <a href="projects.html" class="active" aria-current="page">Projects</a>
+                <a href="index.html#archive">Archive</a>
+                <a href="join.html">Join</a>
+            </div>
+            <div class="nav-meta mono-meta">
+                SYS.ARCHIVE_<span data-year>2026</span> // ONLINE
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-header container">
+        <div class="mono-meta accent-text" style="margin-bottom: 1rem;">DIR: /PROJECTS/ARCHIVE</div>
+        <h1 class="page-title">Technical <br>Collection.</h1>
+
+        <div class="controls-row">
+            <div class="filter-tabs" role="group" aria-label="Filter projects by category">
+                <button class="tab active" type="button" data-filter="all" aria-pressed="true">ALL</button>
+                <button class="tab" type="button" data-filter="ai-jam" aria-pressed="false">AI-JAM</button>
+                <button class="tab" type="button" data-filter="cyber" aria-pressed="false">CYBER</button>
+                <button class="tab" type="button" data-filter="hackathon" aria-pressed="false">HACKATHON</button>
+                <button class="tab" type="button" data-filter="systems" aria-pressed="false">SYSTEMS</button>
+            </div>
+            <div class="terminal-search">
+                <span class="prompt" aria-hidden="true">$</span>
+                <input id="project-search" type="search" aria-label="Search projects" placeholder="grep search_projects..." spellcheck="false" autocomplete="off">
+            </div>
+        </div>
+    </header>
+
+    <main id="main" class="container">
+        <div class="projects-grid">
+
+            <article class="case-study-card" data-category="ai-jam">
+                <div class="card-visual">
+                    <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Terminal running model evaluations" loading="lazy">
+                </div>
+                <div class="card-body">
+                    <div class="card-meta-top">
+                        <span class="mono-meta project-id">ID: 0x26_AI</span>
+                        <span class="mono-meta">YEAR: 2026</span>
+                    </div>
+                    <h2 class="card-title">Neural Nexus AI Jam</h2>
+                    <p class="card-desc">Advanced model evaluation platform for rapid prototyping of LLM agents. Features real-time token tracking and automated benchmarking.</p>
+                    <div class="card-footer">
+                        <span class="tag">AI / ML</span>
+                        <a href="archive-project.html" class="view-btn">View Case Study
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="case-study-card" data-category="cyber">
+                <div class="card-visual">
+                    <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc91?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Server racks powering the CTF infrastructure" loading="lazy">
+                </div>
+                <div class="card-body">
+                    <div class="card-meta-top">
+                        <span class="mono-meta project-id">ID: 0x25_SEC</span>
+                        <span class="mono-meta">YEAR: 2025</span>
+                    </div>
+                    <h2 class="card-title">Aegis CTF Engine</h2>
+                    <p class="card-desc">Distributed infrastructure for offensive security competitions. Includes dynamic environment isolation via Kubernetes and binary exploit tracking.</p>
+                    <div class="card-footer">
+                        <span class="tag">CYBERSECURITY</span>
+                        <a href="archive-project.html" class="view-btn">View Case Study
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="case-study-card" data-category="hackathon">
+                <div class="card-visual">
+                    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Workstations set up for a hackathon" loading="lazy">
+                </div>
+                <div class="card-body">
+                    <div class="card-meta-top">
+                        <span class="mono-meta project-id">ID: 0x25_HK</span>
+                        <span class="mono-meta">YEAR: 2025</span>
+                    </div>
+                    <h2 class="card-title">Global Vision Hack</h2>
+                    <p class="card-desc">Management system for high-throughput coding competitions. Integrated mentoring queue, live hardware inventory, and participant telemetry.</p>
+                    <div class="card-footer">
+                        <span class="tag">HACKATHON</span>
+                        <a href="archive-project.html" class="view-btn">View Case Study
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="case-study-card" data-category="systems">
+                <div class="card-visual">
+                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Laptop open during a systems programming workshop" loading="lazy">
+                </div>
+                <div class="card-body">
+                    <div class="card-meta-top">
+                        <span class="mono-meta project-id">ID: 0x24_SYS</span>
+                        <span class="mono-meta">YEAR: 2024</span>
+                    </div>
+                    <h2 class="card-title">Kernel Labs Workshop</h2>
+                    <p class="card-desc">A deep-dive series into Linux kernel development and systems programming. Over 100 student participants contributing to open source modules.</p>
+                    <div class="card-footer">
+                        <span class="tag">WORKSHOP</span>
+                        <a href="archive-project.html" class="view-btn">View Case Study
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <p class="empty-state mono-meta" hidden>NO RECORDS MATCH THIS QUERY.</p>
+        </div>
+    </main>
+
+    <footer class="container site-footer mono-meta">
+        <div>© <span data-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div class="footer-logos">
+            <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
+            <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">
+        </div>
+        <div>RECORDS SHOWN: <span class="meta-value" data-result-count>04</span></div>
+    </footer>
+
+    <script src="assets/js/main.js" defer></script>
+    <script src="assets/js/projects.js" defer></script>
+
+</body>
+</html>

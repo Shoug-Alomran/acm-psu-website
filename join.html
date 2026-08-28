@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initialize Membership — ACM PSU</title>
+    <meta name="description" content="Apply to join the ACM student chapter at Prince Sultan University for the 2026 cohort.">
+
+    <link rel="canonical" href="https://acm-psu.shoug-tech.com/join.html">
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="/assets/img/favicon-16.png" type="image/png" sizes="16x16">
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#050507">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ACM PSU">
+    <meta property="og:title" content="Initialize Membership — ACM PSU">
+    <meta property="og:description" content="Apply to join the ACM PSU 2026 cohort.">
+    <meta property="og:url" content="https://acm-psu.shoug-tech.com/join.html">
+    <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="ambient-glow ambient-glow--corner"></div>
+
+    <nav>
+        <div class="container nav-inner">
+            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+                <img src="assets/img/acm.png" alt="">
+                <span>ACM</span>
+                <span class="divider">/</span>
+                <span>PSU</span>
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="index.html#about">About</a>
+                <a href="team.html">Team</a>
+                <a href="projects.html">Projects</a>
+                <a href="index.html#archive">Archive</a>
+                <a href="join.html" class="active" aria-current="page">Join</a>
+            </div>
+            <div class="nav-meta mono-meta">
+                STATUS: ENROLLMENT_OPEN
+            </div>
+        </div>
+    </nav>
+
+    <main id="main" class="container">
+        <section class="membership-hero">
+            <div class="mono-meta accent-text" style="margin-bottom: 1rem;">[ ACTION: INITIALIZE_MEMBERSHIP ]</div>
+            <h1 class="page-title">Join the Collective</h1>
+            <p class="mono-meta membership-intro">
+                ACM PSU is looking for the next generation of engineers, researchers, and hackers.
+                Complete the handshake protocol below to apply for the 2026 cohort.
+            </p>
+
+            <div class="grid-layout">
+
+                <div class="terminal-form">
+                    <div class="terminal-header">
+                        <div class="terminal-dots" aria-hidden="true">
+                            <div class="dot red"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <div class="mono-meta terminal-filename">application_v2.0.sh</div>
+                    </div>
+
+                    <form class="form-body" id="membership-form" novalidate>
+                        <div class="input-group">
+                            <div class="label-wrap">
+                                <label for="field-name">Full Name</label>
+                                <span class="mono-meta field-hint">STR_REQ</span>
+                            </div>
+                            <input id="field-name" name="name" type="text" placeholder="e.g. Faisal Al-Dosari" autocomplete="name" required>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="label-wrap">
+                                <label for="field-email">PSU Email</label>
+                                <span class="mono-meta field-hint">EMAIL_VALIDATE</span>
+                            </div>
+                            <input id="field-email" name="email" type="email" placeholder="you@psu.edu.sa" autocomplete="email" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="field-year">Academic Year</label>
+                                <select id="field-year" name="year" required>
+                                    <option value="" disabled selected>Select Year</option>
+                                    <option>Freshman (Y1)</option>
+                                    <option>Sophomore (Y2)</option>
+                                    <option>Junior (Y3)</option>
+                                    <option>Senior (Y4)</option>
+                                    <option>Graduate</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="field-track">Primary Specialization</label>
+                                <select id="field-track" name="specialization" required>
+                                    <option value="" disabled selected>Select Core</option>
+                                    <option>Software Engineering</option>
+                                    <option>Cybersecurity</option>
+                                    <option>AI / Data Science</option>
+                                    <option>Competitive Programming</option>
+                                    <option>UI/UX Design</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="label-wrap">
+                                <label for="field-url">GitHub / Portfolio URL</label>
+                                <span class="mono-meta field-hint">OPTIONAL</span>
+                            </div>
+                            <input id="field-url" name="portfolio" type="url" placeholder="https://github.com/username">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="field-about">Technical Background / Why ACM?</label>
+                            <textarea id="field-about" name="about" rows="4" placeholder="Briefly describe your interests and what you hope to contribute..."></textarea>
+                        </div>
+
+                        <p class="form-status" id="form-status" role="status" hidden></p>
+
+                        <button type="submit" class="btn-submit">Execute Handshake [Enter]</button>
+                    </form>
+                </div>
+
+                <div class="sidebar">
+                    <div class="sidebar-section">
+                        <h3>MEMBERSHIP_BENEFITS</h3>
+                        <ul class="benefits-list">
+                            <li class="benefit-item">
+                                <span class="benefit-icon">01</span>
+                                <span class="benefit-text">Access to <b>ACM Lab Hardware</b> (GPU clusters, IoT kits).</span>
+                            </li>
+                            <li class="benefit-item">
+                                <span class="benefit-icon">02</span>
+                                <span class="benefit-text">Exclusive entry to <b>Member Jams</b> and regional ICPC training.</span>
+                            </li>
+                            <li class="benefit-item">
+                                <span class="benefit-icon">03</span>
+                                <span class="benefit-text">Professional <b>Network Tunneling</b> to PSU alumni at tech giants.</span>
+                            </li>
+                            <li class="benefit-item">
+                                <span class="benefit-icon">04</span>
+                                <span class="benefit-text">Contributor credits on <b>ACM Production Systems</b>.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3>FAQ_REGISTRY</h3>
+                        <div class="faq-item">
+                            <button class="faq-trigger" type="button" aria-expanded="false">
+                                Do I need prior experience?
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            </button>
+                            <div class="faq-content">
+                                No. We look for curiosity and logical aptitude. If you can learn, you can join.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-trigger" type="button" aria-expanded="false">
+                                What is the time commitment?
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            </button>
+                            <div class="faq-content">
+                                Standard members commit ~3-5 hours/week for workshops and project sprints.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-trigger" type="button" aria-expanded="false">
+                                Application deadline?
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            </button>
+                            <div class="faq-content">
+                                Recruitment cycles happen at the start of every semester. Current cycle ends Oct 15.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section preflight">
+                        <h3>PRE_FLIGHT_CHECK</h3>
+                        <div class="mono-meta preflight-list">
+                            [✓] ACTIVE PSU STUDENT ID<br>
+                            [✓] PASSION FOR PROBLEM SOLVING<br>
+                            [✓] BASIC GIT KNOWLEDGE (PREFERRED)<br>
+                            [ ] FORM SUBMITTED
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="container site-footer mono-meta" style="margin-top: 8rem;">
+        <div>© <span data-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div class="footer-logos">
+            <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
+            <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">
+        </div>
+        <div>AUTH_SESSION: <span class="meta-value">GUEST_USER</span></div>
+    </footer>
+
+    <script src="assets/js/main.js" defer></script>
+    <script src="assets/js/join.js" defer></script>
+
+</body>
+</html>

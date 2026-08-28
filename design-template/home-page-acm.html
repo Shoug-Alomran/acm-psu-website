@@ -1,0 +1,965 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">ACM PSU Digital Archive</title>
+    
+    <style vid="5">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+        :root {
+            
+            --bg-base: #050507;
+            --bg-surface: #0a0a0d;
+            --bg-surface-hover: #121218;
+            --text-main: #f8f9fa;
+            --text-muted: #8b949e;
+            --text-dark: #30363d;
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.15);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.15);
+
+            
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            
+            --nav-height: 72px;
+            --container-width: 1400px;
+            --radius-sm: 2px;
+            --radius-md: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+            background-size: 100px 100px;
+            mask-image: radial-gradient(circle at center, black 10%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 10%, transparent 80%);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: -20vh;
+            left: 20vw;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(29, 78, 216, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(100px);
+        }
+
+        
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .mono-meta {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .accent-text { color: var(--accent-blue); }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover { color: var(--text-main); }
+
+        
+        .container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        section {
+            padding: 8rem 0;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: var(--nav-height);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(5, 5, 7, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-inner {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .nav-logo .divider {
+            color: var(--border-strong);
+            font-weight: 400;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--text-main);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after { width: 100%; }
+        .nav-links a.active { color: var(--text-main); }
+        .nav-links a.active::after { width: 100%; }
+
+        .nav-meta {
+            text-align: right;
+        }
+
+        
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: var(--nav-height);
+            border-bottom: none;
+        }
+
+        .hero-system-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid var(--border-strong);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 3rem;
+            background: var(--bg-surface);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .hero-title {
+            font-size: clamp(4rem, 8vw, 7.5rem);
+            text-transform: uppercase;
+            line-height: 0.9;
+            margin-bottom: 2rem;
+            max-width: 1200px;
+        }
+
+        .hero-title span {
+            display: block;
+            color: var(--text-muted);
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 2rem;
+        }
+
+        .hero-desc {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 500px;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--text-main);
+            color: var(--bg-base);
+            border: 1px solid var(--text-main);
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--text-main);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-strong);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-main);
+            background: rgba(255,255,255,0.03);
+        }
+
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 4rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+        }
+
+        .focus-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .focus-item {
+            background: var(--bg-base);
+            padding: 3rem 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .focus-item:hover {
+            background: var(--bg-surface);
+        }
+
+        .focus-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent-blue);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .focus-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        .focus-num {
+            font-family: var(--font-mono);
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .focus-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .team-member {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-surface);
+            overflow: hidden;
+            group: hover;
+        }
+
+        .team-img-wrapper {
+            width: 100%;
+            aspect-ratio: 4/5;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-base);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .team-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(1.2) brightness(0.8);
+            transition: filter 0.5s ease, transform 0.5s ease;
+        }
+
+        .team-member:hover .team-img-wrapper img {
+            filter: grayscale(0%) contrast(1) brightness(1);
+            transform: scale(1.03);
+        }
+        
+        
+        .team-img-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .team-info {
+            padding: 1.5rem;
+        }
+
+        .team-name {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-role {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        
+        .work-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6rem;
+        }
+
+        .project-card {
+            display: grid;
+            grid-template-columns: 7fr 5fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .project-card:nth-child(even) {
+            grid-template-columns: 5fr 7fr;
+        }
+        
+        .project-card:nth-child(even) .project-content {
+            order: -1;
+        }
+
+        .project-visual {
+            position: relative;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem;
+            background: var(--bg-surface);
+        }
+
+        
+        .window-chrome {
+            display: flex;
+            gap: 6px;
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .window-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--text-dark);
+        }
+
+        .project-img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            filter: brightness(0.8) contrast(1.1);
+            transition: filter 0.3s ease;
+        }
+
+        .project-card:hover .project-img {
+            filter: brightness(1) contrast(1);
+        }
+
+        .project-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .project-meta-block {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-dark);
+        }
+
+        .project-title {
+            font-size: 2.5rem;
+            line-height: 1.1;
+        }
+
+        .project-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .link-arrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+        
+        .link-arrow svg {
+            transition: transform 0.2s ease;
+        }
+
+        .link-arrow:hover svg {
+            transform: translateX(4px) rotate(-45deg);
+        }
+
+        
+        .timeline {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .timeline-row {
+            display: grid;
+            grid-template-columns: 200px 1fr 200px;
+            align-items: center;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s ease, padding-left 0.2s ease;
+            cursor: pointer;
+        }
+
+        .timeline-row:hover {
+            background: var(--bg-surface);
+            padding-left: 1rem;
+        }
+
+        .year {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .timeline-details {
+            display: flex;
+            gap: 3rem;
+        }
+
+        .timeline-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .timeline-status {
+            text-align: right;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border: 1px solid var(--border-strong);
+            border-radius: 100px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+        
+        .tag.active {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: var(--accent-blue-dim);
+        }
+
+        
+        .ending {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-bottom: none;
+            background: radial-gradient(circle at center, var(--bg-surface) 0%, var(--bg-base) 70%);
+        }
+
+        .ending-title {
+            font-size: clamp(3rem, 6vw, 5rem);
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+        }
+
+        .ending-desc {
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+        }
+
+        
+        footer {
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        
+        @media (max-width: 1024px) {
+            .hero-content { grid-template-columns: 1fr; gap: 2rem; }
+            .focus-grid { grid-template-columns: repeat(2, 1fr); }
+            .team-grid { grid-template-columns: repeat(2, 1fr); }
+            .project-card, .project-card:nth-child(even) { grid-template-columns: 1fr; gap: 2rem; }
+            .project-card:nth-child(even) .project-content { order: 1; }
+            .timeline-row { grid-template-columns: 100px 1fr; gap: 1rem; padding: 1.5rem 0; }
+            .timeline-status { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .focus-grid { grid-template-columns: 1fr; }
+            .team-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 3rem; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .timeline-details { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body vid="6">
+
+    <div class="ambient-glow" vid="7"></div>
+
+    <nav vid="8">
+        <div class="container nav-inner" vid="9">
+            <div class="nav-logo" vid="10">
+                <span vid="11">ACM</span>
+                <span class="divider" vid="12">/</span>
+                <span vid="13">PSU</span>
+            </div>
+            <div class="nav-links" vid="14">
+                <a href="#about" vid="15">About</a>
+                <a href="#team" vid="16">Team</a>
+                <a href="#projects" vid="17">Projects</a>
+                <a href="#archive" vid="18">Archive</a>
+            </div>
+            <div class="nav-meta mono-meta" vid="19">
+                SYS.ARCHIVE_2026 // ONLINE
+            </div>
+        </div>
+    </nav>
+
+    <main vid="20">
+        <section class="hero container reveal" vid="21">
+            <div class="hero-system-label mono-meta" vid="22">
+                <span class="status-dot" vid="23"></span>
+                ACM.PSU / CURRENT CHAPTER / 2026
+            </div>
+            
+            <h1 class="hero-title" vid="24">
+                Prince Sultan University
+                <span vid="25">Association for Computing Machinery.</span>
+            </h1>
+            
+            <div class="hero-content" vid="26">
+                <p class="hero-desc" vid="27">
+                    A student-led technical collective. We build systems, master algorithms, organize competitions, and engineer the future of software development at PSU. This is our digital archive.
+                </p>
+                <div class="hero-ctas" vid="28">
+                    <a href="#projects" class="btn btn-primary" vid="29">Explore Archive</a>
+                    <a href="#join" class="btn btn-secondary" vid="30">Join ACM</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="container reveal" vid="31">
+            <div class="section-header" vid="32">
+                <h2 vid="33">System Focus</h2>
+                <span class="mono-meta" vid="34">CORE COMPETENCIES // V.26</span>
+            </div>
+
+            <div class="focus-grid" vid="35">
+                <div class="focus-item" vid="36">
+                    <span class="focus-num" vid="37">01</span>
+                    <h3 class="focus-title" vid="38">Software Engineering</h3>
+                    <p class="mono-meta" style="margin-top: 1rem; color: var(--text-dark);" vid="39">ARCHITECTURE, FULL-STACK, SYSTEMS</p>
+                </div>
+                <div class="focus-item" vid="40">
+                    <span class="focus-num" vid="41">02</span>
+                    <h3 class="focus-title" vid="42">Competitive Programming</h3>
+                    <p class="mono-meta" style="margin-top: 1rem; color: var(--text-dark);" vid="43">ALGORITHMS, DATA STRUCTURES, ICPC</p>
+                </div>
+                <div class="focus-item" vid="44">
+                    <span class="focus-num" vid="45">03</span>
+                    <h3 class="focus-title" vid="46">Cybersecurity (CTF)</h3>
+                    <p class="mono-meta" style="margin-top: 1rem; color: var(--text-dark);" vid="47">CRYPTOGRAPHY, REVERSE ENG, FORENSICS</p>
+                </div>
+                <div class="focus-item" vid="48">
+                    <span class="focus-num" vid="49">04</span>
+                    <h3 class="focus-title" vid="50">Hackathons &amp; Jams</h3>
+                    <p class="mono-meta" style="margin-top: 1rem; color: var(--text-dark);" vid="51">RAPID PROTOTYPING, IDEATION, DEPLOY</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="team" class="container reveal" vid="52">
+            <div class="section-header" vid="53">
+                <h2 vid="54">Current Generation</h2>
+                <span class="mono-meta tag active" vid="55">STATUS: ACTIVE CHAPTER</span>
+            </div>
+
+            <div class="team-grid" vid="56">
+                
+                <div class="team-member" vid="57">
+                    <div class="team-img-wrapper" vid="58">
+                        
+                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&amp;w=800&amp;auto=format&amp;fit=crop" alt="Abstract Representation" vid="59">
+                    </div>
+                    <div class="team-info" vid="60">
+                        <h3 class="team-name" vid="61">Faisal Al-Dosari</h3>
+                        <div class="team-role mono-meta" vid="62">
+                            <span vid="63">President</span>
+                            <span style="color: var(--text-dark);" vid="64">ID: 0x01</span>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                <div class="team-member" vid="65">
+                    <div class="team-img-wrapper" vid="66">
+                        <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&amp;w=800&amp;auto=format&amp;fit=crop" alt="Abstract Representation" vid="67">
+                    </div>
+                    <div class="team-info" vid="68">
+                        <h3 class="team-name" vid="69">Nouf Al-Saud</h3>
+                        <div class="team-role mono-meta" vid="70">
+                            <span vid="71">VP of Engineering</span>
+                            <span style="color: var(--text-dark);" vid="72">ID: 0x02</span>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="team-member" vid="73">
+                    <div class="team-img-wrapper" vid="74">
+                        <img src="https://images.unsplash.com/photo-1614729939124-03290b56c9ce?q=80&amp;w=800&amp;auto=format&amp;fit=crop" alt="Abstract Representation" vid="75">
+                    </div>
+                    <div class="team-info" vid="76">
+                        <h3 class="team-name" vid="77">Omar Tariq</h3>
+                        <div class="team-role mono-meta" vid="78">
+                            <span vid="79">Head of Cyber</span>
+                            <span style="color: var(--text-dark);" vid="80">ID: 0x03</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 3rem; text-align: right;" vid="81">
+                <a href="#" class="link-arrow" vid="82">View Complete Roster <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" vid="83"><path d="M5 12h14M12 5l7 7-7 7" vid="84"></path></svg></a>
+            </div>
+        </section>
+
+        <section id="projects" class="container reveal" vid="85">
+            <div class="section-header" vid="86">
+                <h2 vid="87">Selected Work</h2>
+                <span class="mono-meta" vid="88">BUILT BY ACM // PRODUCTION ENV</span>
+            </div>
+
+            <div class="work-grid" vid="89">
+                
+                
+                <article class="project-card" vid="90">
+                    <div class="project-visual" vid="91">
+                        <div class="window-chrome" vid="92">
+                            <span class="window-dot" vid="93"></span><span class="window-dot" vid="94"></span><span class="window-dot" vid="95"></span>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Code IDE Environment" class="project-img" vid="96">
+                    </div>
+                    <div class="project-content" vid="97">
+                        <div class="project-meta-block" vid="98">
+                            <div class="meta-item" vid="99">
+                                <span class="meta-label" vid="100">PROJECT_ID</span>
+                                <span class="mono-meta" style="color: var(--text-main);" vid="101">AI-JAM-26</span>
+                            </div>
+                            <div class="meta-item" vid="102">
+                                <span class="meta-label" vid="103">DEPLOYMENT_YEAR</span>
+                                <span class="mono-meta" style="color: var(--text-main);" vid="104">2026</span>
+                            </div>
+                        </div>
+                        <h3 class="project-title" vid="105">AI Programming Jam Platform</h3>
+                        <p class="project-desc" vid="106">A custom-built, real-time evaluation environment designed for the annual PSU AI Jam. Supports automated grading of machine learning models against hidden datasets with live leaderboards.</p>
+                        <div class="project-links" vid="107">
+                            <a href="#" class="btn btn-secondary" vid="108">Case Study</a>
+                            <a href="#" class="link-arrow" style="align-self: center;" vid="109">Visit Repo <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" vid="110"><path d="M7 17L17 7M17 7H7M17 7V17" vid="111"></path></svg></a>
+                        </div>
+                    </div>
+                </article>
+
+                
+                <article class="project-card" vid="112">
+                    <div class="project-visual" vid="113">
+                        <div class="window-chrome" vid="114">
+                            <span class="window-dot" vid="115"></span><span class="window-dot" vid="116"></span><span class="window-dot" vid="117"></span>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Financial/Data Dashboard" class="project-img" vid="118">
+                    </div>
+                    <div class="project-content" vid="119">
+                        <div class="project-meta-block" vid="120">
+                            <div class="meta-item" vid="121">
+                                <span class="meta-label" vid="122">PROJECT_ID</span>
+                                <span class="mono-meta" style="color: var(--text-main);" vid="123">DEFEND-CTF</span>
+                            </div>
+                            <div class="meta-item" vid="124">
+                                <span class="meta-label" vid="125">DEPLOYMENT_YEAR</span>
+                                <span class="mono-meta" style="color: var(--text-main);" vid="126">2025</span>
+                            </div>
+                        </div>
+                        <h3 class="project-title" vid="127">PSU Capture The Flag Infrastructure</h3>
+                        <p class="project-desc" vid="128">Containerized CTF platform handling 500+ concurrent users. Features dynamic scoring, isolated challenge environments via Docker, and real-time attack-defense visualization metrics.</p>
+                        <div class="project-links" vid="129">
+                            <a href="#" class="btn btn-secondary" vid="130">Case Study</a>
+                            <a href="#" class="link-arrow" style="align-self: center;" vid="131">Live Demo <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" vid="132"><path d="M7 17L17 7M17 7H7M17 7V17" vid="133"></path></svg></a>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <section id="archive" class="container reveal" vid="134">
+            <div class="section-header" vid="135">
+                <h2 vid="136">Archive Directory</h2>
+                <span class="mono-meta" vid="137">HISTORICAL DATA // READ-ONLY</span>
+            </div>
+
+            <div class="timeline" vid="138">
+                <div class="timeline-row" vid="139">
+                    <div class="year" vid="140">2026</div>
+                    <div class="timeline-details" vid="141">
+                        <div class="timeline-stat" vid="142">
+                            <span class="meta-label" vid="143">MEMBERS</span>
+                            <span class="mono-meta" style="color: var(--text-main);" vid="144">142</span>
+                        </div>
+                        <div class="timeline-stat" vid="145">
+                            <span class="meta-label" vid="146">EVENTS</span>
+                            <span class="mono-meta" style="color: var(--text-main);" vid="147">12 COMMITTED</span>
+                        </div>
+                        <div class="timeline-stat" vid="148">
+                            <span class="meta-label" vid="149">LEADERSHIP</span>
+                            <span class="mono-meta" style="color: var(--text-main);" vid="150">F. AL-DOSARI</span>
+                        </div>
+                    </div>
+                    <div class="timeline-status" vid="151">
+                        <span class="tag active" vid="152">ACTIVE CHAPTER</span>
+                    </div>
+                </div>
+
+                <div class="timeline-row" vid="153">
+                    <div class="year" style="color: var(--text-muted);" vid="154">2025</div>
+                    <div class="timeline-details" vid="155">
+                        <div class="timeline-stat" vid="156">
+                            <span class="meta-label" vid="157">MEMBERS</span>
+                            <span class="mono-meta" style="color: var(--text-muted);" vid="158">118</span>
+                        </div>
+                        <div class="timeline-stat" vid="159">
+                            <span class="meta-label" vid="160">EVENTS</span>
+                            <span class="mono-meta" style="color: var(--text-muted);" vid="161">24 EXECUTED</span>
+                        </div>
+                        <div class="timeline-stat" vid="162">
+                            <span class="meta-label" vid="163">LEADERSHIP</span>
+                            <span class="mono-meta" style="color: var(--text-muted);" vid="164">S. AL-AMRI</span>
+                        </div>
+                    </div>
+                    <div class="timeline-status" vid="165">
+                        <span class="tag" vid="166">ARCHIVED</span>
+                    </div>
+                </div>
+
+                <div class="timeline-row" vid="167">
+                    <div class="year" style="color: var(--text-dark);" vid="168">2024</div>
+                    <div class="timeline-details" vid="169">
+                        <div class="timeline-stat" vid="170">
+                            <span class="meta-label" vid="171">MEMBERS</span>
+                            <span class="mono-meta" style="color: var(--text-dark);" vid="172">95</span>
+                        </div>
+                        <div class="timeline-stat" vid="173">
+                            <span class="meta-label" vid="174">EVENTS</span>
+                            <span class="mono-meta" style="color: var(--text-dark);" vid="175">18 EXECUTED</span>
+                        </div>
+                        <div class="timeline-stat" vid="176">
+                            <span class="meta-label" vid="177">LEADERSHIP</span>
+                            <span class="mono-meta" style="color: var(--text-dark);" vid="178">M. KHAN</span>
+                        </div>
+                    </div>
+                    <div class="timeline-status" vid="179">
+                        <span class="tag" style="border-color: var(--border-color); color: var(--text-dark);" vid="180">ARCHIVED</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 3rem; text-align: center;" vid="181">
+                <a href="#" class="link-arrow" vid="182">Query Full Archive Database <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" vid="183"><path d="M5 12h14M12 5l7 7-7 7" vid="184"></path></svg></a>
+            </div>
+        </section>
+
+        <section id="join" class="ending container reveal" vid="185">
+            <p class="ending-desc" vid="186">SYS.MSG: EOF NOT REACHED</p>
+            <h2 class="ending-title" vid="187">The Archive Isn't Finished.</h2>
+            <p class="hero-desc" style="margin-bottom: 3rem; text-align: center;" vid="188">
+                Your code, your designs, your leadership could define the next block. 
+            </p>
+            <a href="#" class="btn btn-primary" style="padding: 1.25rem 3rem; font-size: 1rem;" vid="189">Initialize Membership <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="margin-left: 10px;" vid="190"><path d="M5 12h14M12 5l7 7-7 7" vid="191"></path></svg></a>
+        </section>
+    </main>
+
+    <footer class="container mono-meta" vid="192">
+        <div vid="193">© 2026 ACM PRINCE SULTAN UNIVERSITY</div>
+        <div vid="194">RENDERED: <span style="color: var(--text-main);" vid="195">LOCAL_TIME</span></div>
+    </footer>
+
+    <script vid="196">
+        
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach((el) => {
+            observer.observe(el);
+        });
+    </script>
+
+</body></html>
