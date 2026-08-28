@@ -886,6 +886,93 @@ nav {
     flex-wrap: wrap;
 }
 
+/* Chapter-year selector. A native <select> keeps keyboard and mobile
+   behaviour for free; the chevron sits on top of it. */
+.select-wrap {
+    position: relative;
+    display: block;
+}
+
+.select-box {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    padding: 1.25rem 3rem 1.25rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.select-box:hover { border-color: var(--text-muted); }
+
+.select-box:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.select-box option {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    text-transform: none;
+}
+
+.select-chevron {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Quick-jump year chips under the select. */
+.year-chip {
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.year-chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text-main);
+}
+
+.year-chip[aria-pressed="true"] {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    background: var(--accent-blue-dim);
+}
+
+.year-chip.is-empty { color: var(--text-dark); border-color: var(--border-color); }
+.year-chip.is-empty:hover { color: var(--text-muted); }
+
+.roster-empty {
+    padding: 4rem 2rem;
+    text-align: center;
+    border: 1px dashed var(--border-color);
+    background: var(--bg-surface);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.roster-empty .headline {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
 /* --------------------------------------------------------------------------
    Projects page
    -------------------------------------------------------------------------- */
@@ -2103,4 +2190,13 @@ input::placeholder, textarea::placeholder { color: var(--text-dark); }
     .file-grid { grid-template-columns: minmax(0, 1fr) 60px 32px; }
     .file-grid .col-section { display: none; }
     .archive-title-row h1 { font-size: 1.75rem; }
+}
+
+/* Honeypot field — hidden from people, visible to naive bots. */
+.form-trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }

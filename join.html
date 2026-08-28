@@ -94,6 +94,31 @@
 
                         <div class="form-row">
                             <div class="input-group">
+                                <div class="label-wrap">
+                                    <label for="field-student-id">Student ID</label>
+                                    <span class="mono-meta field-hint">ID_REQ</span>
+                                </div>
+                                <input id="field-student-id" name="studentId" type="text" inputmode="numeric" placeholder="e.g. 221100234" required>
+                            </div>
+                            <div class="input-group">
+                                <div class="label-wrap">
+                                    <label for="field-major">Major</label>
+                                    <span class="mono-meta field-hint">STR_REQ</span>
+                                </div>
+                                <input id="field-major" name="major" type="text" list="major-options" placeholder="e.g. Computer Science" required>
+                                <datalist id="major-options">
+                                    <option value="Computer Science"></option>
+                                    <option value="Software Engineering"></option>
+                                    <option value="Information Systems"></option>
+                                    <option value="Data Science"></option>
+                                    <option value="Cybersecurity"></option>
+                                    <option value="Computer Engineering"></option>
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
                                 <label for="field-year">Academic Year</label>
                                 <select id="field-year" name="year" required>
                                     <option value="" disabled selected>Select Year</option>
@@ -105,8 +130,8 @@
                                 </select>
                             </div>
                             <div class="input-group">
-                                <label for="field-track">Primary Specialization</label>
-                                <select id="field-track" name="specialization" required>
+                                <label for="field-track">What are you interested in?</label>
+                                <select id="field-track" name="interests" required>
                                     <option value="" disabled selected>Select Core</option>
                                     <option>Software Engineering</option>
                                     <option>Cybersecurity</option>
@@ -119,15 +144,20 @@
 
                         <div class="input-group">
                             <div class="label-wrap">
-                                <label for="field-url">GitHub / Portfolio URL</label>
+                                <label for="field-url">LinkedIn / GitHub / Portfolio</label>
                                 <span class="mono-meta field-hint">OPTIONAL</span>
                             </div>
                             <input id="field-url" name="portfolio" type="url" placeholder="https://github.com/username">
                         </div>
 
                         <div class="input-group">
-                            <label for="field-about">Technical Background / Why ACM?</label>
-                            <textarea id="field-about" name="about" rows="4" placeholder="Briefly describe your interests and what you hope to contribute..."></textarea>
+                            <label for="field-about">What would you like to gain experience in?</label>
+                            <textarea id="field-about" name="experience" rows="4" placeholder="Briefly describe your interests and what you hope to contribute..."></textarea>
+                        </div>
+
+                        <div class="input-group form-trap" aria-hidden="true">
+                            <label for="field-website">Leave this field empty</label>
+                            <input id="field-website" name="website" type="text" tabindex="-1" autocomplete="off">
                         </div>
 
                         <p class="form-status" id="form-status" role="status" hidden></p>
@@ -205,7 +235,7 @@
     </main>
 
     <footer class="container site-footer mono-meta" style="margin-top: 8rem;">
-        <div>© <span data-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
         <div class="footer-logos">
             <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
             <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">

@@ -49,7 +49,7 @@
                 <a href="join.html">Join</a>
             </div>
             <div class="nav-meta mono-meta">
-                SYS.ARCHIVE_<span data-year>2026</span> // ONLINE
+                SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE
             </div>
         </div>
     </nav>
@@ -60,13 +60,14 @@
             <span class="dim-text">/</span>
             <span class="accent-text">PEOPLE</span>
             <span class="dim-text">/</span>
-            <span>GEN_2026</span>
+            <span data-gen-label>GEN_2026</span>
         </div>
-        <h1 class="page-title">People <span>/ 2026</span></h1>
+        <h1 class="page-title">People <span data-year-label>/ 2026</span></h1>
     </header>
 
     <main id="main">
         <section class="roster-section container reveal">
+          <div id="roster">
             <div class="section-label">
                 <h2>Executive Council</h2>
                 <span class="mono-meta">LEVEL_01 // ADMINISTRATION</span>
@@ -192,29 +193,29 @@
                     </div>
                 </div>
             </div>
+          </div>
         </section>
 
         <section class="archive-footer">
             <div class="container">
                 <div class="archive-selector">
-                    <p class="mono-meta" style="text-align: center; margin-bottom: 2rem;">HISTORICAL RECURSION // PREVIOUS GENERATIONS</p>
-                    <div class="archive-years">
-                        <span class="tag">2025</span>
-                        <span class="tag">2024</span>
-                        <span class="tag">2023</span>
-                        <span class="tag">2022</span>
-                        <span class="tag dim-text">ORIGIN_2016</span>
+                    <p class="mono-meta" style="text-align: center; margin-bottom: 2rem;">HISTORICAL RECURSION // SELECT PREVIOUS GENERATION</p>
+
+                    <div class="select-wrap">
+                        <select class="select-box" id="year-select" aria-label="Select chapter year" aria-controls="roster">
+                            <option value="2026">2026 — CURRENT CHAPTER</option>
+                        </select>
+                        <svg class="select-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                     </div>
-                    <p class="mono-meta dim-text" style="text-align: center; margin-top: 1.5rem;">
-                        PAST ROSTERS ARE BEING DIGITISED — CHECK BACK SOON.
-                    </p>
+
+                    <div class="archive-years" id="year-chips"></div>
                 </div>
             </div>
         </section>
     </main>
 
     <footer class="container site-footer mono-meta">
-        <div>© <span data-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
         <div class="footer-logos">
             <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
             <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">
@@ -222,6 +223,7 @@
         <div>DIRECTORY_STATUS: <span class="accent-text">COMMITTED</span></div>
     </footer>
 
+    <script src="assets/js/team.js" defer></script>
     <script src="assets/js/main.js" defer></script>
 
 </body>
