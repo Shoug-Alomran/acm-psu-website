@@ -100,6 +100,7 @@ export async function approveApplication(
     internal,
   });
   if (error) throw new Error(error.message);
+  void refreshMembersSheet();
 }
 
 /** A reason is mandatory — the database refuses the call without one. */
@@ -113,6 +114,13 @@ export async function rejectApplication(
 }
 
 /* ----------------------------------------------------------------- members */
+
+async function refreshMembersSheet(): Promise<void> {
+  const { error } = await requireClient().functions.invoke('member-sheet-sync', {
+    body: {},
+  });
+  if (error) console.error('Could not refresh the Members worksheet:', error);
+}
 
 export interface MemberRow {
   id: string;
@@ -273,6 +281,7 @@ export async function setMembershipStatus(
     internal, close_position: closePosition,
   });
   if (error) throw new Error(error.message);
+  void refreshMembersSheet();
 }
 
 export async function setAccountState(
@@ -282,6 +291,7 @@ export async function setAccountState(
     target_user: userId, new_state: state, reason,
   });
   if (error) throw new Error(error.message);
+  void refreshMembersSheet();
 }
 
 export async function grantPosition(
@@ -295,6 +305,7 @@ export async function grantPosition(
     reason,
   });
   if (error) throw new Error(error.message);
+  void refreshMembersSheet();
 }
 
 /* --------------------------------------------------------------- decisions */

@@ -39,3 +39,6 @@ verify_jwt = true
 
 [functions.records-export]
 verify_jwt = true
+
+[functions.member-sheet-sync]
+verify_jwt = true

@@ -53,8 +53,6 @@ export async function applySignupMetadata(): Promise<void> {
       Array.isArray(meta.interests) ? meta.interests.map(text).filter(Boolean) : [],
     );
 
-    if (!major && !academicYear && !interests.length) return;
-
     const [userRow, profileRow] = await Promise.all([
       client.from('app_users').select('major').eq('id', auth.user.id).maybeSingle(),
       client.from('member_profiles').select('academic_year, interests')
@@ -77,6 +75,13 @@ export async function applySignupMetadata(): Promise<void> {
     if (Object.keys(patch).length) {
       await client.from('member_profiles').update(patch).eq('user_id', auth.user.id);
     }
+
+    // The private university workbook is a snapshot of Supabase. Refresh its
+    // Members tab after the signup answers have reached their source rows.
+    // This is best-effort: a Google outage must never block account access.
+    void client.functions.invoke('member-sheet-sync', { body: {} }).then(({ error }) => {
+      if (error) console.error('Could not refresh the Members worksheet:', error);
+    });
   } catch (error) {
     // Pre-filling is a convenience. Never let it break a sign-in.
     console.error('Could not apply sign-up answers to the profile:', error);
