@@ -231,6 +231,14 @@ begin
     new_reference := 'INQ-' || to_char(now(), 'YYYY') || '-' ||
                      lpad(nextval('public.inquiry_reference_seq')::text, 4, '0');
 
+    -- Take responsibility for this transaction's audit entry so the inquiries
+    -- row trigger stands down. Without this a signed-in sender produces two
+    -- rows for one submission: the trigger's generic 'inquiry.created' and the
+    -- richer 'inquiry.submitted' written below. (An anonymous sender never hit
+    -- it, because the trigger skips when auth.uid() is null — which is exactly
+    -- the kind of difference that hides a bug until a member reports it.)
+    perform public.audit_context(null, null, 'created'::audit_decision, false, null);
+
     insert into public.inquiries (
         reference, sender_name, sender_email, category, subject, message,
         submitted_by, user_agent

@@ -115,6 +115,13 @@ Roughly forty tables; the ones worth knowing:
 - `archive_submissions` — what members submit
 - `archive_submission_ai` — advisory suggestions, deliberately separate
 
+**Inquiries**
+- `inquiries` — questions from the website. Anonymous visitors have no policy
+  on this table at all; submission goes through `submit_inquiry()`, which
+  validates, rate-limits, and controls exactly which columns a stranger fills.
+- `inquiry_notes` — internal discussion, in its own table so nothing about it
+  can reach a sender through a column on the inquiry.
+
 **Governance**
 - `member_requests`, `app_settings`, `university_exports`
 - `audit_log` — the decision history. Append-only, with an immutable snapshot
@@ -160,6 +167,17 @@ attribution on the human's entry.
 The university wants a spreadsheet; the platform stays the operational system.
 Data is pushed **out** and never read back, so the sheet cannot become a second,
 diverging source of truth.
+
+**One workbook, many worksheets.** `GOOGLE_SHEETS_SPREADSHEET_ID` identifies a
+single private file, "ACM PSU — Club Records"; Members, Event Participation,
+Contributions and Inquiries are tabs inside it, created on first use. There is
+deliberately no second spreadsheet and no second ID — this is the club's live
+administrative record.
+
+Google applies permissions per spreadsheet rather than per tab, and Inquiries
+can carry information submitted by members of the public. The club therefore
+exports a separate reporting copy when the university needs records, rather
+than sharing the live workbook. The admin page and the docs both say so.
 
 The three datasets are defined in the database
 (`export_members`, `export_event_participation`, `export_contributions`) and

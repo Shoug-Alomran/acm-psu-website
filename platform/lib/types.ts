@@ -64,7 +64,7 @@ export interface MemberProfile {
   avatar_path: string | null;
   visibility: ProfileVisibility;
   display_name: string | null;
-  pronouns: string | null;
+  created_at: string;
   updated_at: string;
 }
 
@@ -353,6 +353,7 @@ export interface AdminAssignment {
 export interface PublicMember {
   user_id: string;
   name: string;
+  person_slug?: string;
   status: MembershipStatus;
   member_no: string | null;
   chapter_year: string | null;
@@ -458,4 +459,71 @@ export interface AuditFilters {
   from?: string;
   to?: string;
   limit?: number;
+}
+
+/* -------------------------------------------------------------- inquiries */
+
+export type InquiryStatus = 'new' | 'in_progress' | 'answered' | 'closed';
+
+export interface InquiryCategory {
+  slug: string;
+  label: string;
+  label_ar: string | null;
+  rank: number;
+  is_active: boolean;
+}
+
+/** The staff view of an inquiry. Internal notes live in their own table. */
+export interface Inquiry {
+  id: string;
+  reference: string;
+  sender_name: string;
+  sender_email: string;
+  category: string | null;
+  subject: string;
+  message: string;
+  submitted_by: string | null;
+  status: InquiryStatus;
+  assigned_to: string | null;
+  assigned_at: string | null;
+  response: string | null;
+  responded_by: string | null;
+  responded_at: string | null;
+  response_delivered: boolean;
+  delivery_note: string | null;
+  closed_at: string | null;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InquiryNote {
+  id: string;
+  inquiry_id: string;
+  author_id: string | null;
+  body: string;
+  created_at: string;
+}
+
+export interface InquiryCounts {
+  new_count: number;
+  in_progress_count: number;
+  answered_count: number;
+  closed_count: number;
+  unassigned_count: number;
+  mine_count: number;
+  awaiting_send: number;
+}
+
+/** What a member sees of an inquiry they sent. Far smaller than Inquiry. */
+export interface MyInquiry {
+  id: string;
+  reference: string;
+  created_at: string;
+  category: string | null;
+  subject: string;
+  message: string;
+  status: InquiryStatus;
+  response: string | null;
+  responded_at: string | null;
 }

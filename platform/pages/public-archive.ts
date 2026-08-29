@@ -15,14 +15,39 @@ import { isConfigured, supabase } from '../lib/supabase.js';
 import { archiveDate, fileSize } from '../lib/format.js';
 import { itemUrl, archiveItems, archiveFolders, projects, archiveCategories } from '../lib/api.js';
 import type { ArchiveFolder, ArchiveItem, ArchiveCategory, Project } from '../lib/types.js';
+import { svgIcon, type IconName } from '../lib/file-icons.js';
+
+/**
+ * Which icon an item gets. The format and mime type say what the file is; the
+ * category and the human kind label ('PDF cheat sheet', 'Slide deck') say what
+ * it is *for*, which is usually the more useful thing to show.
+ */
+function iconName(item: ArchiveItem): IconName {
+  if (item.kind === 'link') return 'link';
+
+  const format = `${item.format ?? ''} ${item.mime_type ?? ''}`.toLowerCase();
+  const category = item.category ?? '';
+  const label = `${item.kind_label ?? ''} ${item.name}`.toLowerCase();
+
+  if (format.includes('image') || format.includes('png') || format.includes('jpg') ||
+      format.includes('jpeg') || format.includes('svg') || format.includes('webp') ||
+      category === 'poster' || category === 'photography' || category === 'branding') return 'image';
+  if (format.includes('video') || format.includes('mp4') || format.includes('mov')) return 'video';
+  if (format.includes('zip') || format.includes('tar') || format.includes('rar')) return 'zip';
+  if (category === 'source-code') return 'code';
+  if (format.includes('html') || item.kind === 'embed') return 'web';
+
+  if (category === 'presentation' || format.includes('ppt') ||
+      /slide|deck|presentation/.test(label)) return 'slides';
+  if (/cheat sheet|checklist|quick reference/.test(label)) return 'list';
+  if (/template/.test(label)) return 'template';
+  if (category === 'report' || category === 'results' || /report/.test(label)) return 'report';
+
+  return 'doc';
+}
 
 function icon(item: ArchiveItem): string {
-  if (item.kind === 'link') return '↗';
-  const format = (item.format ?? item.mime_type ?? '').toLowerCase();
-  if (format.includes('image')) return '▧';
-  if (format.includes('html')) return '◇';
-  if (format.includes('zip')) return '▢';
-  return '▤';
+  return svgIcon(iconName(item));
 }
 
 function badge(item: ArchiveItem): string {
@@ -107,7 +132,8 @@ async function start(): Promise<void> {
           onclick: () => { folderId = folder.id; void draw(); },
         },
           h('div', { class: 'fname' },
-            h('span', { class: 'icon' }, '▣'), h('span', folder.name)),
+            h('span', { class: 'icon', html: svgIcon('folder') }),
+            h('span', folder.name)),
           h('span', { class: 'fcell' }, 'DIR'),
           h('span', { class: 'fcell col-hide' },
             folder.project_id ? projectTitle.get(folder.project_id) ?? '' : ''),
@@ -120,7 +146,8 @@ async function start(): Promise<void> {
           onclick: () => void open(item),
         },
           h('div', { class: 'fname' },
-            h('span', { class: 'icon' }, icon(item)), h('span', item.name)),
+            h('span', { class: 'icon', html: icon(item) }),
+            h('span', item.name)),
           h('span', { class: 'fcell' }, badge(item)),
           h('span', { class: 'fcell col-hide' },
             item.project_id ? projectTitle.get(item.project_id) ?? '' : ''),
@@ -156,7 +183,12 @@ async function start(): Promise<void> {
     categories.map((c: ArchiveCategory) =>
       h('option', { value: c.slug }, c.label))) as HTMLSelectElement;
   categorySelect.addEventListener('change', () => {
-    categoryFilter = categorySelect.value; void draw();
+    // Filtering is a question about the whole archive, not about the folder
+    // that happens to be open — otherwise picking a category inside a folder
+    // silently hides every match that lives anywhere else.
+    categoryFilter = categorySelect.value;
+    if (categoryFilter) folderId = undefined;
+    void draw();
   });
 
   const viewButton = h('button', { type: 'button', class: 'btn-ghost' }, 'GRID');

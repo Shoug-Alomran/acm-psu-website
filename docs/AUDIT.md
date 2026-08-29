@@ -127,6 +127,7 @@ short sentence, so `REJECTED` can never stand alone:
 | Decline a position request or profile removal | `resolve_position_request`, `resolve_profile_removal` |
 | Resolve an account deletion request, or decline any request | `resolve_member_request` |
 | Change a feature switch or the accepted PSU email domains | `save_setting` |
+| Close an inquiry that was never answered, or reopen a closed one | `set_inquiry_status` |
 
 Approving is generally **not** gated — approvals are the expected outcome and
 forcing a sentence on every one of them trains people to type "ok". Reasons are
@@ -201,6 +202,9 @@ attribution on **their** entry — never as authority on the assistant's.
 
 ## Where history appears
 
+Inquiries are audited on submission, assignment and reassignment, status
+change, response, close and reopen — see the `inquiries` category.
+
 - **`/admin/audit.html`** — the global log: search, date range, admin,
   category, decision and project filters; a monthly summary; CSV export;
   a detail view with WHO / WHAT / WHY / CHANGES / CONTEXT / SYSTEM and the
@@ -236,6 +240,11 @@ in the university's spreadsheet.
   secrets accumulate.
 - Interview note bodies. Adding a note is recorded; the text stays in
   `application_notes`, which applicants have no read path to.
+- Inquiry message bodies and responses. `inquiry.submitted` and
+  `inquiry.responded` record that a message arrived and that a reply was
+  written, with its length — the correspondence itself stays on the inquiry
+  row, one join away, rather than being copied into a second table. Internal
+  inquiry notes are recorded as having been added, never quoted.
 
 ---
 

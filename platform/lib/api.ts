@@ -105,12 +105,11 @@ export async function saveName(userId: string, fullName: string): Promise<void> 
 }
 
 export async function memberStats(userId: string): Promise<MemberStats> {
-  const { data } = await requireClient().from('member_stats').select('*')
+  const result = await requireClient().from('member_stats').select('*')
     .eq('user_id', userId).maybeSingle();
-  return (data as MemberStats | null) ?? {
-    user_id: userId, events_count: 0, projects_count: 0, workshops_count: 0,
-    verified_contributions: 0, submissions_count: 0, positions_held: 0,
-  };
+  const data = unwrap(result) as MemberStats | null;
+  if (!data) throw new Error('Your member statistics record is unavailable.');
+  return data;
 }
 
 export async function positionHistory(userId: string): Promise<PositionHistoryRow[]> {
@@ -188,6 +187,22 @@ export async function submissionQueue(statuses: ReviewStatus[] = ['submitted']):
   return unwrap(await requireClient().from('archive_submissions')
     .select('*, member:app_users!archive_submissions_submitted_by_fkey(full_name, email), project:projects(id, title)')
     .in('status', statuses).order('created_at')) ?? [];
+}
+
+/**
+ * Row counts per review status, for the queue tabs.
+ *
+ * Row level security decides what is visible here exactly as it does for
+ * submissionQueue() — this only tallies what the caller can already read.
+ */
+export async function submissionCounts(): Promise<Record<string, number>> {
+  const rows = unwrap(await requireClient().from('archive_submissions').select('status'))
+    ?? [];
+  const counts: Record<string, number> = {};
+  for (const row of rows as Array<{ status: string }>) {
+    counts[row.status] = (counts[row.status] ?? 0) + 1;
+  }
+  return counts;
 }
 
 export async function submissionAi(submissionId: string): Promise<ArchiveSubmissionAi | null> {

@@ -38,8 +38,10 @@ insert into public.app_settings (key, value, description, is_public) values
      'Workers AI model used for review assistance.', false),
     ('google_sheets_enabled', 'false'::jsonb,
      'Whether the university export page offers "push to Google Sheet".', false),
+    -- Public: members need it to be told the real limit before they pick a
+    -- file, rather than being refused by storage after a long upload.
     ('max_upload_bytes', '26214400'::jsonb,
-     'Largest accepted upload, in bytes. 25 MB by default.', false);
+     'Largest accepted upload, in bytes. 25 MB by default.', true);
 
 -- ---------------------------------------------------------------------------
 -- Typed accessors, so callers never parse jsonb by hand.

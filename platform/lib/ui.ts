@@ -10,7 +10,7 @@
  * defined in assets/css/main.css.
  */
 import { h, render, type Child } from './dom.js';
-import { enumLabel, initials } from './format.js';
+import { daysSince, enumLabel, initials } from './format.js';
 import { signOut, isClubAdmin, isReviewer, isSuperAdmin, isStaff, isMember,
          displayName, type Viewer } from './session.js';
 
@@ -48,11 +48,13 @@ function adminLinks(viewer: Viewer): NavLink[] {
   links.push(
     { href: '/admin/contributions.html', label: 'Contributions' },
     { href: '/admin/submissions.html', label: 'Archive Review' },
+    // Reviewers answer inquiries too — it is queue work, not member management.
+    { href: '/admin/inquiries.html', label: 'Inquiries' },
   );
   if (isClubAdmin(viewer)) {
     links.push(
       { href: '/admin/requests.html', label: 'Requests' },
-      { href: '/admin/university-records.html', label: 'University Records' },
+      { href: '/admin/university-records.html', label: 'Club Records' },
     );
   }
   // Reviewers get the audit page too: it is where they can account for their
@@ -185,14 +187,198 @@ export function metaList(rows: Array<[string, Child]>): HTMLElement {
 export function dataTable(
   headers: string[],
   rows: Child[][],
-  options: { empty?: string } = {},
+  options: {
+    empty?: string;
+    /** Extra class on the <table>, for table-specific column rules. */
+    tableClass?: string;
+    /** Per-row class, so a queue can mark the rows that still need work. */
+    rowClass?: (index: number) => string | null;
+    /** Per-column class, applied to every <td> in that column. */
+    cellClass?: (column: number) => string | null;
+  } = {},
 ): HTMLElement {
   if (!rows.length) return emptyState(options.empty ?? 'Nothing here yet.');
   return h('div', { class: 'table-scroll' },
-    h('table', { class: 'data-table' },
-      h('thead', h('tr', headers.map((label) =>
-        h('th', { class: 'mono-meta' }, label.toUpperCase())))),
-      h('tbody', rows.map((cells) => h('tr', cells.map((cell) => h('td', cell)))))));
+    h('table', { class: `data-table${options.tableClass ? ` ${options.tableClass}` : ''}` },
+      h('thead', h('tr', headers.map((label, column) =>
+        h('th', { class: `mono-meta${classOf(options.cellClass?.(column))}` },
+          label.toUpperCase())))),
+      h('tbody', rows.map((cells, index) =>
+        h('tr', { class: options.rowClass?.(index) ?? '' },
+          cells.map((cell, column) =>
+            h('td', { class: options.cellClass?.(column) ?? '' }, cell)))))));
+}
+
+function classOf(value: string | null | undefined): string {
+  return value ? ` ${value}` : '';
+}
+
+/* --------------------------------------------------------------- fragments */
+
+/**
+ * A row of tags. Exists because tags rendered as bare inline spans run into
+ * each other; this is the one place that spacing is decided.
+ */
+export function tagList(values: string[], extraClass = 'tag--sm'): HTMLElement | null {
+  const items = values.map((value) => value.trim()).filter(Boolean);
+  if (!items.length) return null;
+  return h('div', { class: 'tag-row' },
+    items.map((value) => h('span', { class: `tag ${extraClass}` }, value)));
+}
+
+/** A compact label/value block — the portal's answer to a metadata card. */
+export function spec(label: string, value: Child, muted = false): HTMLElement {
+  return h('div', { class: 'spec' },
+    h('span', { class: 'spec__label' }, label.toUpperCase()),
+    h('span', { class: `spec__value${muted ? ' spec__value--muted' : ''}` }, value));
+}
+
+export function specGrid(...items: Child[]): HTMLElement {
+  return h('div', { class: 'spec-grid' }, items);
+}
+
+/** Placeholder rows, so a reloading list keeps its height instead of jumping. */
+export function skeletonList(rows = 5, columns = 4): HTMLElement {
+  return h('div', { class: 'skeleton-list', 'aria-hidden': 'true' },
+    Array.from({ length: rows }, () =>
+      h('div', { class: 'skeleton-row' },
+        Array.from({ length: columns }, (_unused, column) =>
+          h('div', {
+            class: 'skeleton-bar',
+            style: { width: `${[70, 90, 55, 40][column % 4]}%` },
+          })))));
+}
+
+/* ---------------------------------------------------------------- attention */
+
+/**
+ * How much of the administrator's attention a row deserves, right now.
+ *
+ * The portal shows a lot of state, and most of it is not a request for action.
+ * Colouring every state equally is the same as colouring none of them: the
+ * positions catalogue showing a green ACTIVE on all thirty rows told a
+ * committee member nothing about what to do next.
+ *
+ * So there are exactly four levels, and only two of them are loud:
+ *
+ *   now     something is blocked, overdue, or a seat that matters is empty
+ *   review  waiting on a human decision — the ordinary queue state
+ *   ok      settled; no action
+ *   idle    a state, not a request — catalogue entries, inactive records
+ *
+ * Every level is stated in words as well as colour. Nothing in the admin
+ * console may depend on colour alone to be understood.
+ */
+export type Attention = 'now' | 'review' | 'ok' | 'idle';
+
+const ATTENTION_MARK: Record<Attention, string> = {
+  now: '!',
+  review: '•',
+  ok: '✓',
+  idle: '–',
+};
+
+/**
+ * The attention pill. The marker glyph and the label both carry the meaning,
+ * so the pill still reads correctly in monochrome or to a screen reader.
+ */
+export function attentionPill(level: Attention, label: string): HTMLElement {
+  return h('span', { class: `pill pill--attn pill--attn-${level}` },
+    h('span', { class: 'pill__mark', 'aria-hidden': 'true' }, ATTENTION_MARK[level]),
+    h('span', label.toUpperCase()));
+}
+
+/** The class that puts an attention edge on a table row. */
+export function attentionRow(level: Attention): string {
+  return level === 'idle' ? 'attn-row' : `attn-row attn-row--${level}`;
+}
+
+/**
+ * A quiet chip for a state that is merely true, not actionable — "active" on a
+ * catalogue entry, "archived" on an old one. Deliberately not a status pill:
+ * these must not compete with the rows that need something done.
+ */
+export function stateTag(label: string, muted = false): HTMLElement {
+  return h('span', { class: `state-tag${muted ? ' state-tag--muted' : ''}` },
+    label.toUpperCase());
+}
+
+/**
+ * Ages a queue item. Something that has been waiting a fortnight is a
+ * different problem from something that arrived this morning, and the
+ * difference should be visible without reading the date column.
+ */
+export function ageAttention(
+  isoDate: string | null | undefined,
+  /** Days after which an item is overdue. */
+  overdueAfter = 14,
+): { level: Attention; label: string; days: number | null } {
+  const days = daysSince(isoDate);
+  if (days === null) return { level: 'review', label: 'WAITING', days: null };
+
+  return {
+    level: days >= overdueAfter ? 'now' : 'review',
+    label: days === 0 ? 'TODAY' : days === 1 ? '1 DAY' : `${days} DAYS`,
+    days,
+  };
+}
+
+export interface TriageItem {
+  label: string;
+  count: number;
+  href: string;
+  /** What this queue is, in a few words. */
+  hint?: string;
+  /** The level to use when the count is above zero. Defaults to 'review'. */
+  level?: Attention;
+}
+
+/**
+ * The triage strip: what needs this administrator, ordered by urgency, with a
+ * plain-language headline. It is the first thing on the overview page because
+ * it is the only thing most visits are actually about.
+ */
+export function triageStrip(items: TriageItem[]): HTMLElement {
+  const live = items.filter((item) => item.count > 0);
+  const urgent = live.filter((item) => (item.level ?? 'review') === 'now');
+  const total = live.reduce((sum, item) => sum + item.count, 0);
+
+  const headline = total === 0
+    ? 'Nothing is waiting on you.'
+    : urgent.length
+      ? `${total} item${total === 1 ? '' : 's'} waiting — ${urgent.reduce((s, i) => s + i.count, 0)} need attention now.`
+      : `${total} item${total === 1 ? '' : 's'} waiting for a decision.`;
+
+  return h('section', { class: 'triage' },
+    h('div', { class: 'triage__head' },
+      h('span', { class: 'mono-meta' }, 'WHAT NEEDS YOU'),
+      h('p', { class: 'triage__headline' }, headline)),
+
+    h('div', { class: 'triage__grid' },
+      items.map((item) => {
+        const level: Attention = item.count === 0 ? 'ok' : item.level ?? 'review';
+        return h('a', {
+          class: `triage__tile triage__tile--${level}`,
+          href: item.href,
+        },
+          h('span', { class: 'triage__count' }, String(item.count)),
+          h('span', { class: 'triage__label' }, item.label),
+          h('span', { class: 'triage__state' },
+            item.count === 0 ? 'CLEAR' : level === 'now' ? 'NEEDS ACTION' : 'TO REVIEW'),
+          item.hint ? h('span', { class: 'triage__hint' }, item.hint) : null);
+      })));
+}
+
+/**
+ * The key to the colours, shown once per page that uses them. A colour system
+ * nobody can read is decoration; this is the one line that makes it a system.
+ */
+export function attentionLegend(...entries: Array<[Attention, string]>): HTMLElement {
+  return h('div', { class: 'attn-legend' },
+    entries.map(([level, label]) =>
+      h('span', { class: `attn-legend__item attn-legend__item--${level}` },
+        h('span', { class: 'attn-legend__dot', 'aria-hidden': 'true' }),
+        label)));
 }
 
 /* ------------------------------------------------------------------ notices */
@@ -221,15 +407,23 @@ export function toast(message: string, kind: 'ok' | 'err' = 'ok'): void {
  * A modal built on <dialog>, so focus trapping and Escape come from the
  * platform rather than from hand-written key handling.
  */
-export function dialog(title: string, body: Child, footer?: Child): HTMLDialogElement {
-  const el = h('dialog', { class: 'portal-dialog' },
+export function dialog(
+  title: Child,
+  body: Child,
+  footer?: Child,
+  options: { class?: string; footClass?: string } = {},
+): HTMLDialogElement {
+  const el = h('dialog', { class: `portal-dialog${options.class ? ` ${options.class}` : ''}` },
     h('form', { method: 'dialog', class: 'portal-dialog-inner' },
       h('div', { class: 'portal-dialog-head' },
-        h('h2', title),
+        typeof title === 'string' ? h('h2', title) : title,
         h('button', { type: 'submit', value: 'close', class: 'link-button',
           'aria-label': 'Close' }, '✕')),
       h('div', { class: 'portal-dialog-body' }, body),
-      footer ? h('div', { class: 'portal-dialog-foot' }, footer) : null),
+      footer
+        ? h('div', { class: `portal-dialog-foot${options.footClass ? ` ${options.footClass}` : ''}` },
+            footer)
+        : null),
   ) as HTMLDialogElement;
 
   document.body.appendChild(el);
@@ -302,18 +496,27 @@ export function field(options: FieldOptions): HTMLElement {
     options.hint ? h('p', { class: 'field-hint mono-meta dim-text' }, options.hint) : null);
 }
 
-/** Multi-select rendered as checkbox chips, matching the join-page picker. */
+/**
+ * Multi-select rendered as the join page's option grid.
+ *
+ * This deliberately emits the same .interest-picker / .interest-options markup
+ * the public membership page uses, rather than a portal-only variant: the
+ * question is the same question, so it should not be a different control on a
+ * different page. The checked state, hover and 44px hit target all come from
+ * the existing rules in main.css.
+ */
 export function chipPicker(
   name: string, choices: Array<{ value: string; label: string }>, selected: string[] = [],
 ): HTMLElement {
-  return h('div', { class: 'interest-picker', role: 'group' },
-    choices.map((choice) => {
-      const id = `c-${name}-${choice.value}`;
-      return h('div', { class: 'interest-chip' },
-        h('input', { type: 'checkbox', id, name, value: choice.value,
-          checked: selected.includes(choice.value) }),
-        h('label', { for: id }, choice.label));
-    }));
+  return h('div', { class: 'interest-picker' },
+    h('div', { class: 'interest-options', role: 'group' },
+      choices.map((choice) => {
+        const id = `c-${name}-${choice.value}`;
+        return h('label', { for: id },
+          h('input', { type: 'checkbox', id, name, value: choice.value,
+            checked: selected.includes(choice.value) }),
+          h('span', choice.label));
+      })));
 }
 
 export function submitButton(label: string): HTMLButtonElement {

@@ -113,15 +113,50 @@ that entry, because the title is stored on the history row itself.
 
 ## Give the university its spreadsheet
 
-1. **Admin → University Records**.
+1. **Admin → Club Records**.
 2. Pick a dataset and click **Download CSV** or **Download XLSX**.
-3. If Google Sheets export is configured, **Update Google Sheet** instead.
+3. If Google Sheets export is configured, **Update Google Sheet** writes that
+   one worksheet, or **Refresh the whole workbook** updates all four.
+
+Everything lives in one private workbook, "ACM PSU — Club Records", as separate
+worksheets: Members, Event Participation, Contributions and Inquiries. That
+workbook is the club's live administrative record.
+
+**Do not share the live workbook with the university.** Google applies
+permissions to a whole spreadsheet rather than tab by tab, and the Inquiries
+worksheet can contain information submitted by members of the public. When
+records are needed, export a separate reporting copy containing only the
+relevant worksheets — downloading Members, Event Participation and
+Contributions as CSV or XLSX is the simplest way to produce one.
 
 Every export is recorded, so a future committee can account for where student
 data went. Members cannot reach this page, and the database returns no rows to
 them even if they try.
 
 ---
+
+## Answer an inquiry
+
+Messages from the contact page arrive in **Admin → Inquiries**. Reviewers can
+work this queue as well as club admins.
+
+1. Click a status tile to filter, or use the search and filters.
+2. **OPEN** an inquiry.
+3. Assign it to yourself (picking it up moves it to In progress automatically).
+4. Write the **Response to sender** and click **Save response**.
+5. Click **Open in mail client**, send the email, then click **Mark as sent**.
+
+**The platform does not send email.** Step 5 is a real step, not a formality —
+until a mail provider is configured (docs/SETUP.md step 6) nothing reaches the
+sender unless you send it. The page shows a warning counting responses that
+were written but never marked as sent.
+
+Keep **Response to sender** and **Internal notes** apart. The response is what
+the person reads; the notes are committee-only and the sender has no way to
+reach them.
+
+Closing an inquiry that was never answered, and reopening a closed one, both
+require a reason.
 
 ## Find out who decided something
 

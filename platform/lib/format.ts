@@ -50,6 +50,20 @@ export function relativeTime(value: string | null | undefined): string {
   return archiveDate(value);
 }
 
+/**
+ * Whole days since a timestamp, or null if there isn't one.
+ *
+ * Used to age a queue: something submitted this morning and something that has
+ * been sitting for three weeks are not equally urgent, and an admin should be
+ * able to see which is which without reading dates.
+ */
+export function daysSince(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const then = new Date(value).getTime();
+  if (Number.isNaN(then)) return null;
+  return Math.max(0, Math.floor((Date.now() - then) / 86400000));
+}
+
 export function fileSize(bytes: number | null | undefined): string {
   if (!bytes || bytes < 0) return '—';
   const units = ['B', 'KB', 'MB', 'GB'];

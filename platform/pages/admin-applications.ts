@@ -14,6 +14,9 @@ import {
   pageHeader,
   panel,
   statusPill,
+  attentionRow,
+  attentionLegend,
+  ageAttention,
   dataTable,
   loading,
   dialog,
@@ -82,6 +85,11 @@ function errorMessage(error: unknown): string {
   }
 
   return 'An unknown error occurred.';
+}
+
+/** An application still waiting on a human. */
+function pending(status: string): boolean {
+  return status === 'submitted' || status === 'interview';
 }
 
 async function start(): Promise<void> {
@@ -684,6 +692,12 @@ async function start(): Promise<void> {
           ),
         ),
 
+        attentionLegend(
+          ['now', 'Waiting 14 days or more'],
+          ['review', 'Waiting on a decision'],
+          ['ok', 'Decided'],
+        ),
+
         panel(
           `${rows.length} application${rows.length === 1
             ? ''
@@ -767,14 +781,37 @@ async function start(): Promise<void> {
                   ),
 
                   h(
-                    'span',
+                    'div',
                     {
-                      class:
-                        'mono-meta',
+                      class: 'wait-cell',
                     },
-                    archiveDate(
-                      application.created_at,
+
+                    h(
+                      'span',
+                      {
+                        class:
+                          'mono-meta',
+                      },
+                      archiveDate(
+                        application.created_at,
+                      ),
                     ),
+
+                    /*
+                     * How long this person has been waiting. Only shown while
+                     * they are still waiting — an age on a decided application
+                     * is trivia, not a prompt.
+                     */
+                    pending(application.status)
+                      ? h(
+                        'span',
+                        {
+                          class:
+                            `wait-age wait-age--${ageAttention(application.created_at).level}`,
+                        },
+                        `WAITING ${ageAttention(application.created_at).label}`,
+                      )
+                      : null,
                   ),
 
                   statusPill(
@@ -797,6 +834,18 @@ async function start(): Promise<void> {
                   ),
                 ],
               ),
+
+              {
+                rowClass: (index) => {
+                  const application = rows[index];
+                  if (!application) return '';
+                  return attentionRow(
+                    pending(application.status)
+                      ? ageAttention(application.created_at).level
+                      : 'ok',
+                  );
+                },
+              },
             )
             : emptyState(
               'Nothing in this queue.',

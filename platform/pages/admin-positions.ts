@@ -26,7 +26,11 @@ import {
   toast,
   action,
   emptyState,
-  statusPill,
+  stateTag,
+  attentionPill,
+  attentionRow,
+  attentionLegend,
+  type Attention,
 } from '../lib/ui.js';
 
 import {
@@ -148,6 +152,20 @@ function slugify(
       0,
       60,
     );
+}
+
+/**
+ * How loudly an empty seat should ask for attention.
+ *
+ * An empty Events Coordinator is a gap. An empty President is a problem —
+ * the chapter cannot sign anything. Archived entries are not seats at all,
+ * so they never ask for anything.
+ */
+function vacancy(position: Position): Attention {
+  if (!position.is_active) return 'idle';
+  return position.category === 'executive' || position.category === 'lead'
+    ? 'now'
+    : 'review';
 }
 
 async function start(): Promise<void> {
@@ -468,6 +486,20 @@ async function start(): Promise<void> {
         );
       }
 
+      /*
+       * The seats a chapter cannot operate without. Listed by name in the
+       * summary so the gap is legible without reading down the table.
+       */
+      const vacantLeadership =
+        all.filter(
+          (
+            position,
+          ) =>
+            position.is_active &&
+            vacancy(position) === 'now' &&
+            !(byPosition.get(position.id) ?? []).length,
+        );
+
       render(
         content,
 
@@ -492,6 +524,32 @@ async function start(): Promise<void> {
                   ),
             },
             'New position',
+          ),
+        ),
+
+        h(
+          'div',
+          {
+            class: 'position-summary',
+          },
+
+          h(
+            'p',
+            {
+              class: 'queue-summary',
+            },
+            vacantLeadership.length
+              ? `${vacantLeadership.length} leadership ${vacantLeadership.length === 1 ? 'seat is' : 'seats are'} empty — ` +
+                `${vacantLeadership.map((position) => position.title).join(', ')}. ` +
+                'Fill one from Members → the person → Grant position.'
+              : 'Every active leadership seat is filled.',
+          ),
+
+          attentionLegend(
+            ['now', 'Empty leadership seat'],
+            ['review', 'Empty committee seat'],
+            ['ok', 'Filled'],
+            ['idle', 'Archived'],
           ),
         ),
 
@@ -571,7 +629,9 @@ async function start(): Promise<void> {
                     held.length
                       ? h(
                         'div',
-                        {},
+                        {
+                          class: 'holder-list',
+                        },
 
                         held.map(
                           (
@@ -581,9 +641,12 @@ async function start(): Promise<void> {
                               'p',
                               {},
 
-                              holder.member
-                                ?.full_name ??
-                              '—',
+                              h(
+                                'strong',
+                                holder.member
+                                  ?.full_name ??
+                                '—',
+                              ),
 
                               ' ',
 
@@ -601,19 +664,16 @@ async function start(): Promise<void> {
                             ),
                         ),
                       )
-                      : h(
-                        'span',
-                        {
-                          class:
-                            'mono-meta dim-text',
-                        },
-                        'VACANT',
+                      : attentionPill(
+                        vacancy(position),
+                        'Vacant',
                       ),
 
-                    statusPill(
+                    stateTag(
                       position.is_active
-                        ? 'active'
-                        : 'inactive',
+                        ? 'Active'
+                        : 'Archived',
+                      !position.is_active,
                     ),
 
                     h(
@@ -702,6 +762,15 @@ async function start(): Promise<void> {
                   ];
                 },
               ),
+
+              {
+                rowClass: (index) => {
+                  const position = all[index];
+                  if (!position) return '';
+                  const held = byPosition.get(position.id) ?? [];
+                  return attentionRow(held.length ? 'ok' : vacancy(position));
+                },
+              },
             )
             : emptyState(
               'No positions defined.',

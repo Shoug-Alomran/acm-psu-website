@@ -154,8 +154,32 @@ create trigger participations_touch
 -- Live count of accepted people per opening, so the portal can show
 -- "3 of 4 filled" without the browser counting rows it may not be able to see.
 -- ---------------------------------------------------------------------------
+-- Capacity, counted across everyone, shown only to people entitled to see it.
+--
+-- WHY IT RUNS AS OWNER. A member's RLS on event_position_applications
+-- restricts them to their own rows. Under security_invoker = true the counts
+-- below would be computed over that member's own applications only, so every
+-- role would read as completely open, "FULL" would never appear, and members
+-- would register for positions already filled — discovering it only when an
+-- admin's approval failed.
+--
+-- WHAT THAT COSTS, AND HOW IT IS PAID. Running as owner means the underlying
+-- policies no longer gate this view, so THE WHERE CLAUSE BELOW IS THIS VIEW'S
+-- AUTHORIZATION. It repeats the predicate from the event_positions SELECT
+-- policy, so the rows a caller sees here are exactly the rows they could see
+-- on the table itself. Without it, Supabase's default privileges would let an
+-- anonymous visitor enumerate every event role — including unannounced ones on
+-- internal projects — together with its staffing.
+--
+-- Only aggregates cross the boundary from event_position_applications:
+-- count(a.id), never a.user_id, a.availability, a.note or a.admin_note. No
+-- applicant identity, email, student ID or application content is reachable
+-- through this view.
+--
+-- If you add a column here, ask first whether it is an aggregate. If it names
+-- a person, it does not belong.
 create view public.event_position_availability
-with (security_invoker = true) as
+with (security_invoker = false) as
 select
     ep.id            as event_position_id,
     ep.project_id,
@@ -169,7 +193,12 @@ select
     count(a.id) filter (where a.status = 'pending')  as pending
 from public.event_positions ep
 left join public.event_position_applications a on a.event_position_id = ep.id
+where public.is_active_member() or public.is_staff()
 group by ep.id;
+
+-- Belt as well as braces: no anonymous role should hold SELECT here at all.
+revoke all on public.event_position_availability from anon;
+grant select on public.event_position_availability to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Approving an event-position application.

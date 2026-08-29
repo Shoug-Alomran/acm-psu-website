@@ -39,63 +39,11 @@ import {
   setting,
 } from '../lib/api.js';
 
-const INTERESTS = [
-  {
-    value: 'programming',
-    label: 'Programming',
-  },
-  {
-    value: 'cybersecurity',
-    label: 'Cybersecurity',
-  },
-  {
-    value: 'ai',
-    label: 'AI & Machine Learning',
-  },
-  {
-    value: 'web-development',
-    label: 'Web Development',
-  },
-  {
-    value: 'design-media',
-    label: 'Design & Media',
-  },
-  {
-    value: 'event-organising',
-    label: 'Event Organising',
-  },
-  {
-    value: 'workshops',
-    label: 'Teaching & Workshops',
-  },
-  {
-    value: 'competitions',
-    label: 'Competitions & CTFs',
-  },
-  {
-    value: 'documentation',
-    label: 'Writing & Documentation',
-  },
-  {
-    value: 'community',
-    label: 'Community & Outreach',
-  },
-];
-
-const ACADEMIC_YEARS = [
-  'Foundation',
-  'Year 1',
-  'Year 2',
-  'Year 3',
-  'Year 4',
-  'Year 5+',
-  'Graduate',
-].map(
-  (year) => ({
-    value: year,
-    label: year,
-  }),
-);
+import {
+  INTERESTS,
+  ACADEMIC_YEARS,
+  knownInterests,
+} from '../lib/membership.js';
 
 function errorMessage(
   error: unknown,
@@ -526,6 +474,16 @@ async function start(): Promise<void> {
       required:
         true,
 
+      /*
+       * Pre-filled from the profile when the person answered this while
+       * creating their account. Asking twice reads as a form that is not
+       * paying attention.
+       */
+      value:
+        viewer.profile
+          ?.academic_year ??
+        '',
+
       options: [
         {
           value:
@@ -576,6 +534,12 @@ async function start(): Promise<void> {
       chipPicker(
         'interests',
         INTERESTS,
+
+        knownInterests(
+          viewer.profile
+            ?.interests ??
+          [],
+        ),
       ),
     ),
 

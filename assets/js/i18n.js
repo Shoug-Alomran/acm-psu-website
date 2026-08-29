@@ -38,6 +38,8 @@
         'Archive': 'الأرشيف',
         'Join': 'انضم إلينا',
         'Portal': 'البوابة',
+        'Contact': 'تواصل معنا',
+        'Ask us anything': 'اسألنا أي شيء',
         'Digital Archive': 'الأرشيف الرقمي',
         'SYS.ARCHIVE_': 'الأرشيف_',
         '// ONLINE': '// متصل',

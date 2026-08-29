@@ -137,7 +137,7 @@ works without it. The assistant only suggests; it can never publish.
 
 ---
 
-## Step 5 — Google Sheets export (optional)
+## Step 5 — Google Sheets: the Club Records workbook (optional)
 
 CSV and XLSX export already work and are enough to hand the university a
 spreadsheet. This step adds a button that pushes straight into a private Google
@@ -155,8 +155,13 @@ Sheet.
 9. Open that file. You need two values from it:
    - `client_email` — looks like `acm-sheets-writer@…iam.gserviceaccount.com`
    - `private_key` — a long block starting `-----BEGIN PRIVATE KEY-----`
-10. Go to <https://sheets.google.com> and create a new blank spreadsheet.
-    Name it `ACM PSU — University Records`.
+10. Go to <https://sheets.google.com> and create **one** new blank spreadsheet.
+    Name it exactly `ACM PSU — Club Records`.
+
+    One workbook holds every dataset as a separate worksheet — Members, Event
+    Participation, Contributions and Inquiries. Each tab is created
+    automatically the first time you export to it. Do not make a spreadsheet
+    per dataset.
 11. Click **Share**, paste the `client_email` from step 9, give it **Editor**,
     and untick "Notify people". Click **Share**.
 12. Copy the spreadsheet ID out of its URL — the long string between
@@ -177,9 +182,76 @@ Sheet.
     **Google Sheets export**.
 15. Tell Claude when this is done.
 
-> Keep that spreadsheet private. Share it with the university directly, never
-> with a public link. Nothing in the member portal or the public website can
-> reach it.
+> Keep that workbook private. Nothing in the member portal or on the public
+> website can reach it.
+>
+> **This is the club's live administrative workbook, and it stays one file.**
+> Google applies permissions to a whole spreadsheet rather than tab by tab, and
+> the Inquiries worksheet can contain information submitted by members of the
+> public. When the university needs records, export a separate reporting copy
+> containing only the relevant worksheets — the per-dataset CSV and XLSX
+> downloads on the Club Records page are the simplest way to produce one.
+> Do not share the live workbook itself.
+
+---
+
+## Step 6 — Emailing inquiry responses (not yet implemented)
+
+**This does not exist yet, and the interface says so rather than pretending
+otherwise.** Today the workflow is:
+
+1. An admin opens the inquiry and writes the response. Saving records it
+   against the inquiry and marks it Answered.
+2. They click **Open in mail client**, which opens their own email app with the
+   sender, subject, reference and response pre-filled.
+3. They send it, then click **Mark as sent**, which is what sets
+   `response_delivered`.
+
+Until step 2 is automated, the admin page shows a warning counting responses
+that were written but never marked as sent, so nothing silently goes unanswered.
+
+### What would be needed to send automatically
+
+1. Choose a transactional email provider — **Resend** is the simplest for this
+   (generous free tier, one API call). SendGrid, Postmark or Amazon SES work
+   equally well.
+2. Verify the sending domain so mail from `acm@psu.edu.sa` (or a club
+   subdomain) is not treated as spam. **This needs DNS access and is the part
+   that actually takes time** — SPF, DKIM and DMARC records at the domain
+   registrar. Ask whoever administers `psu.edu.sa`; if that is not possible,
+   send from a club-controlled subdomain instead.
+3. Store the API key as an Edge Function secret:
+
+   ```sh
+   npx supabase secrets set RESEND_API_KEY=... ACM_FROM_EMAIL='ACM PSU <acm@psu.edu.sa>'
+   ```
+
+4. Add a `send-inquiry-response` Edge Function that re-checks the caller is
+   staff, loads the inquiry, sends the mail, and sets `response_delivered` and
+   `delivery_note`.
+5. Point the **Mark as sent** button at that function instead of the mailto:
+   link.
+
+Tell me when the domain is verified and I will write the function. Nothing
+else in the platform depends on this — inquiries are fully usable without it.
+
+---
+
+## Step 7 — Spam protection for the contact form (optional)
+
+The public contact form is protected by a honeypot field, per-email rate limits
+(3 per hour, 10 per day) and a global ceiling of 120 per hour, all enforced in
+the database rather than the browser. That is enough for a student club.
+
+If the form is ever targeted properly, add **Cloudflare Turnstile**:
+
+1. Cloudflare dashboard → **Turnstile** → **Add site**.
+2. Domain: `acm-psu.shoug-tech.com`. Widget mode: **Managed**.
+3. Copy the **site key** and the **secret key**.
+4. Tell me both are ready — the site key goes in the page, the secret is
+   verified inside `submit_inquiry` via an Edge Function.
+
+---
 
 ---
 

@@ -54,13 +54,14 @@ projects.html         Project archive with category filters and live search
 archive.html          Searchable index across every project's archive
 positions.html        Live project assignments
 join.html             What membership involves, and where to apply
+contact.html          Public inquiry form — questions to the committee
 404.html              Not-found page
 
 portal/               Member portal (sign-in, application, dashboard, profile,
                       record, opportunities, contributions, submissions, requests)
 admin/                Admin console (overview, applications, members, positions,
-                      projects, review queues, requests, university records,
-                      audit history, administration)
+                      projects, review queues, inquiries, requests, club
+                      records, audit history, administration)
 
 platform/             TypeScript source for both portals
   lib/                supabase client, session/guards, UI kit, data access

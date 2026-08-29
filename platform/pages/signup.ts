@@ -5,14 +5,40 @@
  * membership application is a separate, deliberate step afterwards. Keeping
  * them apart means someone can have an account while their application is
  * still being read, and an alumnus keeps an account after leaving.
+ *
+ * The form asks for more than a login needs, in the same voice as the
+ * membership application, for two reasons: four anonymous boxes are a worse
+ * first impression of the chapter than the rest of the site gives, and every
+ * answer here is one the application form no longer has to ask for — it
+ * arrives pre-filled instead.
+ *
+ * Only the credentials are required. Everything below them is optional and can
+ * be changed later in the portal, which is why none of it blocks the button.
+ *
+ * The extra answers travel in the auth user's metadata rather than being
+ * written directly: with email confirmation on there is no session at this
+ * point, so there is nobody for row level security to authorise. They are
+ * applied on first sign-in — see lib/signup-profile.ts.
+ *
+ * A student ID is deliberately NOT asked for here. It is an administrative
+ * identifier, guarded in the database, and the membership application is where
+ * it is collected and checked against the person.
  */
-import { h, formValues, textOf } from '../lib/dom.js';
-import { authShell, field, notice, submitButton } from '../lib/ui.js';
+import { h, formValues, textOf, asArray } from '../lib/dom.js';
+import { wideAuthShell, field, chipPicker, notice, submitButton } from '../lib/ui.js';
+import { INTERESTS, ACADEMIC_YEARS } from '../lib/membership.js';
 import { isConfigured, supabase, requireClient, siteUrl, readableError } from '../lib/supabase.js';
+
+/** A labelled break in a long form, matching the review console's captions. */
+function section(title: string, blurb: string): HTMLElement {
+  return h('div', { class: 'form-section' },
+    h('span', { class: 'form-section__label' }, title.toUpperCase()),
+    h('p', { class: 'form-section__blurb' }, blurb));
+}
 
 async function start(): Promise<void> {
   if (!isConfigured || !supabase) {
-    authShell('Create an account', '',
+    wideAuthShell('Create an account', '',
       notice('warn', 'The portal is not connected to a database yet. See docs/SETUP.md.'));
     return;
   }
@@ -20,12 +46,35 @@ async function start(): Promise<void> {
   const status = h('div');
 
   const form = h('form', { class: 'portal-form', novalidate: true },
+    section('Sign-in details', 'This is all you need to create the account.'),
+
     field({ label: 'Full name', name: 'full_name', required: true, maxlength: 120 }),
+
     field({ label: 'Email', name: 'email', type: 'email', required: true,
             hint: 'Use your PSU address if you intend to apply for membership.' }),
-    field({ label: 'Password', name: 'password', type: 'password', required: true,
-            hint: 'At least 8 characters.' }),
-    field({ label: 'Confirm password', name: 'confirm', type: 'password', required: true }),
+
+    h('div', { class: 'field-pair' },
+      field({ label: 'Password', name: 'password', type: 'password', required: true,
+              hint: 'At least 8 characters.' }),
+      field({ label: 'Confirm password', name: 'confirm', type: 'password', required: true })),
+
+    section('About you',
+      'Optional. It saves you answering the same questions on the membership ' +
+      'application, and you can change any of it later.'),
+
+    h('div', { class: 'field-pair' },
+      field({ label: 'Major', name: 'major', maxlength: 120,
+              placeholder: 'e.g. Software Engineering' }),
+
+      field({ label: 'Academic year', name: 'academic_year', type: 'select',
+              options: [{ value: '', label: 'Prefer not to say' }, ...ACADEMIC_YEARS] })),
+
+    h('div', { class: 'form-field' },
+      h('span', { class: 'mono-meta' }, 'AREAS OF INTEREST'),
+      h('p', { class: 'field-hint mono-meta dim-text' },
+        'Pick anything that sounds interesting. No experience is expected in any of them.'),
+      chipPicker('interests', INTERESTS)),
+
     status,
     submitButton('Create account'),
   ) as HTMLFormElement;
@@ -55,7 +104,17 @@ async function start(): Promise<void> {
       email,
       password,
       options: {
-        data: { full_name: textOf(values, 'full_name') },
+        /*
+         * full_name is read by the database trigger that creates app_users.
+         * The rest is picked up on first sign-in, once there is a session that
+         * row level security can authorise.
+         */
+        data: {
+          full_name: textOf(values, 'full_name'),
+          major: textOf(values, 'major'),
+          academic_year: textOf(values, 'academic_year'),
+          interests: asArray(values.interests),
+        },
         emailRedirectTo: `${siteUrl}/portal/auth-callback.html`,
       },
     });
@@ -78,7 +137,7 @@ async function start(): Promise<void> {
       'open it to activate your account, then sign in.'));
   });
 
-  authShell('Create an account',
+  wideAuthShell('Create an account',
     'An account lets you apply for membership and, once accepted, use the member portal.',
     form,
     h('div', { class: 'auth-links' },

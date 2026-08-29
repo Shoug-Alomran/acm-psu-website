@@ -19,6 +19,9 @@ import {
   pageHeader,
   panel,
   statusPill,
+  attentionRow,
+  attentionLegend,
+  ageAttention,
   dataTable,
   loading,
   dialog,
@@ -1341,6 +1344,12 @@ async function start(): Promise<void> {
           ),
         ),
 
+        attentionLegend(
+          ['now', 'Someone is asking to leave — resolve first'],
+          ['review', 'Waiting on a decision'],
+          ['ok', 'Resolved'],
+        ),
+
         panel(
           `Membership and privacy — ${general.length}`,
 
@@ -1476,6 +1485,27 @@ async function start(): Promise<void> {
                       ),
                   ],
               ),
+
+              {
+                rowClass: (index) => {
+                  const request = general[index];
+                  if (!request) return '';
+                  if (request.status !== 'pending') return attentionRow('ok');
+
+                  /*
+                   * A withdrawal, a profile removal or an account deletion is
+                   * somebody asking to leave. Those do not sit in a queue at
+                   * the same volume as the rest.
+                   */
+                  const leaving = request.kind === 'withdrawal' ||
+                    request.kind === 'profile_removal' ||
+                    request.kind === 'account_deletion';
+
+                  return attentionRow(
+                    leaving ? 'now' : ageAttention(request.created_at).level,
+                  );
+                },
+              },
             )
             : emptyState(
               'Nothing waiting.',
@@ -1569,6 +1599,18 @@ async function start(): Promise<void> {
                       ),
                   ],
               ),
+
+              {
+                rowClass: (index) => {
+                  const request = position[index];
+                  if (!request) return '';
+                  return attentionRow(
+                    request.status === 'pending'
+                      ? ageAttention(request.created_at).level
+                      : 'ok',
+                  );
+                },
+              },
             )
             : emptyState(
               'Nothing waiting.',
@@ -1660,6 +1702,18 @@ async function start(): Promise<void> {
                       ),
                   ],
               ),
+
+              {
+                rowClass: (index) => {
+                  const request = event[index];
+                  if (!request) return '';
+                  return attentionRow(
+                    request.status === 'pending'
+                      ? ageAttention(request.created_at).level
+                      : 'ok',
+                  );
+                },
+              },
             )
             : emptyState(
               'Nothing waiting.',

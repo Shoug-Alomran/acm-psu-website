@@ -13,11 +13,13 @@
  *   Contributions        | university reporting
  *   Inquiries            | internal club record
  *
- * A NOTE ON SHARING. Google shares a spreadsheet as a whole file, not by tab.
- * The Inquiries sheet contains members of the public writing to the club, so
- * the workbook should NOT be handed to the university wholesale. Share a copy
- * containing only the three reporting tabs, or download those as CSV/XLSX and
- * send those. The admin page says the same thing where it can be acted on.
+ * A NOTE ON SHARING. This is the club's live administrative workbook, and it
+ * stays a single file on purpose. Google applies permissions to a whole
+ * spreadsheet rather than tab by tab, and the Inquiries worksheet can carry
+ * information submitted by members of the public — so when the university
+ * needs records, export a separate reporting copy containing only the relevant
+ * worksheets instead of sharing this one. The admin page says the same thing
+ * where it can be acted on.
  *
  * Access: club admin only. Each dataset is a database function that returns
  * zero rows unless is_club_admin() is true, so even a mistake here cannot leak

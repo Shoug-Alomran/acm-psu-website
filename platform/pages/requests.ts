@@ -22,6 +22,7 @@ import {
   positions, saveProfile,
 } from '../lib/api.js';
 import { loadViewer } from '../lib/session.js';
+import { myInquiries, STATUS_LABELS } from '../lib/inquiries.js';
 import { archiveDate, enumLabel } from '../lib/format.js';
 import type { MemberRequestKind, Position } from '../lib/types.js';
 
@@ -99,8 +100,11 @@ async function start(): Promise<void> {
   }
 
   async function draw(): Promise<void> {
-    const [requests, positionRequest] = await Promise.all([
+    const [requests, positionRequest, questions] = await Promise.all([
       myRequests(viewer.userId), myPositionRequest(viewer.userId),
+      // Only inquiries this person sent while signed in. The view omits every
+      // internal column, so there is nothing here to leak.
+      myInquiries().catch(() => []),
     ]);
 
     const hasPending = (kind: MemberRequestKind) =>
@@ -203,6 +207,27 @@ async function start(): Promise<void> {
             onclick: () => simpleRequest('data_export', 'Request a copy of my data',
               'An admin will send you everything the platform holds about you.',
               'Anything specific you need?') }, 'Request my data'))),
+
+      panel('Your questions to the committee',
+        questions.length
+          ? h('div', { class: 'history-list' },
+              questions.map((question) => h('div', { class: 'history-row' },
+                h('span', { class: 'mono-meta' }, archiveDate(question.created_at)),
+                h('div', {},
+                  h('strong', question.subject), ' ',
+                  statusPill(question.status),
+                  h('p', { class: 'mono-meta dim-text' }, question.reference),
+                  question.response
+                    ? h('p', { class: 'history-reason' },
+                        h('span', { class: 'mono-meta dim-text' }, 'REPLY  '),
+                        question.response)
+                    : h('p', { class: 'mono-meta dim-text' },
+                        STATUS_LABELS[question.status].toUpperCase() +
+                        ' — NO REPLY YET')))))
+          : emptyState('You have not sent the committee a question.',
+              'Anything sent from the contact page while signed in appears here.'),
+        h('div', { class: 'button-row' },
+          h('a', { class: 'btn-ghost', href: '/contact.html' }, 'Ask a question'))),
 
       panel('Request history',
         requests.length

@@ -14,6 +14,7 @@ import {
   pageHeader,
   panel,
   statRow,
+  triageStrip,
   dataTable,
   loading,
   emptyState,
@@ -56,80 +57,6 @@ function errorMessage(error: unknown): string {
   }
 
   return 'An unknown error occurred.';
-}
-
-function queueRow(
-  label: string,
-  value: number,
-  href: string,
-  hint: string,
-) {
-  return h(
-    'a',
-    {
-      class: 'browser-row',
-      href,
-      style: {
-        textDecoration: 'none',
-      },
-    },
-
-    h(
-      'div',
-      {
-        class: 'fname',
-      },
-
-      h(
-        'span',
-        {
-          class: 'icon',
-        },
-        value > 0
-          ? '●'
-          : '○',
-      ),
-
-      h(
-        'span',
-        label,
-      ),
-    ),
-
-    h(
-      'span',
-      {
-        class: 'fcell',
-      },
-      value > 0
-        ? `${value} WAITING`
-        : 'CLEAR',
-    ),
-
-    h(
-      'span',
-      {
-        class: 'fcell col-hide',
-      },
-      hint,
-    ),
-
-    h(
-      'span',
-      {
-        class: 'fcell col-hide',
-      },
-      '',
-    ),
-
-    h(
-      'span',
-      {
-        class: 'file-act',
-      },
-      '→',
-    ),
-  );
 }
 
 async function start(): Promise<void> {
@@ -221,6 +148,68 @@ async function start(): Promise<void> {
           ),
         ),
 
+        /*
+         * What is waiting, loudest first.
+         *
+         * 'now' is reserved for queues where the delay lands on somebody else:
+         * an applicant cannot join, and a withdrawal or deletion request is a
+         * person asking to leave. The rest are ordinary review work.
+         */
+        triageStrip([
+          ...(isClubAdmin(viewer)
+            ? [{
+                label: 'Membership applications',
+                count: counts.applications,
+                href: '/admin/applications.html',
+                hint: 'READ, INTERVIEW, DECIDE',
+                level: 'now' as const,
+              }]
+            : []),
+
+          ...(isClubAdmin(viewer)
+            ? [{
+                label: 'Membership and privacy requests',
+                count: counts.memberRequests,
+                href: '/admin/requests.html',
+                hint: 'WITHDRAWAL, REMOVAL, DELETION',
+                level: 'now' as const,
+              }]
+            : []),
+
+          {
+            label: 'Archive submissions',
+            count: counts.submissions,
+            href: '/admin/submissions.html',
+            hint: 'REVIEW BEFORE PUBLISHING',
+          },
+
+          {
+            label: 'Contribution reviews',
+            count: counts.contributions,
+            href: '/admin/contributions.html',
+            hint: 'VERIFY SUBMITTED WORK',
+          },
+
+          ...(isClubAdmin(viewer)
+            ? [{
+                label: 'Position change requests',
+                count: counts.positionRequests,
+                href: '/admin/requests.html',
+                hint: 'MEMBERS ASKING FOR A ROLE',
+              }]
+            : []),
+
+          ...(isClubAdmin(viewer)
+            ? [{
+                label: 'Event position requests',
+                count: counts.eventRequests,
+                href: '/admin/requests.html',
+                hint: 'VOLUNTEERS FOR EVENT ROLES',
+              }]
+            : []),
+        ]),
+
+        /* Context, not a queue — nothing here is asking to be acted on. */
         statRow([
           [
             counts.members,
@@ -228,82 +217,15 @@ async function start(): Promise<void> {
           ],
 
           [
-            counts.applications,
-            'Pending applications',
-          ],
-
-          [
-            counts.contributions +
-            counts.submissions,
-            'Awaiting review',
-          ],
-
-          [
             counts.activeProjects,
             'Live projects',
           ],
+
+          [
+            chapter,
+            'Chapter year',
+          ],
         ]),
-
-        panel(
-          'Waiting on an admin',
-
-          h(
-            'div',
-            {
-              class: 'browser-list',
-            },
-
-            isClubAdmin(viewer)
-              ? queueRow(
-                'Membership applications',
-                counts.applications,
-                '/admin/applications.html',
-                'Read, interview, approve or decline',
-              )
-              : null,
-
-            queueRow(
-              'Contribution reviews',
-              counts.contributions,
-              '/admin/contributions.html',
-              'Verify work members have submitted',
-            ),
-
-            queueRow(
-              'Archive submissions',
-              counts.submissions,
-              '/admin/submissions.html',
-              'Review files before they are published',
-            ),
-
-            isClubAdmin(viewer)
-              ? queueRow(
-                'Position change requests',
-                counts.positionRequests,
-                '/admin/requests.html',
-                'Members asking for a different role',
-              )
-              : null,
-
-            isClubAdmin(viewer)
-              ? queueRow(
-                'Event position requests',
-                counts.eventRequests,
-                '/admin/requests.html',
-                'Members volunteering for event roles',
-              )
-              : null,
-
-            isClubAdmin(viewer)
-              ? queueRow(
-                'Membership and privacy requests',
-                counts.memberRequests,
-                '/admin/requests.html',
-                'Withdrawals, profile removal, account deletion',
-              )
-              : null,
-          ),
-        ),
 
         panel(
           'Live projects and events',

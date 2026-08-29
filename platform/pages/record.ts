@@ -93,7 +93,7 @@ async function start(): Promise<void> {
 
     panel('Decision history',
       h('p', { class: 'mono-meta dim-text' },
-        'Decisions ACM has recorded about you, with the reason given at the time.'),
+        ''),
       memberDecisionList(decisions)),
 
     pending.length

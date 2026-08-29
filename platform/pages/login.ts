@@ -32,6 +32,10 @@ import {
   isStaff,
 } from '../lib/session.js';
 
+import {
+  applySignupMetadata,
+} from '../lib/signup-profile.js';
+
 /**
  * Only same-origin paths, so ?next= cannot be used as an open redirect.
  */
@@ -328,6 +332,13 @@ async function start(): Promise<void> {
             'SIGNED IN — LOADING YOUR ACCOUNT…',
           ),
         );
+
+        /*
+         * If this is the first sign-in after creating an account, the optional
+         * answers from the sign-up form are still sitting in auth metadata.
+         * Fold them in now, while there is a session to authorise the write.
+         */
+        await applySignupMetadata();
 
         const destination =
           safeNext() ??

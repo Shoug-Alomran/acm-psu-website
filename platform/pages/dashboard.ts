@@ -616,7 +616,7 @@ async function start(): Promise<void> {
                 class:
                   'mono-meta dim-text',
               },
-              'Verified by ACM. These fields are maintained by admins.',
+              '',
             ),
 
             metaList([
@@ -681,17 +681,14 @@ async function start(): Promise<void> {
                 class:
                   'mono-meta dim-text',
               },
-              'Yours to change at any time, without asking anyone.',
+              '',
             ),
 
             metaList([
               [
                 'Visibility',
                 statusPill(
-                  profile?.visibility ===
-                    'public'
-                    ? 'active'
-                    : 'inactive',
+                  profile?.visibility ?? 'private',
                 ),
               ],
 
@@ -734,6 +731,8 @@ async function start(): Promise<void> {
                   profile?.website_url
                     ? 'Website'
                     : null,
+
+                  ...(profile?.extra_links ?? []).map((link) => link.label),
                 ]
                   .filter(
                     Boolean,

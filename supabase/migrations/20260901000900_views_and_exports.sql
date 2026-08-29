@@ -78,6 +78,14 @@ comment on view public.public_member_directory is
 grant select on public.public_member_directory to anon, authenticated;
 
 -- Public position history for people who are publicly listed.
+--
+-- This view runs as owner and has no WHERE clause of its own. THE INNER JOIN
+-- IS THE GUARD: a row survives only if that person is in
+-- public_member_directory, which already requires visibility = 'public', an
+-- active or alumni membership, and a live account. Replace that join with a
+-- LEFT JOIN and every member's position history becomes world-readable.
+--
+-- Columns are titles and dates only — no email, no student ID.
 create view public.public_position_history
 with (security_invoker = false) as
 select

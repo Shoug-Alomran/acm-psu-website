@@ -14,6 +14,9 @@ import {
   pageHeader,
   panel,
   statusPill,
+  attentionRow,
+  attentionLegend,
+  ageAttention,
   dataTable,
   loading,
   dialog,
@@ -754,6 +757,12 @@ async function start(): Promise<void> {
           ),
         ),
 
+        attentionLegend(
+          ['now', 'Waiting 14 days or more'],
+          ['review', 'Waiting on verification'],
+          ['ok', 'Decided'],
+        ),
+
         panel(
           `${rows.length} in this queue`,
 
@@ -868,6 +877,18 @@ async function start(): Promise<void> {
                   ),
                 ],
               ),
+
+              {
+                rowClass: (index) => {
+                  const row = rows[index];
+                  if (!row) return '';
+                  return attentionRow(
+                    row.status === 'submitted'
+                      ? ageAttention(row.created_at).level
+                      : 'ok',
+                  );
+                },
+              },
             )
             : emptyState(
               'This queue is clear.',

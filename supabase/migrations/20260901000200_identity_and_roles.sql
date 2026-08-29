@@ -62,7 +62,6 @@ create table public.member_profiles (
     avatar_path    text,
     visibility     profile_visibility not null default 'private',
     display_name   text,
-    pronouns       text,
     created_at     timestamptz not null default now(),
     updated_at     timestamptz not null default now(),
 

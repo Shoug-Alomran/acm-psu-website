@@ -29,6 +29,10 @@ import {
   isMember,
 } from '../lib/session.js';
 
+import {
+  applySignupMetadata,
+} from '../lib/signup-profile.js';
+
 function errorMessage(
   error: unknown,
 ): string {
@@ -193,6 +197,13 @@ async function start(): Promise<void> {
       '',
       window.location.pathname,
     );
+
+    /*
+     * The sign-up form's optional answers were parked in the auth user's
+     * metadata because there was no session to authorise a write. There is
+     * one now, so fold them into the profile before it is read.
+     */
+    await applySignupMetadata();
 
     let viewer;
 

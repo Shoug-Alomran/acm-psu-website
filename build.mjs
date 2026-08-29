@@ -12,7 +12,7 @@
  *   npm run watch     rebuild on save
  */
 import { build, context } from 'esbuild';
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 const WATCH = process.argv.includes('--watch');
@@ -66,6 +66,18 @@ function writeEnvModule() {
     );
 }
 
+/* Code splitting names shared chunks by content hash, so editing any shared
+ * module leaves the previous chunk behind. Clearing the directory first keeps
+ * dead bundles from being committed and deployed forever. */
+function clearOutput() {
+    if (!existsSync(OUT_DIR)) return;
+    for (const file of readdirSync(OUT_DIR)) {
+        if (file.endsWith('.js') || file.endsWith('.js.map')) {
+            rmSync(join(OUT_DIR, file));
+        }
+    }
+}
+
 const entryPoints = readdirSync(PAGE_DIR)
     .filter((f) => f.endsWith('.ts'))
     .map((f) => join(PAGE_DIR, f));
@@ -83,6 +95,7 @@ const options = {
     define: { 'process.env.NODE_ENV': JSON.stringify(WATCH ? 'development' : 'production') }
 };
 
+clearOutput();
 writeEnvModule();
 
 if (WATCH) {

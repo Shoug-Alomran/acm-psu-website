@@ -158,7 +158,7 @@
 .link-button {
     background: none;
     border: none;
-    color: var(--text-dark);
+    color: var(--text-muted);
     cursor: pointer;
     font-family: var(--font-mono);
     font-size: 0.68rem;
@@ -200,6 +200,16 @@
 
 .portal-title { font-size: clamp(1.75rem, 3vw, 2.5rem); }
 .portal-header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* main.css gives every <section> the public site's 8rem breathing room and a
+   closing rule. A panel is a working surface inside a scrolling application,
+   not a landing-page band, so both are reset here. */
+.portal-body section,
+.auth-body section {
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
 
 .panel { border: 1px solid var(--border-color); background: var(--bg-surface); }
 
@@ -587,7 +597,17 @@
 .browser-row:hover { background: var(--bg-surface-hover); }
 .browser-row .fname { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
 .browser-row .fname span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.browser-row .icon { color: var(--accent-blue); flex: 0 0 auto; }
+.browser-row .icon { color: var(--accent-blue); flex: 0 0 auto; line-height: 0; }
+
+.browser-row .icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 .browser-row .fcell { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
 
 .browser-list.is-grid {
@@ -605,6 +625,8 @@
     border: 1px solid var(--border-color);
     min-height: 8rem;
 }
+
+.browser-list.is-grid .browser-row .icon svg { width: 2.25rem; height: 2.25rem; stroke-width: 1.3; }
 
 [dir="rtl"] .browser-row { text-align: right; }
 
@@ -825,4 +847,1276 @@
     .change-row { grid-template-columns: 1fr; gap: 0.2rem; }
     .change-arrow { display: none; }
     .change-before::after { content: ' →'; color: var(--accent-blue); }
+}
+
+/* ==========================================================================
+   ARCHIVE REVIEW WORKSPACE
+   ==========================================================================
+
+   The review console is the densest surface in the platform: an administrator
+   has to read a submission, weigh an advisory machine analysis and then make a
+   decision that is recorded permanently against their name.
+
+   Everything below is built from the tokens already defined in main.css and
+   the primitives already defined above — panels, pills, mono metadata, ghost
+   buttons, hairline borders, 2px corners. Nothing here introduces a second
+   visual system; it only gives the review surface the extra structure that a
+   long table row and a stacked modal could not carry.
+
+   The hierarchy the styles are trying to make obvious, loudest first:
+
+     1. the administrative decision           .decision-bar
+     2. the submission and its artifact       .review-primary
+     3. the advisory analysis                 .review-analysis / .ai-panel
+     4. supporting metadata and history       .spec-grid, .meta-list
+
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   Shared review primitives
+   -------------------------------------------------------------------------- */
+
+/* A hairline block with a mono caption. The workhorse of this whole file. */
+.review-block {
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+}
+
+.review-block__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.review-block__head h3 {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.review-block__body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.review-block__body > p { font-size: 0.9rem; color: var(--text-muted); }
+
+/* A label/value pair. Used for classification, artifact facts, identity. */
+/* Hairlines are drawn by each cell rather than by a 1px grid gap, so a row
+   that does not fill every track leaves empty space, not a stray block. */
+.spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    overflow: hidden;
+}
+
+.spec {
+    box-shadow: 1px 0 0 var(--border-color), 0 1px 0 var(--border-color);
+    padding: 0.8rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.spec__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.spec__value {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.spec__value--muted { color: var(--text-muted); }
+
+/* Tag rows. Tags must never run together — this is the fix for that. */
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.tag--sm {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    color: var(--text-muted);
+    border-color: var(--border-color);
+    background: var(--bg-base);
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   The submissions queue
+   -------------------------------------------------------------------------- */
+
+.queue-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    align-items: baseline;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 62ch;
+}
+
+.queue-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+}
+
+.queue-tab {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.queue-tab:last-child { border-right: none; }
+.queue-tab:hover { color: var(--text-main); background: var(--bg-surface-hover); }
+
+.queue-tab.is-active {
+    color: var(--text-main);
+    background: var(--bg-surface-hover);
+    border-bottom-color: var(--accent-blue);
+}
+
+.queue-tab__count {
+    font-size: 0.66rem;
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.05rem 0.35rem;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.queue-tab.is-active .queue-tab__count {
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+/* Queue rows. Awaiting-review rows carry an accent edge so the work that
+   still needs a human is visible without reading the status column. */
+.queue-table { table-layout: auto; }
+
+.queue-table td:first-child,
+.queue-table th:first-child { padding-left: 1.25rem; }
+
+.queue-row td:first-child { box-shadow: inset 2px 0 0 transparent; }
+.queue-row--pending td:first-child { box-shadow: inset 2px 0 0 var(--accent-blue); }
+.queue-row--attention td:first-child { box-shadow: inset 2px 0 0 var(--pill-warn); }
+
+.queue-row td { vertical-align: middle; }
+
+.queue-identity { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.queue-identity strong { font-weight: 500; font-size: 0.92rem; line-height: 1.35; }
+
+.queue-identity .queue-sub {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-dark);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.queue-meta {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.queue-meta--dim { color: var(--text-dark); }
+
+.queue-actions { text-align: right; white-space: nowrap; }
+[dir="rtl"] .queue-actions { text-align: left; }
+
+.btn-review {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-review:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    background: var(--accent-blue-dim);
+}
+
+/* Skeleton rows, so switching queues does not collapse the page height. */
+.skeleton-list { display: flex; flex-direction: column; }
+
+.skeleton-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) minmax(0, 1.5fr) 6rem;
+    gap: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.skeleton-row:last-child { border-bottom: none; }
+
+.skeleton-bar {
+    height: 0.7rem;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.04) 0%,
+        rgba(255, 255, 255, 0.09) 50%,
+        rgba(255, 255, 255, 0.04) 100%);
+    background-size: 200% 100%;
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+/* --------------------------------------------------------------------------
+   The review dialog
+   -------------------------------------------------------------------------- */
+
+.portal-dialog--review {
+    width: min(88rem, calc(100vw - 2rem));
+    max-height: 92vh;
+}
+
+.portal-dialog--review .portal-dialog-inner { max-height: 92vh; }
+.portal-dialog--review .portal-dialog-body { padding: 0; gap: 0; }
+
+.portal-dialog-head .link-button {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.portal-dialog-head .link-button:hover {
+    color: var(--text-main);
+    background: var(--bg-surface-hover);
+}
+
+.portal-dialog[open] { animation: dialog-in 0.18s ease-out; }
+.portal-dialog[open]::backdrop { animation: backdrop-in 0.18s ease-out; }
+
+@keyframes dialog-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* The dialog title bar carries the submission identity, not just a label. */
+.review-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    min-width: 0;
+}
+
+.review-head h2 {
+    font-size: 1.05rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.review-head .breadcrumb {
+    margin-bottom: 0.35rem;
+    width: 100%;
+    color: var(--text-dark);
+}
+
+/* Two columns on a wide screen: the submission on the left, the advisory
+   analysis on the right. They collapse to one column below 1100px. */
+.review-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 0;
+}
+
+.review-primary,
+.review-analysis {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    min-width: 0;
+}
+
+.review-analysis {
+    border-left: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.012);
+}
+
+/* The one control that reaches the assistant, sized as the column's action. */
+.review-analysis > .btn-ghost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.1rem;
+}
+
+/* Section captions inside the review columns. */
+.review-caption {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.review-caption::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.review-identity { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.review-identity h3 {
+    font-size: 1.35rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.review-byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.review-byline strong { color: var(--text-main); font-weight: 500; }
+
+.review-byline .mono-meta { color: var(--text-dark); font-size: 0.68rem; }
+
+/* Long member notes / external links must wrap rather than push the layout. */
+.review-longtext {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.review-link { color: var(--accent-blue); overflow-wrap: anywhere; }
+.review-link:hover { text-decoration: underline; }
+
+.preview-box { position: relative; }
+
+.preview-empty {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    align-items: center;
+    max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   The advisory analysis panel
+   -------------------------------------------------------------------------- */
+
+.ai-panel {
+    position: sticky;
+    top: 0;
+}
+
+.ai-panel .panel-head { padding: 0.85rem 1.25rem; }
+
+.ai-panel .panel-head h2 {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ai-model {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-dark);
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+.ai-body { display: flex; flex-direction: column; }
+
+.ai-section {
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.ai-section:last-child { border-bottom: none; }
+
+.ai-section__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* Quick brief — deliberately the loudest thing in the panel. */
+.ai-brief { background: var(--accent-blue-dim); border-left: 2px solid var(--accent-blue); }
+.ai-brief .ai-section__label { color: var(--accent-blue); }
+
+.ai-brief p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-main);
+    max-width: 60ch;
+    overflow-wrap: anywhere;
+}
+
+/* Confidence — a reliability reading, never an approval score. */
+.confidence-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.confidence-reading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+}
+
+.confidence-score {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.confidence-level {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+}
+
+.confidence-meter {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.confidence-meter__fill {
+    height: 100%;
+    background: var(--accent-blue);
+    transition: width 0.5s ease;
+}
+
+.confidence-meter--low    .confidence-meter__fill { background: var(--pill-warn); }
+.confidence-meter--medium .confidence-meter__fill { background: var(--pill-wait); }
+
+.confidence-reason {
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.confidence-note {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.7rem;
+}
+
+/* Suggestions — a proposal, its reasoning, and the human's options. */
+.suggestion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.suggestion:last-child { border-bottom: none; }
+
+.suggestion__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.suggestion__value {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    font-weight: 500;
+    color: var(--text-main);
+    overflow-wrap: anywhere;
+    border-left: 2px solid var(--border-strong);
+    padding-left: 0.85rem;
+}
+
+.suggestion__reason {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.suggestion__reason::before {
+    content: 'WHY ';
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dark);
+}
+
+.suggestion__actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.suggestion__unavailable {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--pill-warn);
+}
+
+.btn-mini {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.7rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-mini:hover:not(:disabled) {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    background: var(--accent-blue-dim);
+}
+
+.btn-mini:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-mini--quiet { color: var(--text-muted); opacity: 0.8; }
+.btn-mini--quiet:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text-muted); background: transparent; }
+
+.suggestion.is-applied { background: rgba(59, 130, 246, 0.05); }
+.suggestion.is-applied .suggestion__value { border-left-color: var(--accent-blue); }
+
+.suggestion__applied {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+}
+
+/* Reviewer-attention flags. Empty groups are never rendered at all. */
+.flag-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.flag-group:last-child { border-bottom: none; }
+
+.flag-group__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.flag-group__count {
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0 0.3rem;
+    font-size: 0.58rem;
+}
+
+.flag-group--danger  .flag-group__label { color: var(--pill-bad); }
+.flag-group--danger  .flag-group__count { color: var(--pill-bad); border-color: var(--pill-bad); }
+.flag-group--warn    .flag-group__label { color: var(--pill-warn); }
+.flag-group--warn    .flag-group__count { color: var(--pill-warn); border-color: var(--pill-warn); }
+
+.flag-group--danger { background: rgba(239, 68, 68, 0.05); }
+
+.flag-list { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+
+.flag {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    padding: 0.5rem 0.75rem;
+    border-left: 2px solid var(--text-dark);
+    background: var(--bg-base);
+    overflow-wrap: anywhere;
+}
+
+.flag--danger { border-left-color: var(--pill-bad); color: var(--text-main); }
+.flag--warn   { border-left-color: var(--pill-warn); }
+.flag--info   { border-left-color: var(--border-strong); }
+
+/* The severity marker also carries a text label, so severity never depends on
+   colour alone. */
+.flag__marker {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    color: inherit;
+    opacity: 0.75;
+    flex: 0 0 auto;
+}
+
+/* Review notes read as guidance, not as another warning. */
+.note-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: note;
+}
+
+.note-item {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.note-item::before {
+    counter-increment: note;
+    content: counter(note, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--accent-blue);
+    padding-top: 0.28rem;
+}
+
+/* The advisory statement. Present on every state of the panel. */
+.ai-disclaimer {
+    padding: 0.9rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.75;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-base);
+    margin: 0;
+}
+
+.ai-disclaimer strong { color: var(--text-main); font-weight: 700; }
+
+.ai-disclaimer ul { list-style: none; margin: 0.4rem 0 0; padding: 0; }
+.ai-disclaimer li { padding-left: 0.9rem; position: relative; }
+.ai-disclaimer li::before { content: '—'; position: absolute; left: 0; }
+
+/* Idle / running / failed states for the panel. */
+.ai-empty {
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.ai-empty p { font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); max-width: 46ch; }
+
+.ai-running {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+}
+
+.ai-spinner {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid var(--accent-blue);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ai-spin 0.8s linear infinite;
+    flex: 0 0 auto;
+}
+
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+
+.ai-skeleton { display: flex; flex-direction: column; gap: 0.6rem; padding: 0 1.25rem 1.5rem; }
+
+.ai-reveal { animation: ai-fade 0.28s ease-out; }
+
+@keyframes ai-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   The administrative decision bar
+   --------------------------------------------------------------------------
+
+   Deliberately unlike anything in the advisory panel: full width, at the
+   bottom of the dialog, always visible, and captioned. Accepting a machine
+   suggestion fills in a form field; only this bar decides anything.
+   -------------------------------------------------------------------------- */
+
+.decision-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem 1.5rem;
+    background: var(--bg-surface);
+}
+
+.decision-bar__caption {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.decision-bar__caption .mono-meta {
+    color: var(--text-main);
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+}
+
+.decision-bar__caption span:last-child {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.decision-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.decision-bar .btn-submit { margin-top: 0; padding: 0.8rem 1.4rem; font-size: 0.74rem; letter-spacing: 0.06em; }
+.decision-bar .btn-ghost { padding: 0.8rem 1.2rem; }
+
+/* Decline is destructive: it reads as an outline until it is hovered, so it
+   is never the button someone hits by momentum. */
+.btn-danger {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f8a3a3;
+}
+
+.btn-danger:hover {
+    border-color: var(--pill-bad);
+    color: var(--pill-bad);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.portal-dialog-foot--decision { padding: 1rem 1.5rem; }
+
+/* --------------------------------------------------------------------------
+   Review workspace — responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+    .review-grid { grid-template-columns: minmax(0, 1fr); }
+
+    .review-analysis {
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .ai-panel { position: static; }
+}
+
+@media (max-width: 880px) {
+    /* Full-bleed on a phone. `inset: 0` rather than `width: 100vw`, which
+       overflows by the scrollbar width on desktop-class browsers. */
+    .portal-dialog--review {
+        inset: 0;
+        width: auto;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+    }
+
+    .portal-dialog--review .portal-dialog-inner { max-height: 100%; }
+
+    .review-primary,
+    .review-analysis { padding: 1.25rem 1rem; }
+
+    .ai-section,
+    .suggestion,
+    .flag-group,
+    .ai-disclaimer,
+    .ai-empty { padding-left: 1rem; padding-right: 1rem; }
+
+    .spec-grid { grid-template-columns: minmax(0, 1fr); }
+    .skeleton-row { grid-template-columns: minmax(0, 1fr) 5rem; }
+    .skeleton-row > :nth-child(n + 3) { display: none; }
+
+    .decision-bar { flex-direction: column; align-items: stretch; }
+    .decision-bar__actions > * { flex: 1 1 auto; }
+
+    /* Crushing eight columns into a phone makes every one unreadable; the
+       queue keeps its shape and scrolls inside .table-scroll instead. */
+    .queue-table { min-width: 46rem; }
+
+    .queue-tabs { flex-direction: column; }
+
+    .queue-tab {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        border-left: 2px solid transparent;
+        justify-content: space-between;
+    }
+
+    .queue-tab:last-child { border-bottom: none; }
+    .queue-tab.is-active { border-bottom-color: var(--border-color); border-left-color: var(--accent-blue); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-bar,
+    .ai-spinner { animation: none; }
+
+    .ai-reveal,
+    .portal-dialog[open],
+    .portal-dialog[open]::backdrop { animation: none; }
+
+    .confidence-meter__fill { transition: none; }
+}
+
+/* ==========================================================================
+   ATTENTION
+   ==========================================================================
+
+   One colour system for the whole admin console, so a committee member can
+   look at any page and know within a second or two what is being asked of
+   them. There are four levels and only two of them are loud:
+
+     now     red    — blocked, overdue, or an empty seat that matters
+     review  amber  — waiting on a human decision
+     ok      green  — settled, nothing to do
+     idle    grey   — a state, not a request
+
+   Two rules hold the system together:
+
+   1. Colour never carries meaning on its own. Every attention marker also
+      carries a glyph and a word, and every page that uses the colours prints
+      the legend once.
+
+   2. A state that is merely true is not coloured. A catalogue entry being
+      "active" is not an achievement, and thirty green pills in a column are
+      indistinguishable from thirty grey ones. Those use .state-tag.
+   -------------------------------------------------------------------------- */
+
+:root {
+    --attn-now:    var(--pill-bad);
+    --attn-review: var(--pill-warn);
+    --attn-ok:     var(--pill-ok);
+    --attn-idle:   var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Attention pills
+   -------------------------------------------------------------------------- */
+
+.pill--attn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+}
+
+.pill__mark {
+    font-weight: 700;
+    opacity: 0.9;
+    /* A fixed box so the labels line up down a column. */
+    min-width: 0.5rem;
+    text-align: center;
+}
+
+.pill--attn-now    { color: var(--attn-now); background: rgba(239, 68, 68, 0.08); }
+.pill--attn-review { color: var(--attn-review); background: rgba(245, 158, 11, 0.08); }
+.pill--attn-ok     { color: var(--attn-ok); }
+.pill--attn-idle   { color: var(--attn-idle); border-color: var(--border-strong); }
+
+/* --------------------------------------------------------------------------
+   A state that is not a request for action
+   -------------------------------------------------------------------------- */
+
+.state-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    background: var(--bg-base);
+    white-space: nowrap;
+}
+
+.state-tag--muted { color: var(--text-dark); }
+
+/* --------------------------------------------------------------------------
+   Attention on a table row
+   --------------------------------------------------------------------------
+   A hairline edge on the first cell. Enough to find the row while scanning a
+   column of thirty, quiet enough that ten of them in a row is not alarming.
+   -------------------------------------------------------------------------- */
+
+.attn-row td:first-child { box-shadow: inset 2px 0 0 transparent; }
+.attn-row--now td:first-child    { box-shadow: inset 2px 0 0 var(--attn-now); }
+.attn-row--review td:first-child { box-shadow: inset 2px 0 0 var(--attn-review); }
+.attn-row--ok td:first-child     { box-shadow: inset 2px 0 0 var(--attn-ok); }
+
+.attn-row--now { background: rgba(239, 68, 68, 0.035); }
+.attn-row--now:hover { background: rgba(239, 68, 68, 0.06); }
+
+/* The archive queue was the first surface to use this; keep it on the same
+   vocabulary rather than maintaining a second set of row modifiers. */
+.queue-row--pending td:first-child   { box-shadow: inset 2px 0 0 var(--attn-review); }
+.queue-row--attention td:first-child { box-shadow: inset 2px 0 0 var(--text-muted); }
+
+/* --------------------------------------------------------------------------
+   The legend
+   -------------------------------------------------------------------------- */
+
+.attn-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.attn-legend__item { display: inline-flex; align-items: center; gap: 0.45rem; }
+
+.attn-legend__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--attn-idle);
+    flex: 0 0 auto;
+}
+
+.attn-legend__item--now    .attn-legend__dot { background: var(--attn-now); }
+.attn-legend__item--review .attn-legend__dot { background: var(--attn-review); }
+.attn-legend__item--ok     .attn-legend__dot { background: var(--attn-ok); }
+
+/* --------------------------------------------------------------------------
+   The triage strip
+   --------------------------------------------------------------------------
+   The overview page's answer to "what am I here for". Counts first, at a size
+   that can be read from across a desk; the queue name under it; the state
+   spelled out so the colour is confirmation rather than the message.
+   -------------------------------------------------------------------------- */
+
+.triage {
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+}
+
+.triage__head {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.triage__head .mono-meta { color: var(--text-muted); }
+
+.triage__headline {
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 2vw, 1.35rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.triage__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    background: var(--bg-surface);
+    overflow: hidden;
+}
+
+.triage__tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1.15rem 1.5rem;
+    box-shadow: 1px 0 0 var(--border-color), 0 1px 0 var(--border-color);
+    color: inherit;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    min-width: 0;
+}
+
+.triage__tile:hover {
+    background: var(--bg-surface-hover);
+    color: inherit;
+}
+
+.triage__count {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.triage__label {
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: var(--text-main);
+}
+
+.triage__state {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.09em;
+    color: var(--text-muted);
+}
+
+.triage__hint {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.triage__tile--now      { border-left-color: var(--attn-now); background: rgba(239, 68, 68, 0.04); }
+.triage__tile--now      .triage__count,
+.triage__tile--now      .triage__state { color: var(--attn-now); }
+.triage__tile--now:hover { background: rgba(239, 68, 68, 0.07); }
+
+.triage__tile--review   { border-left-color: var(--attn-review); }
+.triage__tile--review   .triage__count,
+.triage__tile--review   .triage__state { color: var(--attn-review); }
+
+/* A cleared queue is deliberately understated: it is good news, not an event. */
+.triage__tile--ok       .triage__count { color: var(--text-dark); }
+.triage__tile--ok       .triage__state { color: var(--attn-ok); }
+
+@media (max-width: 880px) {
+    .triage__grid { grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); }
+    .triage__tile { padding: 1rem; }
+    .triage__count { font-size: 1.6rem; }
+}
+
+/* --------------------------------------------------------------------------
+   Waiting time in a queue column
+   --------------------------------------------------------------------------
+   A date says when. This says how long, which is the part that decides what
+   to open first.
+   -------------------------------------------------------------------------- */
+
+.wait-cell { display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-start; }
+
+.wait-age {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.07em;
+    padding: 0.1rem 0.35rem;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+.wait-age--now    { color: var(--attn-now); }
+.wait-age--review { color: var(--text-muted); }
+.wait-age--ok,
+.wait-age--idle   { color: var(--text-dark); }
+
+/* --------------------------------------------------------------------------
+   Positions catalogue
+   -------------------------------------------------------------------------- */
+
+.position-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.holder-list { display: flex; flex-direction: column; gap: 0.2rem; }
+.holder-list p { font-size: 0.88rem; line-height: 1.45; }
+.holder-list strong { font-weight: 500; }
+
+/* --------------------------------------------------------------------------
+   Form sections
+   --------------------------------------------------------------------------
+   A long form needs somewhere for the eye to rest. The same captioned rule the
+   review workspace uses, so sign-up and the application read as one product.
+   -------------------------------------------------------------------------- */
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* The first section opens the form; it needs a caption, not a divider. */
+.portal-form > .form-section:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.form-section__label {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+}
+
+.form-section__blurb {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 54ch;
+}
+
+/* The picker comes from main.css, shared with the public join page. It only
+   needs to sit correctly inside a portal field here. */
+.form-field > .interest-picker { margin-top: 0.35rem; }
+
+/*
+ * .form-field input above stretches every control to the full field width,
+ * which is right for a text box and wrong for a checkbox — it swallowed the
+ * option and pushed its label out of the box. Restore the checkbox at a
+ * specificity that beats it.
+ */
+.form-field .interest-options input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    min-width: 0;
+    padding: 0;
+    flex: 0 0 auto;
+    accent-color: var(--accent-blue);
+}
+
+.form-field .interest-options label { min-width: 0; }
+.form-field .interest-options label span { min-width: 0; overflow-wrap: anywhere; }
+
+/* One column is unreadable in a narrow card; three is too thin to scan. */
+@media (max-width: 560px) {
+    .interest-options { grid-template-columns: minmax(0, 1fr); }
 }

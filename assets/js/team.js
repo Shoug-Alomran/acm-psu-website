@@ -36,26 +36,6 @@
 
     var CURRENT = '2026';
 
-    /* Current static cards use this translation layer. Archived/future members
-       can provide the same fields directly as nameAr, roleAr, bioAr, etc. */
-    var PROFILE_AR = {
-        '0x01_LEAD': {
-            name: 'محمد ياور حياة',
-            role: 'رئيس النادي',
-            college: 'كلية علوم الحاسب والمعلومات',
-            term: 'الدفعة الحالية'
-        },
-        '0x02_LEAD': {
-            name: 'شوق العمران',
-            role: 'نائبة الرئيس',
-            major: 'هندسة البرمجيات والأمن السيبراني',
-            college: 'كلية علوم الحاسب والمعلومات',
-            term: 'نوفمبر 2025–حتى الآن',
-            bio: 'شوق العمران طالبة في هندسة البرمجيات والأمن السيبراني بجامعة الأمير سلطان، ومطوّرة تقنية ومدرّبة ومؤسِّسة استوديو بلو برنت. تمتد أعمالها عبر تطوير الأنظمة المتكاملة، والأمن السيبراني، ودمج الذكاء الاصطناعي، والتعليم التقني، والتوثيق الموجّه للمطورين.\n\nصمّمت شوق ونشرت منصات ويب ومشاريع في الأمن السيبراني وأنظمة مدعومة بالذكاء الاصطناعي، من بينها «فرصة»، وهو نموذج أولي عامل طُوّر خلال هاكاثون للذكاء الاصطناعي مع دمج كلاودفلير ووركرز للذكاء الاصطناعي. وتشمل محفظة أعمالها أيضًا منصات أكاديمية، وبنية تحتية للمسابقات، وموارد تقنية تحوّل الأفكار المعقدة والعمل التطبيقي إلى أنظمة واضحة وقابلة للاستخدام.\n\nبصفتها نائبة رئيس نادي ACM في جامعة الأمير سلطان، تعمل شوق على عدة مبادرات رئيسية في وقت واحد. تدير مسؤوليات تقنية وتنظيمية متداخلة تشمل تطوير موقع النادي وأرشيفه الرقمي، ومعسكر البرمجة بالذكاء الاصطناعي، ومسابقات CTF، والهاكاثونات، والورش، ومشاريع النادي الأخرى. وتمتد مسؤولياتها إلى تطوير المنصات، وتخطيط الفعاليات، والمحتوى التقني، وتصميم المسابقات، والتوثيق، وتنسيق الفرق، والنشر؛ بما يتطلب دفع عدة مشاريع مكثفة إلى الأمام بالتوازي.\n\nإلى جانب تنظيم المبادرات التقنية، تمتلك شوق خبرة في تقديمها مباشرة. فقد قدّمت ورشة في الأمن السيبراني لإحدى مسابقات CTF، وقدّمت ورشة «رحلتي كمدرّسة زميلة» عبر مركز الكتابة والإرشاد في جامعة الأمير سلطان، مستندة إلى خبرتها كمدرّسة زميلة. وتجمع خبرتها التعليمية بين التدريب التقني، وتعليم الأقران، والتحدث أمام الجمهور، وتطوير موارد تعليمية منظمة.\n\nتجمع شوق في أعمالها بين هندسة البرمجيات، والأمن السيبراني، والذكاء الاصطناعي، والتدريب التقني، وتنسيق المشاريع، والقيادة المجتمعية. ومن السمات المميزة لعملها قدرتها على تولّي عدة مبادرات عالية المتطلبات في الوقت نفسه، والتنقل بين المسؤوليات التقنية والقيادية، وقيادة المشاريع من التخطيط والتوثيق المبكرين إلى التنفيذ والنشر والتسليم.',
-            progression: ['نوفمبر 2025–أبريل 2026 — مسؤولة الاتصال', 'أبريل 2026–حتى الآن — نائبة الرئيس']
-        }
-    };
-
     var CHAPTERS = {
         '2026': { label: '2026', current: true },
         '2025': { label: '2025', leads: [], members: [] },
@@ -75,6 +55,9 @@
     /* The markup already in the page is the current chapter — keep it so we can
        restore it verbatim rather than re-rendering it from data. */
     var currentMarkup = roster.innerHTML;
+    document.addEventListener('acm:rosterupdated', function () {
+        if (select.value === CURRENT) { currentMarkup = roster.innerHTML; }
+    });
 
     function esc(value) {
         return String(value == null ? '' : value)
@@ -115,6 +98,7 @@
             ' data-person-college="' + esc(person.college || '') + '"' +
             ' data-person-id="' + esc(person.id || '—') + '"' +
             ' data-person-year="' + esc(person.year || '') + '"' +
+            ' data-person-academic-year="' + esc(person.academicYear || '') + '"' +
             ' data-person-term="' + esc(person.term || '') + '"' +
             ' data-person-bio="' + esc(person.bio || '') + '"' +
             ' data-person-progression="' + esc(progression) + '"' +
@@ -277,9 +261,8 @@
     function profileValue(card, field) {
         var englishKey = 'person' + field.charAt(0).toUpperCase() + field.slice(1);
         if (profileLanguage() !== 'ar') { return card.dataset[englishKey] || ''; }
-        var record = PROFILE_AR[card.dataset.personId] || {};
         var arabicKey = englishKey + 'Ar';
-        return record[field] || card.dataset[arabicKey] || card.dataset[englishKey] || '';
+        return card.dataset[arabicKey] || card.dataset[englishKey] || '';
     }
 
     function openProfile(card) {
@@ -289,10 +272,11 @@
         setProfile('role', profileValue(card, 'role'));
         setProfile('major', profileValue(card, 'major'));
         setProfile('college', profileValue(card, 'college') || profileValue(card, 'major'));
+        setProfile('academic-year', card.dataset.personAcademicYear);
         setProfile('year', card.dataset.personYear || document.querySelector('[data-year-label]').textContent.replace('/', '').trim());
         setProfile('id', card.dataset.personId);
         setProfile('term', profileValue(card, 'term') || (profileLanguage() === 'ar' ? 'الدفعة الحالية' : 'Current chapter'));
-        setProfile('service', profileValue(card, 'term') || card.dataset.personYear || '—');
+        setProfile('service', card.dataset.personService || profileValue(card, 'term') || card.dataset.personYear || '—');
         setProfile('initials', initials(profileValue(card, 'name')));
 
         var bioSection = profileDialog.querySelector('[data-profile-bio-section]');
@@ -319,18 +303,53 @@
             return '<li><span>' + esc(parts.shift()) + '</span><strong>' + esc(parts.join(' — ')) + '</strong></li>';
         }).join('');
 
-        var arabic = profileLanguage() === 'ar';
         var linkData = [
-            ['GitHub', card.dataset.personGithub],
             ['LinkedIn', card.dataset.personLinkedin],
-            ['SHOUG.TECH', card.dataset.personWebsite],
-            [arabic ? 'مركز الأعمال' : 'Work Hub', card.dataset.personWork],
-            [arabic ? 'بلو برنت' : 'Blueprint', card.dataset.personBlueprint]
+            ['GitHub', card.dataset.personGithub],
+            ['Website', card.dataset.personWebsite],
+            ['Work Hub', card.dataset.personWork],
+            ['Blueprint', card.dataset.personBlueprint]
         ].filter(function (entry) { return entry[1]; });
+        try {
+            var extraLinks = JSON.parse(card.dataset.personExtraLinks || '[]');
+            if (Array.isArray(extraLinks)) {
+                extraLinks.forEach(function (link) {
+                    if (link && link.label && link.url) { linkData.push([link.label, link.url]); }
+                });
+            }
+        } catch (_) { /* A malformed optional value must not break a static profile. */ }
+        linkData = linkData.filter(function (entry, index, all) {
+            return all.findIndex(function (candidate) { return candidate[1] === entry[1]; }) === index;
+        });
         var linksSection = profileDialog.querySelector('[data-profile-links-section]');
         linksSection.hidden = !linkData.length;
         profileDialog.querySelector('[data-profile-links]').innerHTML = linkData.map(function (entry) {
             return '<a href="' + esc(entry[1]) + '" rel="noopener">' + esc(entry[0]) + '<span>↗</span></a>';
+        }).join('');
+
+        function publicRecords(key) {
+            try {
+                var value = JSON.parse(card.dataset[key] || '[]');
+                return Array.isArray(value) ? value : [];
+            } catch (_) { return []; }
+        }
+
+        var contributions = publicRecords('personContributions');
+        var contributionsSection = profileDialog.querySelector('[data-profile-contributions-section]');
+        contributionsSection.hidden = !contributions.length;
+        profileDialog.querySelector('[data-profile-contributions]').innerHTML = contributions.map(function (item) {
+            return '<article><div><strong>' + esc(item.title) + '</strong><span>' +
+                esc(item.type_label || item.type_slug || '') + '</span></div><p>' +
+                esc(item.project_title || 'ACM PSU') + (item.role_text ? ' · ' + esc(item.role_text) : '') +
+                '</p></article>';
+        }).join('');
+
+        var participation = publicRecords('personParticipation');
+        var participationSection = profileDialog.querySelector('[data-profile-participation-section]');
+        participationSection.hidden = !participation.length;
+        profileDialog.querySelector('[data-profile-participation]').innerHTML = participation.map(function (item) {
+            return '<article><div><strong>' + esc(item.project_title) + '</strong><span>' +
+                esc(item.status || '') + '</span></div><p>' + esc(item.role_text || 'Participant') + '</p></article>';
         }).join('');
         if (!profileDialog.open) { profileDialog.showModal(); }
     }
