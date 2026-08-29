@@ -2,16 +2,15 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
-# Allow the workflow to publish to Pages via OIDC.
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# One deploy at a time; let an in-flight run finish rather than cancelling it.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -19,15 +18,20 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      # The public website is plain HTML and needs no build. The member and
-      # admin portals are TypeScript, so they are rebuilt here from source
-      # rather than trusting whatever bundle happens to be committed.
-      - uses: actions/setup-node@v4
+    env:
+      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+      PUBLIC_SITE_URL: https://acm-psu.shoug-tech.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
 
       - name: Install build dependencies
@@ -36,21 +40,33 @@ jobs:
       - name: Type-check the portal
         run: npm run typecheck
 
-      # PUBLIC_* values are safe in a browser: the Supabase anon key grants
-      # nothing on its own because every table is protected by row level
-      # security. Privileged keys live in Supabase Edge Function secrets and
-      # never reach this workflow.
+      - name: Validate public Supabase configuration
+        shell: bash
+        run: |
+          if [ -z "$PUBLIC_SUPABASE_URL" ]; then
+           echo "::error::PUBLIC_SUPABASE_URL is missing from GitHub repository secrets."
+            exit 1
+          fi
+
+          if [ -z "$PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::error::PUBLIC_SUPABASE_ANON_KEY is missing from GitHub repository secrets."
+            exit 1
+          fi
+
+          echo "PUBLIC_SUPABASE_URL is configured."
+          echo "PUBLIC_SUPABASE_ANON_KEY is configured."
+          echo "Supabase URL length: ${#PUBLIC_SUPABASE_URL}"
+          echo "Supabase key length: ${#PUBLIC_SUPABASE_ANON_KEY}"
+
       - name: Build the portal bundles
-        env:
-          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          PUBLIC_SITE_URL: https://acm-psu.shoug-tech.com
         run: npm run build
 
-      # design-template/ holds the original mockups and is not published.
       - name: Stage site files
+        shell: bash
         run: |
+          rm -rf _site
           mkdir -p _site
+
           rsync -a \
             --exclude '.git' \
             --exclude '.github' \
@@ -68,22 +84,28 @@ jobs:
             --exclude 'package-lock.json' \
             --exclude 'tsconfig.json' \
             --exclude 'build.mjs' \
+            --exclude '.env.local' \
             --exclude '.env.local.example' \
             --exclude '_site' \
             ./ _site/
 
-      - uses: actions/configure-pages@v5
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
