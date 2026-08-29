@@ -207,6 +207,7 @@ nav {
     display: flex;
     align-items: center;
 }
+.portal-nav { display: flex; flex-direction: column; }
 
 .nav-inner {
     width: 100%;

@@ -47,6 +47,22 @@
     position: relative;
     z-index: 1;
 }
+.portal-nav {
+    display: flex;
+    flex-direction: column;
+
+    /* Reset the public-site global nav styles. */
+    position: static;
+    top: auto;
+    width: auto;
+    height: auto;
+    border-bottom: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    z-index: auto;
+    align-items: stretch;
+}
 
 .portal-sidebar {
     border-right: 1px solid var(--border-color);
