@@ -55,3 +55,37 @@ comment on view public.public_event_participation is
 
 grant select on public.public_verified_contributions to anon, authenticated;
 grant select on public.public_event_participation to anon, authenticated;
+
+-- Dashboard totals use the same verified record rules for every member.
+create or replace view public.member_stats
+with (security_invoker = true) as
+select
+    u.id as user_id,
+    (select count(distinct pa.project_id) from public.participations pa
+      where pa.user_id = u.id and pa.verified_at is not null
+        and pa.status in ('confirmed', 'completed'))                       as events_count,
+    (select count(distinct record.project_id)
+       from (
+         select c.project_id from public.contributions c
+          where c.user_id = u.id and c.status = 'approved'
+            and c.project_id is not null and c.deleted_at is null
+         union
+         select pa.project_id from public.participations pa
+          where pa.user_id = u.id and pa.verified_at is not null
+            and pa.status in ('confirmed', 'completed')
+       ) record)                                                           as projects_count,
+    (select count(*) from public.contributions c
+      where c.user_id = u.id and c.status = 'approved' and c.deleted_at is null
+        and c.type_slug in ('workshop-development', 'workshop-presenter')) as workshops_count,
+    (select count(*) from public.contributions c
+      where c.user_id = u.id and c.status = 'approved' and c.deleted_at is null)
+                                                                           as verified_contributions,
+    (select count(*) from public.archive_submissions s
+      where s.submitted_by = u.id)                                         as submissions_count,
+    (select count(*) from public.position_history ph
+      where ph.user_id = u.id)                                             as positions_held
+from public.app_users u
+where u.deleted_at is null;
+
+comment on view public.member_stats is
+    'Verified per-member dashboard totals. Projects include both approved work and verified participation.';
