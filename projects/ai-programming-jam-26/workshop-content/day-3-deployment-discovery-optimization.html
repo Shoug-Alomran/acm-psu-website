@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="JAM.26 Day 3 workshop: deploy with Vercel, connect domains with Cloudflare, verify production, configure search discovery, analyze PageSpeed, and debug production issues.">
+<link rel="canonical" href="https://acm-psu.shoug-tech.com/projects/ai-programming-jam-26/workshop-content/day-3-deployment-discovery-optimization.html">
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<title>Day 3 | Deployment, Discovery & Optimization | JAM.26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F4EF;
+    --panel:#FFFFFF;
+    --ink:#111111;
+    --sub:#5B5B55;
+    --indigo:#6C5CE7;
+    --teal:#22C9AE;
+    --orange:#FF6B45;
+    --cream-line: rgba(17,17,17,0.08);
+    --shadow-ink: 7px 7px 0 var(--ink);
+    --shadow-ink-sm: 4px 4px 0 var(--ink);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:'JetBrains Mono', monospace; line-height:1.55;
+    background-image: radial-gradient(circle, rgba(17,17,17,0.10) 1px, transparent 1px); background-size: 22px 22px;
+  }
+  a{color:inherit;}
+  ::selection{ background:var(--indigo); color:#fff; }
+
+  .topbar{
+    position:sticky; top:0; z-index:50; background:var(--bg); border-bottom:3px solid var(--ink);
+    display:flex; align-items:center; justify-content:space-between; padding:16px 28px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:19px; letter-spacing:.5px;}
+  .brand .mark{
+    width:34px;height:34px; display:grid; place-items:center; background:var(--indigo);
+    border:3px solid var(--ink); color:#fff; font-size:16px; box-shadow: 3px 3px 0 var(--ink);
+  }
+  .crumb{ font-size:12px; color:var(--sub); }
+  .crumb b{ color:var(--ink); }
+  .pill-btn{
+    background:var(--teal); border:3px solid var(--ink); color:var(--ink); font-family:inherit;
+    font-weight:800; font-size:12px; letter-spacing:1px; padding:9px 16px; box-shadow: 3px 3px 0 var(--ink);
+    text-decoration:none; text-transform:uppercase; white-space:nowrap; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .pill-btn:hover{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+
+  .index-bar{
+    display:flex; gap:10px; overflow-x:auto; padding:14px 28px; border-bottom:3px solid var(--ink); background:var(--panel); position:sticky; top:69px; z-index:40;
+  }
+  .index-bar::-webkit-scrollbar{ height:6px; }
+  .index-bar a{
+    flex:0 0 auto; text-decoration:none; font-size:11px; letter-spacing:.8px; text-transform:uppercase;
+    font-weight:700; color:var(--ink); border:2px solid var(--ink); padding:7px 12px; background:var(--bg);
+  }
+  .index-bar a:hover{ background:var(--indigo); color:#fff; }
+
+  main{ max-width:1120px; margin:0 auto; padding:0 28px; }
+
+  .hero{ padding:56px 0 40px; }
+  .kicker{
+    display:inline-block; font-size:12px; letter-spacing:2px; font-weight:800; color:var(--indigo);
+    border:2px solid var(--indigo); padding:5px 12px; margin-bottom:18px; background:#fff;
+  }
+  .browser-window{ border:3px solid var(--ink); background:var(--panel); box-shadow: var(--shadow-ink); }
+  .browser-chrome{
+    display:flex; align-items:center; gap:14px; border-bottom:3px solid var(--ink); padding:12px 16px; background:#EDEBE3;
+  }
+  .dots{ display:flex; gap:7px; }
+  .dot{ width:12px;height:12px; border-radius:50%; }
+  .dot.red{ background:#FF5F57; } .dot.yellow{ background:#FEBC2E; } .dot.green{ background:#28C840; }
+  .addr{ flex:1; background:#fff; border:2px solid var(--ink); font-size:12px; padding:6px 12px; color:var(--sub); }
+  .addr b{color:var(--ink);}
+  .browser-body{ padding:40px; }
+  .readme-tag{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--sub); margin-bottom:16px;}
+  h1.title{ font-size:44px; margin:0 0 22px; line-height:1.08; font-weight:800; }
+  h1.title .accent{ color:var(--indigo); }
+  p.lead{ font-size:15px; color:#2b2b28; }
+
+  .fact-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:3px solid var(--ink); box-shadow:var(--shadow-ink-sm); margin-top:26px;}
+  .fact-grid > div{ padding:20px; border-right:2px solid var(--ink); background:#fff; }
+  .fact-grid > div:last-child{ border-right:none; }
+  .fact-grid .k{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--sub); margin-bottom:6px; }
+  .fact-grid .v{ font-size:14px; font-weight:800; line-height:1.4; }
+  @media(max-width:700px){ .fact-grid{ grid-template-columns:1fr; } .fact-grid>div{ border-right:none; border-bottom:2px solid var(--ink); } .fact-grid>div:last-child{border-bottom:none;} }
+
+  section.block{ padding:48px 0; border-bottom:3px solid var(--ink); scroll-margin-top:130px; }
+  section.block:last-of-type{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:26px; }
+  .sec-num{ font-size:12px; font-weight:800; color:#fff; background:var(--ink); padding:4px 9px; }
+  h2.sec-title{ font-size:30px; margin:0; font-weight:800; }
+  h2.sec-title .hash{ color:var(--orange); }
+  p.sec-sub{ color:var(--sub); font-size:13px; margin:6px 0 0; }
+  h3.sub-title{ font-size:18px; margin:28px 0 12px; font-weight:800; }
+  h4.mini-title{ font-size:15px; margin:20px 0 8px; font-weight:800; }
+
+  ul.bullet-list{ margin:0; padding-left:0; list-style:none; }
+  ul.bullet-list li{ position:relative; padding:7px 0 7px 22px; font-size:14px; border-bottom:1px solid var(--cream-line); }
+  ul.bullet-list li:last-child{ border-bottom:none; }
+  ul.bullet-list li::before{ content:"▸"; position:absolute; left:0; color:var(--indigo); font-weight:800; }
+
+  ul.check-list{ list-style:none; margin:0; padding:0; }
+  ul.check-list li{ display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--cream-line); font-size:14px; }
+  ul.check-list li:last-child{ border-bottom:none; }
+  .box{ flex:0 0 18px; width:18px; height:18px; border:2px solid var(--ink); margin-top:2px; background:#fff; }
+
+  .cols-2{ display:grid; grid-template-columns:1fr 1fr; gap:36px; }
+  @media(max-width:760px){ .cols-2{ grid-template-columns:1fr; } }
+
+  .tag-group{ margin:18px 0 30px; }
+  .tag-group .label{ font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--sub); margin-bottom:10px; font-weight:700; }
+  .tags{ display:flex; flex-wrap:wrap; gap:10px; }
+  .tag{ border:2px solid var(--ink); background:#fff; padding:8px 14px; font-size:12.5px; font-weight:600; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease, background .15s ease; }
+  a.tag:hover{ transform:translate(-2px,-2px); box-shadow:3px 3px 0 var(--ink); background:#F8F7FF; }
+  .tag.filled{ background:var(--ink); color:#fff; }
+
+  .flow-strip{
+    margin-top:22px; padding:16px 18px; background:#fff; border:2px solid var(--ink); font-size:12.5px;
+    overflow-x:auto; white-space:nowrap; color:var(--sub);
+  }
+  .flow-strip b{ color:var(--ink); }
+  .note-callout{ margin-top:18px; padding:14px 18px; border:2px dashed var(--ink); font-size:13px; background:#fff; }
+
+  .concept-grid{ display:grid; grid-template-columns:1fr; gap:22px; }
+  .concept{ border:3px solid var(--ink); background:#fff; box-shadow:var(--shadow-ink-sm); padding:26px; }
+  .concept .num{
+    display:inline-flex; width:38px; height:38px; align-items:center; justify-content:center;
+    font-weight:800; font-size:15px; color:#fff; border:2px solid var(--ink); margin-bottom:14px;
+  }
+  .concept h4{ margin:0 0 10px; font-size:19px; font-weight:800; }
+  .concept p.who{ font-size:13.5px; color:var(--sub); margin:0 0 14px; }
+  .concept-01 .num, .concept-04 .num, .concept-07 .num{ background:var(--indigo); }
+  .concept-02 .num, .concept-05 .num, .concept-08 .num{ background:var(--teal); }
+  .concept-03 .num, .concept-06 .num{ background:var(--orange); }
+
+  .img-placeholder{
+    border:3px dashed var(--ink); background:repeating-linear-gradient(135deg, #fff, #fff 10px, #EFEDE4 10px, #EFEDE4 20px);
+    padding:34px 20px; text-align:center; margin:16px 0; min-height:150px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  }
+  .img-placeholder .icon{ font-size:26px; }
+  .img-placeholder .label{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; color:var(--ink); }
+  .img-placeholder .hint{ font-size:11.5px; color:var(--sub); max-width:420px; }
+
+  ol.stepper{ counter-reset:step; list-style:none; margin:0; padding:0; }
+  ol.stepper li{ counter-increment:step; position:relative; padding:14px 0 14px 46px; font-size:14px; border-bottom:1px solid var(--cream-line); }
+  ol.stepper li:last-child{ border-bottom:none; }
+  ol.stepper li::before{
+    content: counter(step, decimal-leading-zero); position:absolute; left:0; top:12px; width:30px; height:30px;
+    display:grid; place-items:center; background:var(--indigo); color:#fff; font-weight:800; font-size:12px; border:2px solid var(--ink);
+  }
+
+  .prompt-card{ border:3px solid var(--ink); margin-bottom:26px; background:#fff; box-shadow:var(--shadow-ink-sm); }
+  .prompt-card .head{ display:flex; align-items:center; gap:10px; background:var(--ink); color:#fff; padding:10px 16px; font-size:12px; letter-spacing:.5px; }
+  .prompt-card .head .dots{ gap:5px; }
+  .prompt-card .head .dot{ width:8px; height:8px; }
+  .prompt-card .term{ padding:20px; font-size:13px; background:#0E0E0C; color:#B9F5EA; white-space:pre-wrap; line-height:1.7; }
+  .prompt-card .term .field{ color:var(--orange); }
+  .prompt-card .purpose{ padding:14px 20px; border-top:2px solid var(--cream-line); font-size:13px; }
+  .prompt-card .purpose b{ color:var(--indigo); }
+
+  .fix-card{ border:3px solid var(--ink); background:#fff; padding:22px; margin-bottom:22px; box-shadow:var(--shadow-ink-sm); position:relative; }
+  .fix-card .tab{
+    position:absolute; top:-14px; left:22px; background:var(--orange); color:#fff; font-size:11px; font-weight:800;
+    padding:5px 12px; border:2px solid var(--ink); text-transform:uppercase; letter-spacing:.5px; transform:rotate(-2deg);
+  }
+  .fix-card h4{ margin:14px 0 12px; font-size:16px; font-weight:800; }
+  .fix-card .row{ margin-bottom:10px; font-size:13.5px; }
+  .fix-card .row b{ display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--indigo); margin-bottom:4px; }
+  .fix-card .row.fix b{ color:var(--teal); }
+
+  footer{ padding:40px 28px 60px; text-align:center; color:var(--sub); font-size:12px; max-width:1120px; margin:0 auto; }
+  footer .foot-mark{ display:inline-flex; align-items:center; gap:8px; font-weight:800; color:var(--ink); margin-bottom:10px;}
+
+  .deco-diamond{ position:fixed; width:180px; height:180px; border:2px solid rgba(255,107,69,0.35); transform:rotate(45deg); left:-90px; bottom:60px; z-index:-1; }
+  .deco-circle{ position:fixed; width:220px; height:220px; border-radius:50%; border:2px solid rgba(108,92,231,0.18); right:-110px; top:200px; z-index:-1; }
+
+  @media(max-width:900px){ .crumb{display:none;} }
+  @media(max-width:700px){
+    .topbar{padding:14px 16px;}
+    .index-bar{padding:12px 16px; top:67px;}
+    main{padding:0 18px;}
+    h1.title{ font-size:30px; }
+    .browser-body{ padding:24px; }
+    h2.sec-title{ font-size:22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deco-diamond"></div>
+<div class="deco-circle"></div>
+
+<div class="topbar">
+  <a class="brand" href="/archive-project.html#learning-archive" style="text-decoration:none;color:inherit"><span class="mark">✦</span> JAM.26</a>
+  <div class="crumb"><a href="/archive-project.html#learning-archive" style="color:inherit">ARCHIVE</a> / <a href="https://ai-programming-jam.shoug-tech.com/workshop-day-03.html" style="color:inherit"><b>DAY 3</b></a> — Deployment, Discovery &amp; Optimization</div>
+  <a class="pill-btn" href="#exercise">YOUR EXERCISE_</a>
+</div>
+
+<nav class="index-bar">
+  <a href="#overview">Overview</a>
+  <a href="#ready">Before You Start</a>
+  <a href="#local-vs-prod">1. Local vs. Production</a>
+  <a href="#vercel">2. Deploying with Vercel</a>
+  <a href="#dns">3. Domains &amp; DNS</a>
+  <a href="#verify">4. Production Verification</a>
+  <a href="#discovery">5. Search Engine Discovery</a>
+  <a href="#webmaster">6. Search Console &amp; Bing</a>
+  <a href="#pagespeed">7. PageSpeed Insights</a>
+  <a href="#proddebug">8. Production Debugging</a>
+  <a href="#prompts">Prompt Templates</a>
+  <a href="#walkthrough">Worked Example</a>
+  <a href="#exercise">Your Exercise</a>
+  <a href="#troubleshoot">Troubleshooting</a>
+  <a href="#selfcheck">Self-Check</a>
+  <a href="#resources">Resources</a>
+</nav>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero" id="overview">
+    <span class="kicker">SEASON 2026 // DAY 03 OF 03</span>
+    <div class="browser-window">
+      <div class="browser-chrome">
+        <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+        <div class="addr">ai-programming-jam.shoug-tech.com / <b>workshops / day-3</b></div>
+      </div>
+      <div class="browser-body">
+        <div class="readme-tag">README.md</div>
+        <h1 class="title"># Deployment, Discovery,<br>and <span class="accent">Optimization</span></h1>
+
+        <p class="lead">Working on localhost is not the finish line. Today your application goes public: deployed, reachable through a real domain, discoverable by search engines, and tested the way real users will actually experience it.</p>
+        <p class="lead">You'll deploy with Vercel, connect a custom domain through Cloudflare, prepare the site for search engine discovery, and use Google PageSpeed Insights to identify meaningful improvements instead of chasing a score.</p>
+
+        <div class="fact-grid">
+          <div><div class="k">Today you'll practice</div><div class="v">Deploy → Connect Domain → Verify → Discover → Optimize</div></div>
+          <div><div class="k">You'll use</div><div class="v">Vercel, Cloudflare, Search Console, Bing Webmaster, PageSpeed</div></div>
+          <div><div class="k">By the end</div><div class="v">A live production URL you can share</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BEFORE YOU START -->
+  <section class="block" id="ready">
+    <div class="sec-head"><span class="sec-num">00</span><h2 class="sec-title"><span class="hash">##</span> Before You Start</h2></div>
+    <p class="sec-sub">You should be able to do all of this already — flag an instructor if not:</p>
+    <ul class="bullet-list">
+      <li>A working web application</li>
+      <li>A GitHub repository containing the application</li>
+      <li>Basic Git and GitHub knowledge</li>
+      <li>A working Firebase configuration</li>
+      <li>Authentication working locally</li>
+      <li>Persistent data working locally</li>
+      <li>Familiarity with browser Developer Tools</li>
+      <li>Experience using Codex or Claude Code</li>
+    </ul>
+    <div class="note-callout">This day builds directly on Day 1 and Day 2 — bring the project you've been working on.</div>
+
+    <div class="tag-group" style="margin-top:30px;">
+      <div class="label">Accounts You'll Need</div>
+      <div class="tags">
+        <span class="tag">GitHub</span><span class="tag">Vercel</span><span class="tag">Cloudflare</span><span class="tag">Google</span>
+        <span class="tag">Bing Webmaster Tools</span><span class="tag">Firebase</span><span class="tag">Claude</span><span class="tag">OpenAI / Codex</span>
+      </div>
+    </div>
+    <div class="tag-group">
+      <div class="label">Software You'll Need</div>
+      <div class="tags">
+        <span class="tag filled">Visual Studio Code</span><span class="tag filled">Git</span><span class="tag filled">Node.js</span>
+        <span class="tag filled">npm</span><span class="tag filled">A modern web browser</span><span class="tag filled">Claude Code</span><span class="tag filled">Codex</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCEPT 1 -->
+  <section class="block" id="local-vs-prod">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title"><span class="hash">##</span> Local Development vs. Production</h2></div>
+    <p class="lead">An app working on <code>localhost</code> doesn't mean it's ready for real users. Production brings its own considerations: hosting, domains, DNS, environment variables, external services, security, performance, accessibility, and search engine discovery.</p>
+    <div class="flow-strip"><b>Local Code → GitHub → Build → Hosting → DNS → Browser → External Services</b></div>
+    <ul class="bullet-list">
+      <li>Localhost is your environment; production is everyone's</li>
+      <li>Configuration can differ between the two environments</li>
+      <li>Environment variables may need to be set up separately for production</li>
+      <li>External services (like Firebase) can behave differently in production</li>
+      <li>Production must be tested independently — never assume it "just works"</li>
+    </ul>
+  </section>
+
+  <!-- CONCEPT 2 -->
+  <section class="block" id="vercel">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title"><span class="hash">##</span> Deploying with Vercel</h2></div>
+    <p class="lead">Vercel connects directly to your GitHub repository and builds/deploys your app automatically. That gives you a simple, repeatable workflow:</p>
+    <div class="flow-strip"><b>Code → Commit → Push → GitHub → Vercel → Production</b></div>
+    <ul class="bullet-list">
+      <li>Connect the correct repository</li>
+      <li>Understand your build settings</li>
+      <li>Configure environment variables in Vercel</li>
+      <li>Read deployment logs when something goes wrong</li>
+      <li>Know the difference between a successful and a failed deployment</li>
+      <li>Verify the deployed app actually works — don't just trust the green checkmark</li>
+      <li>Future GitHub pushes can automatically trigger new deployments</li>
+      <li><b>A successful deployment doesn't guarantee your app is correct</b></li>
+    </ul>
+    <div class="note-callout"><b>Production configuration:</b> set required environment variables in the hosting platform. Never commit private server-side secrets, tokens, or credentials to GitHub.</div>
+  </section>
+
+  <!-- CONCEPT 3 -->
+  <section class="block" id="dns">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title"><span class="hash">##</span> Domains and DNS</h2></div>
+    <p class="lead">Hosting and domains solve two different problems. Vercel hosts your app. Your domain is the human-readable address. DNS tells the internet where that domain should actually point — and Cloudflare is where you manage that.</p>
+    <div class="cols-2">
+      <ul class="bullet-list">
+        <li>Domain</li>
+        <li>DNS &amp; DNS records</li>
+        <li>A records</li>
+        <li>CNAME records</li>
+      </ul>
+      <ul class="bullet-list">
+        <li>Root domain vs. subdomain</li>
+        <li>DNS propagation</li>
+        <li>HTTPS</li>
+        <li>Vercel domain verification</li>
+      </ul>
+    </div>
+    <div class="flow-strip">User enters domain → DNS resolves domain → Request reaches Vercel → Vercel serves your app</div>
+    <div class="note-callout">DNS changes are not always visible everywhere immediately. If the configuration is correct but the domain is inconsistent, propagation may still be in progress.</div>
+  </section>
+
+  <!-- CONCEPT 4 -->
+  <section class="block" id="verify">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title"><span class="hash">##</span> Production Verification</h2></div>
+    <p class="lead">Once deployed, test your app again — in production, not just locally.</p>
+    <ul class="bullet-list">
+      <li>Test navigation and important routes</li>
+      <li>Test authentication, sign-up, and sign-in</li>
+      <li>Test Firestore reads and writes</li>
+      <li>Test refresh behavior</li>
+      <li>Test on more than one screen size</li>
+      <li>Inspect the browser console</li>
+      <li>Check for failed network requests</li>
+      <li>Verify environment variables actually loaded</li>
+      <li>Check for broken assets</li>
+      <li>Verify HTTPS is working</li>
+      <li>Test in a fresh/private browser session when useful</li>
+      <li>Test the final custom domain, not only the temporary Vercel URL</li>
+    </ul>
+    <div class="note-callout"><b>Production is a separate test target.</b> A green deployment status confirms the build deployed. It does not prove your application behavior is correct.</div>
+  </section>
+
+  <!-- CONCEPT 5 -->
+  <section class="block" id="discovery">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title"><span class="hash">##</span> Search Engine Discovery</h2></div>
+    <p class="lead">Publishing a site doesn't automatically make it appear in search results. Search engines have to discover, crawl, understand, and index your pages first.</p>
+    <div class="flow-strip"><b>Website → Discovery → Crawl → Index → Search Result</b></div>
+    <ul class="bullet-list">
+      <li>Crawling &amp; indexing</li>
+      <li>Page titles &amp; meta descriptions</li>
+      <li>Semantic HTML</li>
+      <li>robots.txt</li>
+      <li>Sitemap</li>
+      <li>Internal navigation</li>
+      <li>Publicly accessible pages</li>
+      <li>Search engine webmaster tools</li>
+    </ul>
+  </section>
+
+  <!-- CONCEPT 6 -->
+  <section class="block" id="webmaster">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title"><span class="hash">##</span> Google Search Console &amp; Bing Webmaster Tools</h2></div>
+    <p class="lead">These tools let you tell search engines about your site directly, and let you inspect how they see it.</p>
+    <ul class="bullet-list">
+      <li>Add or verify your website</li>
+      <li>Verify domain ownership when required</li>
+      <li>Submit a sitemap</li>
+      <li>Inspect specific URLs</li>
+      <li>Review indexing information</li>
+      <li>Identify crawl or indexing issues</li>
+    </ul>
+    <div class="note-callout">Submitting a URL does not guarantee immediate indexing or ranking. Webmaster tools help search engines discover and inspect your site, but search visibility can take time.</div>
+  </section>
+
+  <!-- CONCEPT 7 -->
+  <section class="block" id="pagespeed">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title"><span class="hash">##</span> PageSpeed Insights</h2></div>
+    <p class="lead">A website shouldn't just function — it should be usable. PageSpeed Insights surfaces opportunities across performance, accessibility, best practices, and SEO.</p>
+    <ul class="bullet-list">
+      <li>Test the production URL, not localhost</li>
+      <li>Review mobile results (and desktop when useful)</li>
+      <li>Identify high-impact problems first</li>
+      <li>Understand a recommendation before changing any code</li>
+      <li>Don't blindly apply every suggestion</li>
+      <li>Make one meaningful improvement at a time</li>
+      <li>Redeploy, then retest</li>
+    </ul>
+    <div class="flow-strip"><b>Measure → Read Findings → Prioritize → Change One Thing → Deploy → Measure Again</b></div>
+    <div class="note-callout">Treat the report as diagnostic information, not a score to chase for its own sake. Prioritize user impact, accessibility, and meaningful performance improvements.</div>
+  </section>
+
+  <!-- CONCEPT 8 -->
+  <section class="block" id="proddebug">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title"><span class="hash">##</span> Production Debugging</h2></div>
+    <p class="lead">Production problems follow the same evidence-based process you already know — with one extra step.</p>
+    <div class="flow-strip"><b>Expected → Observed → Evidence → Hypothesis → Fix → Deploy → Verify</b></div>
+    <div class="flow-strip">Code → Build → Vercel → DNS → Browser → Firebase / External Service</div>
+    <ul class="bullet-list">
+      <li>Read Vercel build logs</li>
+      <li>Inspect browser errors and network requests</li>
+      <li>Verify environment configuration</li>
+      <li>Verify DNS</li>
+      <li>Verify Firebase behavior specifically in production</li>
+      <li>Isolate which layer is actually failing</li>
+      <li>Give Codex or Claude Code specific evidence</li>
+      <li>Test locally when appropriate, then test again in production after deploying</li>
+    </ul>
+  </section>
+
+  <!-- PROMPT TEMPLATES -->
+  <section class="block" id="prompts">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title"><span class="hash">##</span> Prompt Templates You Can Use</h2></div>
+    <p class="sec-sub">Copy these into Codex or Claude Code and fill in the bracketed fields.</p>
+
+    <div class="prompt-card">
+      <div class="head"><div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div> 01 — production readiness review</div>
+      <div class="term">Review this project for production readiness before I deploy it.
+Do not make any changes yet.
+
+Inspect the application and identify:
+1. Required environment variables
+2. Build or deployment concerns
+3. Firebase configuration concerns
+4. Client-side errors that could appear in production
+5. Routing concerns
+6. Security concerns
+7. Missing production configuration
+
+Prioritize issues that could prevent the application from functioning after deployment.</div>
+      <div class="purpose"><b>Use this:</b> before your very first deploy — catch problems before they happen live.</div>
+    </div>
+
+    <div class="prompt-card">
+      <div class="head"><div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div> 02 — diagnose a failed deployment</div>
+      <div class="term">My Vercel deployment failed.
+
+Here is the relevant deployment output:
+<span class="field">[PASTE ERROR]</span>
+
+The application works locally using:
+<span class="field">[LOCAL COMMAND]</span>
+
+Before changing anything, identify the most likely root cause from the deployment evidence. Explain your reasoning and recommend the smallest appropriate fix. Do not modify unrelated functionality.</div>
+      <div class="purpose"><b>Use this:</b> the moment a Vercel build fails. Paste the actual log — not a summary.</div>
+    </div>
+
+    <div class="prompt-card">
+      <div class="head"><div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div> 03 — pagespeed analysis</div>
+      <div class="term">I ran my production website through Google PageSpeed Insights.
+
+These are the most important findings:
+<span class="field">[PASTE FINDINGS]</span>
+
+Review the existing project and determine which findings are actionable in the codebase.
+
+Prioritize the improvements based on:
+1. User impact
+2. Performance impact
+3. Accessibility impact
+4. Implementation effort
+5. Risk of breaking existing functionality
+
+Do not make changes yet. Give me a prioritized optimization plan first.</div>
+      <div class="purpose"><b>Use this:</b> right after running PageSpeed Insights, before touching any code.</div>
+    </div>
+
+    <div class="prompt-card">
+      <div class="head"><div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div> 04 — SEO and indexing review</div>
+      <div class="term">Review this website's codebase for basic technical SEO and search engine discoverability.
+
+Check for:
+- Page titles
+- Meta descriptions
+- Semantic HTML
+- Heading structure
+- robots.txt
+- Sitemap
+- Important public routes
+- Broken internal links
+- Other obvious indexing problems
+
+Explain each issue and its impact before making changes.</div>
+      <div class="purpose"><b>Use this:</b> before submitting your site to Google Search Console or Bing Webmaster Tools.</div>
+    </div>
+
+    <div class="prompt-card">
+      <div class="head"><div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div> 05 — diagnose domain or DNS problems</div>
+      <div class="term">My Vercel deployment works at:
+<span class="field">[VERCEL URL]</span>
+
+But my custom domain has this problem:
+<span class="field">[ACTUAL BEHAVIOR]</span>
+
+Vercel domain status:
+<span class="field">[STATUS]</span>
+
+Cloudflare DNS records:
+<span class="field">[RELEVANT RECORDS]</span>
+
+Before recommending changes, determine whether the likely failure is:
+1. DNS configuration
+2. Domain verification
+3. DNS propagation
+4. HTTPS / certificate state
+5. Application behavior
+
+Explain the evidence for your diagnosis and recommend the smallest appropriate next step.</div>
+      <div class="purpose"><b>Use this:</b> when the deployment works but the custom domain does not.</div>
+    </div>
+  </section>
+
+  <!-- WALKTHROUGH -->
+  <section class="block" id="walkthrough">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title"><span class="hash">##</span> Worked Example</h2></div>
+    <p class="lead">The instructor will continue the Study Task Tracker from Day 2 and take it through the full production journey: from GitHub to a public custom-domain application that has been verified, prepared for discovery, measured, and improved.</p>
+
+    <ol class="stepper">
+      <li>Open the completed Day 2 application and confirm it's pushed to GitHub.</li>
+      <li>Connect the repository to Vercel.</li>
+      <li>Review the project's deployment configuration.</li>
+      <li>Configure required environment variables.</li>
+      <li>Deploy the application.</li>
+      <li>Open the Vercel production URL and test key functionality, including Firebase auth and data.</li>
+      <li>Review the production browser console.</li>
+      <li>Add a custom domain to the Vercel project.</li>
+      <li>Open Cloudflare DNS management and configure the required records.</li>
+      <li>Verify the domain connects, then open the app using the custom domain.</li>
+      <li>Verify HTTPS and re-test app functionality.</li>
+      <li>Review robots.txt and the sitemap.</li>
+      <li>Walk through Google Search Console and Bing Webmaster Tools.</li>
+      <li>Demonstrate sitemap submission or URL inspection.</li>
+      <li>Run the production URL through PageSpeed Insights and review the report.</li>
+      <li>Pick one meaningful improvement, implement, test locally, commit, and push.</li>
+      <li>Let Vercel redeploy, verify the change in production, and rerun PageSpeed Insights to compare.</li>
+    </ol>
+
+    <div class="img-placeholder">
+      <div class="icon">IMAGES</div>
+      <div class="label">Worked Example Screenshots</div>
+      <div class="hint">Drop in screenshots of the Vercel deployment, the Cloudflare DNS setup, and a before/after PageSpeed report.</div>
+    </div>
+
+    <div class="img-placeholder" style="min-height:260px;">
+      <div class="icon">VIDEO</div>
+      <div class="label">Instructor Demo Recording</div>
+      <div class="hint">Add the Day 3 deployment, domain, discovery, and optimization walkthrough here later.</div>
+    </div>
+
+    <div class="note-callout">Watch the full chain: GitHub → Vercel → Cloudflare → Production Domain → Search Engines → PageSpeed Insights → Improvement → Redeployment. The app should stay functional the whole way through.</div>
+  </section>
+
+  <!-- YOUR EXERCISE -->
+  <section class="block" id="exercise">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title"><span class="hash">##</span> Your Exercise</h2></div>
+    <p class="lead">Continue the <b>Campus Event Board</b> from Days 1 and 2 and take it through the same production journey.</p>
+    <div class="flow-strip"><b>Campus Event Board → GitHub → Vercel → Domain → Verify → Discover → Measure → Improve</b></div>
+
+    <h3 class="sub-title">Steps</h3>
+    <ol class="stepper">
+      <li>Verify the application works locally, then commit and push any working changes.</li>
+      <li>Connect the repository to Vercel and configure required environment variables.</li>
+      <li>Deploy the application, then open the production URL.</li>
+      <li>Test the app's critical functionality, Firebase authentication, and persistent data.</li>
+      <li>Inspect the browser console for production errors.</li>
+      <li>Configure your assigned domain or subdomain, and the required Cloudflare DNS records.</li>
+      <li>Verify the domain connects successfully and that HTTPS works.</li>
+      <li>Test the app again using the custom domain.</li>
+      <li>Verify basic page metadata, and create/verify robots.txt and a sitemap where appropriate.</li>
+      <li>Configure Google Search Console and Bing Webmaster Tools; submit or verify your sitemap.</li>
+      <li>Run the production URL through PageSpeed Insights and review the results.</li>
+      <li>Identify one meaningful improvement, implement and test it, then commit and push.</li>
+      <li>Verify the new Vercel deployment, retest production, and document your final production URL.</li>
+    </ol>
+
+    <h3 class="sub-title">You're done when...</h3>
+    <ul class="check-list">
+      <li><span class="box"></span> Your application is deployed through Vercel and loads successfully</li>
+      <li><span class="box"></span> Required environment variables are configured</li>
+      <li><span class="box"></span> Firebase authentication and persistent data both work in production</li>
+      <li><span class="box"></span> Your custom domain or assigned subdomain resolves correctly, over HTTPS</li>
+      <li><span class="box"></span> Critical app functionality has been tested in production</li>
+      <li><span class="box"></span> Basic search engine discovery requirements have been reviewed</li>
+      <li><span class="box"></span> Google Search Console and Bing Webmaster Tools have been configured</li>
+      <li><span class="box"></span> Your production site has been analyzed with PageSpeed Insights</li>
+      <li><span class="box"></span> At least one meaningful improvement has been identified and made</li>
+      <li><span class="box"></span> Your final production URL is ready to share</li>
+      <li><span class="box"></span> Your final working production checkpoint is committed to GitHub</li>
+    </ul>
+  </section>
+
+  <!-- TROUBLESHOOTING -->
+  <section class="block" id="troubleshoot">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title"><span class="hash">##</span> Troubleshooting</h2></div>
+    <p class="sec-sub">Hit one of these? Work through it before asking for help.</p>
+
+    <div class="fix-card">
+      <span class="tab">If this happens</span>
+      <h4>App works locally, but the Vercel build fails</h4>
+      <div class="row"><b>Why it happens</b>Build errors, missing dependencies, environment variables, incorrect project configuration, case-sensitive file paths, or code that behaves differently during production builds.</div>
+      <div class="row fix"><b>What to do</b>Read the Vercel build logs and find the first meaningful error. Ask yourself: what specifically failed, according to the log? Fix that problem — don't make unrelated changes.</div>
+    </div>
+
+    <div class="fix-card">
+      <span class="tab">If this happens</span>
+      <h4>The site deploys, but Firebase doesn't work</h4>
+      <div class="row"><b>Why it happens</b>Production configuration, environment variables, Firebase settings, authorization configuration, or app logic that behaves differently in production.</div>
+      <div class="row fix"><b>What to do</b>Compare local vs. production behavior directly. Inspect the browser console and network activity. Ask: what actually changed between localhost and production?</div>
+    </div>
+
+    <div class="fix-card">
+      <span class="tab">If this happens</span>
+      <h4>The Vercel URL works, but your custom domain doesn't</h4>
+      <div class="row"><b>Why it happens</b>Incorrect DNS records, incomplete verification, conflicting records, or DNS propagation still in progress.</div>
+      <div class="row fix"><b>What to do</b>Check the domain status in Vercel and compare it against your Cloudflare DNS configuration. Ask: does the app fail, or does the request never even reach it?</div>
+    </div>
+
+    <div class="fix-card">
+      <span class="tab">If this happens</span>
+      <h4>PageSpeed score is lower than expected</h4>
+      <div class="row"><b>Why it happens</b>Large assets, inefficient loading, accessibility problems, metadata issues, layout behavior, or implementation choices.</div>
+      <div class="row fix"><b>What to do</b>Read the individual findings — not just the overall score. Ask which finding actually affects the real user experience most, fix that one thing, redeploy, and retest.</div>
+    </div>
+
+    <div class="fix-card">
+      <span class="tab">If this happens</span>
+      <h4>A route works through navigation, but refreshing it fails</h4>
+      <div class="row"><b>Why it happens</b>Client-side routing and production hosting configuration may not agree about how that route should be served.</div>
+      <div class="row fix"><b>What to do</b>Confirm the framework and routing strategy, inspect the production response for the failing URL, and verify the hosting configuration required for direct route access.</div>
+    </div>
+
+    <div class="fix-card">
+      <span class="tab">If this happens</span>
+      <h4>Your site isn't showing up in search results yet</h4>
+      <div class="row"><b>Why it happens</b>Deployment and indexing are separate processes — search engines may simply not have discovered or indexed your site yet.</div>
+      <div class="row fix"><b>What to do</b>Check accessibility, indexing configuration, webmaster tools, sitemap status, and URL inspection info. Verify your site is crawlable and properly submitted. Indexing and ranking are not immediate — that's expected.</div>
+    </div>
+  </section>
+
+  <!-- SELF CHECK -->
+  <section class="block" id="selfcheck">
+    <div class="sec-head"><span class="sec-num">13</span><h2 class="sec-title"><span class="hash">##</span> Self-Check Before You Leave</h2></div>
+    <p class="sec-sub">Can you tick all of these? If not, flag an instructor before the session ends.</p>
+    <ul class="check-list">
+      <li><span class="box"></span> A working Vercel production deployment</li>
+      <li><span class="box"></span> A connected custom domain or assigned subdomain</li>
+      <li><span class="box"></span> Correct DNS configuration</li>
+      <li><span class="box"></span> HTTPS access</li>
+      <li><span class="box"></span> Working authentication in production</li>
+      <li><span class="box"></span> Working persistent data in production</li>
+      <li><span class="box"></span> Successful production functionality testing</li>
+      <li><span class="box"></span> An understanding of robots.txt and sitemaps</li>
+      <li><span class="box"></span> An understanding of Google Search Console and Bing Webmaster Tools</li>
+      <li><span class="box"></span> A PageSpeed Insights report for your production website</li>
+      <li><span class="box"></span> At least one identified improvement</li>
+      <li><span class="box"></span> The ability to investigate a production failure using evidence</li>
+      <li><span class="box"></span> A final production URL you can share with others</li>
+    </ul>
+  </section>
+
+  <!-- RESOURCES -->
+  <section class="block" id="resources">
+    <div class="sec-head"><span class="sec-num">14</span><h2 class="sec-title"><span class="hash">##</span> Resources</h2></div>
+    <div class="tag-group">
+      <div class="label">Documentation</div>
+      <div class="tags">
+        <a class="tag" href="https://vercel.com/docs" target="_blank" rel="noopener noreferrer">Vercel Docs ↗</a>
+        <a class="tag" href="https://developers.cloudflare.com/dns/" target="_blank" rel="noopener noreferrer">Cloudflare DNS Docs ↗</a>
+        <a class="tag" href="https://firebase.google.com/docs" target="_blank" rel="noopener noreferrer">Firebase Docs ↗</a>
+        <a class="tag" href="https://developers.google.com/search/docs/monitor-debug/search-console-start" target="_blank" rel="noopener noreferrer">Google Search Console ↗</a>
+        <a class="tag" href="https://www.bing.com/webmasters/help/webmaster-guidelines-30fba23a" target="_blank" rel="noopener noreferrer">Bing Webmaster Tools ↗</a>
+        <a class="tag" href="https://pagespeed.web.dev/" target="_blank" rel="noopener noreferrer">PageSpeed Insights ↗</a>
+        <a class="tag" href="https://developers.google.com/search/docs/crawling-indexing/robots/intro" target="_blank" rel="noopener noreferrer">Google robots.txt Docs ↗</a>
+        <a class="tag" href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview" target="_blank" rel="noopener noreferrer">Google Sitemap Docs ↗</a>
+      </div>
+    </div>
+    <div class="tag-group">
+      <div class="label">Handouts</div>
+      <div class="tags">
+        <a class="tag filled" href="#vercel">Deployment Checklist</a>
+        <a class="tag filled" href="#dns">DNS Cheat Sheet</a>
+        <a class="tag filled" href="#verify">Production Verification</a>
+        <a class="tag filled" href="#discovery">Discovery Checklist</a>
+        <a class="tag filled" href="#pagespeed">PageSpeed Checklist</a>
+        <a class="tag filled" href="#prompts">AI Prompt Templates</a>
+      </div>
+    </div>
+
+    <div class="flow-strip">Before deployment: Local Test → Commit → Push → Production Configuration</div>
+    <div class="flow-strip">Deployment: GitHub → Vercel → Build → Production URL</div>
+    <div class="flow-strip">Domain: Domain → Cloudflare DNS → Vercel → HTTPS</div>
+    <div class="flow-strip">Verification: Load → Navigate → Authenticate → Read/Write Data → Console → Network</div>
+    <div class="flow-strip">Discovery: Metadata → robots.txt → Sitemap → Google → Bing</div>
+    <div class="flow-strip">Optimization: PageSpeed → Prioritize → Improve → Commit → Deploy → Retest</div>
+
+    <div class="img-placeholder">
+      <div class="icon">FILES</div>
+      <div class="label">Participant Handouts Placeholder</div>
+      <div class="hint">Add downloadable JAM.26 deployment, DNS, production verification, discovery, and PageSpeed handouts here later.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-mark">✦ JAM.26</div>
+  Programming Jam 2026 | Day 3 | Deployment, Discovery &amp; Optimization
+</footer>
+
+</body>
+</html>

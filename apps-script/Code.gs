@@ -55,6 +55,10 @@ function doPost(e) {
             return json({ status: 'ok' });
         }
 
+        if (data.action === 'positionSignup') {
+            return json(registerForPosition(data));
+        }
+
         REQUIRED_FIELDS.forEach(function (field) {
             if (!String(data[field] || '').trim()) {
                 throw new Error('Missing required field: ' + field);
@@ -68,8 +72,15 @@ function doPost(e) {
     }
 }
 
-function doGet() {
-    return json({ status: 'ok', message: 'ACM registration endpoint is live.' });
+function doGet(e) {
+    if (e && e.parameter && e.parameter.action === 'positions') {
+        try {
+            return json({ status: 'ok', positions: listPublishedPositions() });
+        } catch (err) {
+            return json({ status: 'error', message: String(err && err.message || err) });
+        }
+    }
+    return json({ status: 'ok', message: 'ACM registration and position endpoint is live.' });
 }
 
 function parseBody(e) {
@@ -117,15 +128,189 @@ function appendRow(data) {
 }
 
 function getSheet() {
-    var book = SPREADSHEET_ID
-        ? SpreadsheetApp.openById(SPREADSHEET_ID)
-        : SpreadsheetApp.getActive();
+    var book = getBook();
     if (!book) {
         throw new Error('No spreadsheet: bind the script to the sheet or set SPREADSHEET_ID');
     }
     var sheet = SHEET_NAME ? book.getSheetByName(SHEET_NAME) : book.getSheets()[0];
     if (!sheet) { throw new Error('Sheet not found: ' + SHEET_NAME); }
     return sheet;
+}
+
+function getBook() {
+    return SPREADSHEET_ID
+        ? SpreadsheetApp.openById(SPREADSHEET_ID)
+        : SpreadsheetApp.getActive();
+}
+
+/* -------------------------------------------------------------------------
+ * Project position registry
+ * ------------------------------------------------------------------------- */
+
+var POSITIONS_SHEET = 'Positions';
+var POSITION_SIGNUPS_SHEET = 'Position Signups';
+
+var POSITION_HEADERS = [
+    'Position ID', 'Project', 'Title', 'Summary', 'Responsibilities',
+    'Requirements', 'Commitment', 'Capacity', 'Deadline', 'Selection Method',
+    'Status', 'Waitlist Enabled'
+];
+
+var POSITION_SIGNUP_HEADERS = [
+    'Timestamp', 'Position ID', 'Project', 'Position', 'Full Name', 'PSU Email',
+    'Student ID', 'Interest Note', 'Status'
+];
+
+function listPublishedPositions() {
+    var book = getBook();
+    if (!book) { throw new Error('No spreadsheet configured'); }
+    var positionsSheet = book.getSheetByName(POSITIONS_SHEET);
+    var signupsSheet = book.getSheetByName(POSITION_SIGNUPS_SHEET);
+    if (!positionsSheet || !signupsSheet) {
+        throw new Error('Position sheets are missing. Run setupPositionSheets once.');
+    }
+
+    var positions = rowsAsObjects(positionsSheet);
+    var signups = rowsAsObjects(signupsSheet);
+    var counts = {};
+    signups.forEach(function (signup) {
+        if (String(signup['Status'] || '').toLowerCase() === 'assigned') {
+            var id = String(signup['Position ID'] || '').trim();
+            counts[id] = (counts[id] || 0) + 1;
+        }
+    });
+
+    return positions.filter(function (position) {
+        return ['open', 'closed'].indexOf(String(position['Status'] || '').toLowerCase()) !== -1;
+    }).map(function (position) {
+        var id = String(position['Position ID'] || '').trim();
+        var capacity = Math.max(0, Number(position['Capacity']) || 0);
+        var filled = counts[id] || 0;
+        var manuallyClosed = String(position['Status'] || '').toLowerCase() === 'closed';
+        return {
+            id: id,
+            project: String(position['Project'] || ''),
+            title: String(position['Title'] || ''),
+            summary: String(position['Summary'] || ''),
+            responsibilities: String(position['Responsibilities'] || ''),
+            requirements: String(position['Requirements'] || ''),
+            commitment: String(position['Commitment'] || ''),
+            capacity: capacity,
+            filled: filled,
+            remaining: Math.max(0, capacity - filled),
+            deadline: displaySheetValue(position['Deadline']),
+            selection: String(position['Selection Method'] || 'First come, first served'),
+            status: manuallyClosed || filled >= capacity ? 'closed' : 'open',
+            waitlist: isTruthy(position['Waitlist Enabled'])
+        };
+    });
+}
+
+function registerForPosition(data) {
+    ['positionId', 'name', 'email', 'studentId', 'note'].forEach(function (field) {
+        if (!String(data[field] || '').trim()) { throw new Error('Missing required field: ' + field); }
+    });
+    if (String(data.commitment || '') !== 'yes') { throw new Error('You must accept the commitment'); }
+
+    var email = String(data.email).trim().toLowerCase();
+    if (!/@psu\.edu\.sa$/i.test(email)) { throw new Error('Use your PSU email address'); }
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+        var book = getBook();
+        var positionsSheet = book.getSheetByName(POSITIONS_SHEET);
+        var signupsSheet = book.getSheetByName(POSITION_SIGNUPS_SHEET);
+        if (!positionsSheet || !signupsSheet) { throw new Error('Position registry is not configured'); }
+
+        var positionId = String(data.positionId).trim();
+        var position = rowsAsObjects(positionsSheet).filter(function (row) {
+            return String(row['Position ID'] || '').trim() === positionId;
+        })[0];
+        if (!position || String(position['Status'] || '').toLowerCase() !== 'open') {
+            throw new Error('This position is not open');
+        }
+
+        var signups = rowsAsObjects(signupsSheet);
+        var studentId = String(data.studentId).trim();
+        var prior = signups.filter(function (signup) {
+            var samePerson = String(signup['PSU Email'] || '').toLowerCase() === email || String(signup['Student ID'] || '').trim() === studentId;
+            var active = ['assigned', 'waitlisted'].indexOf(String(signup['Status'] || '').toLowerCase()) !== -1;
+            return samePerson && active;
+        });
+        if (prior.some(function (signup) { return String(signup['Position ID']) === positionId; })) {
+            throw new Error('You already requested this position');
+        }
+        if (prior.some(function (signup) { return String(signup['Status']).toLowerCase() === 'assigned'; })) {
+            throw new Error('You already hold an active assignment');
+        }
+
+        var assignedCount = signups.filter(function (signup) {
+            return String(signup['Position ID']) === positionId && String(signup['Status']).toLowerCase() === 'assigned';
+        }).length;
+        var capacity = Math.max(0, Number(position['Capacity']) || 0);
+        var signupStatus = assignedCount < capacity ? 'Assigned' : 'Waitlisted';
+        if (signupStatus === 'Waitlisted' && !isTruthy(position['Waitlist Enabled'])) {
+            throw new Error('This position is full and registration is closed');
+        }
+
+        signupsSheet.appendRow([
+            new Date(), positionId, position['Project'], position['Title'],
+            String(data.name).trim(), email, studentId, String(data.note).trim(), signupStatus
+        ]);
+        return { status: 'ok', assignmentStatus: signupStatus.toLowerCase() };
+    } finally {
+        lock.releaseLock();
+    }
+}
+
+function rowsAsObjects(sheet) {
+    var values = sheet.getDataRange().getValues();
+    if (!values.length) { return []; }
+    var headers = values[0].map(function (header) { return String(header).trim(); });
+    return values.slice(1).filter(function (row) {
+        return row.some(function (cell) { return String(cell).trim() !== ''; });
+    }).map(function (row) {
+        var record = {};
+        headers.forEach(function (header, index) { record[header] = row[index]; });
+        return record;
+    });
+}
+
+function displaySheetValue(value) {
+    if (Object.prototype.toString.call(value) === '[object Date]') {
+        return Utilities.formatDate(value, Session.getScriptTimeZone(), 'd MMM yyyy');
+    }
+    return String(value || 'Open until filled');
+}
+
+function isTruthy(value) {
+    return ['true', 'yes', '1'].indexOf(String(value || '').toLowerCase()) !== -1;
+}
+
+/* Run once from the Apps Script editor. It creates both tabs and example
+ * assignments. Edit or delete the examples directly in the Positions tab. */
+function setupPositionSheets() {
+    var book = getBook();
+    if (!book) { throw new Error('No spreadsheet configured'); }
+    var positions = book.getSheetByName(POSITIONS_SHEET) || book.insertSheet(POSITIONS_SHEET);
+    var signups = book.getSheetByName(POSITION_SIGNUPS_SHEET) || book.insertSheet(POSITION_SIGNUPS_SHEET);
+
+    if (positions.getLastRow() === 0) {
+        positions.appendRow(POSITION_HEADERS);
+        positions.getRange(2, 1, 4, POSITION_HEADERS.length).setValues([
+            ['JAM26-PRESENTER', 'ACM Programming Jam 2026', 'Workshop Presenter', 'Teach one preparation session and help members apply the workflow during guided practice.', 'Prepare slides and examples|Deliver one rehearsal|Present the session|Share final resources', 'Comfortable speaking to a group|Working knowledge of the workshop topic|Can attend rehearsal and event', '4–6 hours preparation + 90-minute session', 2, '7 Sep 2026', 'First come, first served; requirements verified afterward', 'Open', false],
+            ['JAM26-DEMO', 'ACM Programming Jam 2026', 'Demo Video Recorder', 'Record a concise walkthrough showing participants how to use the competition tooling.', 'Plan a short script|Record screen and voice|Edit captions and mistakes|Deliver source and final MP4', 'Clear spoken explanation|Screen-recording access|Basic video editing', '3–5 hours total', 2, '10 Sep 2026', 'First come, first served', 'Open', false],
+            ['JAM26-CONTENT', 'ACM Programming Jam 2026', 'Content Creator', 'Create accurate announcement and recap content for the event channels.', 'Draft announcement copy|Create event-day updates|Prepare recap post|Follow the ACM visual and writing style', 'Strong written communication|Reliable response time|Design experience is helpful', '2–3 hours per week', 3, '10 Sep 2026', 'First come, first served', 'Open', false],
+            ['CTF3-MEDIA', 'ACM/CyberTech CTF 3.0', 'Event Media Recorder', 'Capture useful event footage and organize it for the final competition recap.', 'Follow the shot list|Record horizontal and vertical footage|Collect participant consent when required|Upload labeled original files', 'Available throughout the event|Phone or camera with adequate storage|Can transfer large files', '4 hours on event day + 1 hour upload', 2, '17 Oct 2026', 'First come, first served', 'Open', false]
+        ]);
+    }
+    if (signups.getLastRow() === 0) { signups.appendRow(POSITION_SIGNUP_HEADERS); }
+    [positions, signups].forEach(function (sheet) {
+        sheet.setFrozenRows(1);
+        sheet.getRange(1, 1, 1, sheet.getLastColumn()).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+        sheet.autoResizeColumns(1, sheet.getLastColumn());
+    });
 }
 
 function indexOfHeader(headers, candidates) {

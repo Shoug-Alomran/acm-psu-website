@@ -22,7 +22,7 @@
     <meta property="og:url" content="https://acm-psu.shoug-tech.com/team.html">
     <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
 
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/main.css?v=20260829-7">
 </head>
 <body>
 
@@ -45,7 +45,8 @@
                 <a href="index.html#about">About</a>
                 <a href="team.html" class="active" aria-current="page">Team</a>
                 <a href="projects.html">Projects</a>
-                <a href="index.html#archive">Archive</a>
+                <a href="positions.html">Positions</a>
+                <a href="projects.html#workshops">Archive</a>
                 <a href="join.html">Join</a>
             </div>
             <div class="nav-meta mono-meta">
@@ -74,7 +75,7 @@
             </div>
 
             <div class="lead-grid">
-                <div class="lead-card">
+                <div class="lead-card person-card" role="button" tabindex="0" aria-haspopup="dialog" aria-label="View profile for Muhammad Yawar Hayat" data-person-name="Muhammad Yawar Hayat" data-person-role="PRESIDENT" data-person-college="College of Computer &amp; Information Sciences" data-person-id="0x01_LEAD" data-person-year="2026">
                     <div class="lead-img" style="display:flex;align-items:center;justify-content:center;background:var(--bg-base);font-family:var(--font-display);font-size:3rem;color:var(--text-dark);" aria-hidden="true">MY</div>
                     <div class="lead-content">
                         <div>
@@ -86,7 +87,15 @@
                     </div>
                 </div>
 
-                <div class="lead-card">
+                <div class="lead-card person-card" role="button" tabindex="0" aria-haspopup="dialog" aria-label="View profile for Shoug Alomran" data-person-name="Shoug Alomran" data-person-role="VICE PRESIDENT" data-person-major="Software Engineering &amp; Cybersecurity" data-person-college="College of Computer &amp; Information Sciences" data-person-id="0x02_LEAD" data-person-year="2026" data-person-term="NOV 2025–PRESENT" data-person-bio="Shoug Alomran is a Software Engineering and Cybersecurity student at Prince Sultan University, technical builder, instructor, and founder of Blueprint Studio. Her work spans full-stack development, cybersecurity, AI integration, technical education, and developer-focused documentation.
+
+She has designed and deployed web platforms, cybersecurity projects, and AI-powered systems, including Fursah, a working prototype developed during an AI hackathon with Cloudflare Workers AI integration. Her portfolio also includes academic platforms, competition infrastructure, and technical resources that transform complex ideas and practical work into clear, usable systems.
+
+As Vice President of the ACM Club at Prince Sultan University, Shoug works across several major initiatives simultaneously. She manages overlapping technical and organizational responsibilities, including the development of the ACM Club website and digital archive, the AI Programming Jam, CTF competitions, hackathons, workshops, and other club projects. Her responsibilities span platform development, event planning, technical content, competition design, documentation, team coordination, and deployment, often requiring multiple demanding projects to move forward in parallel.
+
+Beyond organizing technical initiatives, Shoug has experience delivering them directly. She has conducted a cybersecurity workshop for a CTF and delivered “My Journey as a Student Tutor” through Prince Sultan University’s Writing & Tutoring Center (WTC), drawing on her experience as a student tutor. Her teaching experience combines technical instruction, peer education, public speaking, and the development of structured learning resources.
+
+Across her work, Shoug combines software engineering, cybersecurity, AI, technical instruction, project coordination, and community leadership. A defining part of her work is her ability to take ownership of multiple high-demand initiatives at once, move between technical and leadership responsibilities, and carry projects from early planning and documentation through implementation, deployment, and delivery." data-person-progression="NOV 2025–APR 2026 — Liaison Officer|APR 2026–PRESENT — Vice President" data-person-github="https://github.com/Shoug-Alomran" data-person-linkedin="https://www.linkedin.com/in/shoug-alomran" data-person-website="https://shoug-tech.com/" data-person-work="https://shoug-tech.com/work/" data-person-blueprint="https://blueprint.shoug-tech.com/">
                     <div class="lead-img" style="display:flex;align-items:center;justify-content:center;background:var(--bg-base);font-family:var(--font-display);font-size:3rem;color:var(--text-dark);" aria-hidden="true">SA</div>
                     <div class="lead-content">
                         <div>
@@ -132,18 +141,58 @@
         </section>
     </main>
 
+    <dialog class="person-dialog" id="person-dialog" aria-labelledby="person-dialog-name">
+        <div class="person-dialog-head">
+            <div>
+                <p class="mono-meta accent-text">PEOPLE / PROFILE</p>
+                <h2 id="person-dialog-name" data-profile-name>Member profile</h2>
+                <p class="person-profile-role" data-profile-role>—</p>
+            </div>
+            <button class="person-dialog-close" type="button" aria-label="Close profile">×</button>
+        </div>
+        <div class="person-dialog-body">
+            <aside class="person-profile-aside">
+                <div class="person-profile-mark" data-profile-initials aria-hidden="true">—</div>
+                <div class="person-profile-status"><span class="status-dot"></span><span data-profile-term>Current chapter</span></div>
+                <div class="mono-meta dim-text">RECORD: <span data-profile-id>—</span></div>
+            </aside>
+            <div class="person-profile-main">
+                <section class="person-profile-section" data-profile-bio-section hidden>
+                    <p class="person-profile-eyebrow">BIO</p>
+                    <p class="person-profile-bio" data-profile-bio></p>
+                </section>
+                <dl class="person-profile-details">
+                    <div data-profile-major-row><dt>Major</dt><dd data-profile-major>—</dd></div>
+                    <div><dt>College</dt><dd data-profile-college>—</dd></div>
+                    <div><dt>Chapter</dt><dd data-profile-year>—</dd></div>
+                    <div><dt>ACM service</dt><dd data-profile-service>—</dd></div>
+                </dl>
+                <section class="person-profile-section" data-profile-progression-section hidden>
+                    <p class="person-profile-eyebrow">ROLE PROGRESSION</p>
+                    <ol class="person-profile-timeline" data-profile-progression></ol>
+                </section>
+                <section class="person-profile-section" data-profile-links-section hidden>
+                    <p class="person-profile-eyebrow">CONNECTED SYSTEMS</p>
+                    <div class="person-profile-links" data-profile-links></div>
+                </section>
+            </div>
+        </div>
+    </dialog>
+
     <footer class="container site-footer mono-meta">
         <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
         <div class="footer-logos">
+            <img src="assets/img/acm.png" alt="Association for Computing Machinery">
             <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
             <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">
         </div>
         <div>DIRECTORY_STATUS: <span class="accent-text">COMMITTED</span></div>
+        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
     </footer>
 
-    <script src="assets/js/i18n.js" defer></script>
-    <script src="assets/js/team.js" defer></script>
-    <script src="assets/js/main.js" defer></script>
+    <script src="assets/js/i18n.js?v=20260829-3" defer></script>
+    <script src="assets/js/team.js?v=20260829-4" defer></script>
+    <script src="assets/js/main.js?v=20260829-2" defer></script>
 
 </body>
 </html>

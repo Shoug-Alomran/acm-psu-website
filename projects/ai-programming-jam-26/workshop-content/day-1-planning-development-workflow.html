@@ -1,0 +1,2863 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Day 1 | Planning and Development Workflow | JAM.26</title>
+    <meta name="description" content="JAM.26 Day 1 workshop: turn application requirements into a functional plan, map the system in Excalidraw, plan UI in Variant, set up development tools, use GitHub, and direct AI coding assistants responsibly.">
+    <link rel="canonical" href="https://acm-psu.shoug-tech.com/projects/ai-programming-jam-26/workshop-content/day-1-planning-development-workflow.html">
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #F5F4EF;
+            --panel: #FFFFFF;
+            --ink: #111111;
+            --sub: #5B5B55;
+            --indigo: #6C5CE7;
+            --teal: #22C9AE;
+            --orange: #FF6B45;
+            --cream-line: rgba(17, 17, 17, 0.08);
+            --shadow-ink: 7px 7px 0 var(--ink);
+            --shadow-ink-sm: 4px 4px 0 var(--ink);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.55;
+            background-image:
+                radial-gradient(circle, rgba(17, 17, 17, 0.10) 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        ::selection {
+            background: var(--indigo);
+            color: #fff;
+        }
+
+        /* ============================================================
+     TOP BAR
+  ============================================================ */
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--bg);
+            border-bottom: 3px solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 19px;
+            letter-spacing: .5px;
+            white-space: nowrap;
+        }
+
+        .brand .mark {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            background: var(--indigo);
+            border: 3px solid var(--ink);
+            color: #fff;
+            font-size: 16px;
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .crumb {
+            font-size: 12px;
+            color: var(--sub);
+            text-align: center;
+        }
+
+        .crumb b {
+            color: var(--ink);
+        }
+
+        .pill-btn {
+            background: var(--teal);
+            border: 3px solid var(--ink);
+            color: var(--ink);
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 1px;
+            padding: 9px 16px;
+            box-shadow: 3px 3px 0 var(--ink);
+            text-decoration: none;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition:
+                transform .15s ease,
+                box-shadow .15s ease;
+        }
+
+        .pill-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        /* ============================================================
+     SECTION INDEX
+  ============================================================ */
+
+        .index-bar {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 14px 28px;
+            border-bottom: 3px solid var(--ink);
+            background: var(--panel);
+            position: sticky;
+            top: 69px;
+            z-index: 40;
+        }
+
+        .index-bar::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .index-bar a {
+            flex: 0 0 auto;
+            text-decoration: none;
+            font-size: 11px;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            padding: 7px 12px;
+            background: var(--bg);
+            transition:
+                background .15s ease,
+                color .15s ease;
+        }
+
+        .index-bar a:hover {
+            background: var(--indigo);
+            color: #fff;
+        }
+
+        main {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        /* ============================================================
+     HERO
+  ============================================================ */
+
+        .hero {
+            padding: 56px 0 40px;
+        }
+
+        .kicker {
+            display: inline-block;
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-weight: 800;
+            color: var(--indigo);
+            border: 2px solid var(--indigo);
+            padding: 5px 12px;
+            margin-bottom: 18px;
+            background: #fff;
+        }
+
+        .browser-window {
+            border: 3px solid var(--ink);
+            background: var(--panel);
+            box-shadow: var(--shadow-ink);
+        }
+
+        .browser-chrome {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 3px solid var(--ink);
+            padding: 12px 16px;
+            background: #EDEBE3;
+        }
+
+        .dots {
+            display: flex;
+            gap: 7px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.red {
+            background: #FF5F57;
+        }
+
+        .dot.yellow {
+            background: #FEBC2E;
+        }
+
+        .dot.green {
+            background: #28C840;
+        }
+
+        .addr {
+            flex: 1;
+            background: #fff;
+            border: 2px solid var(--ink);
+            font-size: 12px;
+            padding: 6px 12px;
+            color: var(--sub);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .addr b {
+            color: var(--ink);
+        }
+
+        .browser-body {
+            padding: 40px;
+        }
+
+        .readme-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--sub);
+            margin-bottom: 16px;
+        }
+
+        h1.title {
+            font-size: 44px;
+            margin: 0 0 22px;
+            line-height: 1.08;
+            font-weight: 800;
+        }
+
+        h1.title .accent {
+            color: var(--indigo);
+        }
+
+        p.lead {
+            font-size: 15px;
+            color: #2b2b28;
+        }
+
+        .fact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            border: 3px solid var(--ink);
+            box-shadow: var(--shadow-ink-sm);
+            margin-top: 26px;
+        }
+
+        .fact-grid>div {
+            padding: 20px;
+            border-right: 2px solid var(--ink);
+            background: #fff;
+        }
+
+        .fact-grid>div:last-child {
+            border-right: none;
+        }
+
+        .fact-grid .k {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--sub);
+            margin-bottom: 6px;
+        }
+
+        .fact-grid .v {
+            font-size: 14px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        /* ============================================================
+     SECTION SHELL
+  ============================================================ */
+
+        section.block {
+            padding: 48px 0;
+            border-bottom: 3px solid var(--ink);
+            scroll-margin-top: 135px;
+        }
+
+        section.block:last-of-type {
+            border-bottom: none;
+        }
+
+        .sec-head {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+
+        .sec-num {
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            background: var(--ink);
+            padding: 4px 9px;
+            flex: 0 0 auto;
+        }
+
+        h2.sec-title {
+            font-size: 30px;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        h2.sec-title .hash {
+            color: var(--orange);
+        }
+
+        p.sec-sub {
+            color: var(--sub);
+            font-size: 13px;
+            margin: 6px 0 0;
+        }
+
+        h3.sub-title {
+            font-size: 18px;
+            margin: 28px 0 12px;
+            font-weight: 800;
+        }
+
+        h4.mini-title {
+            font-size: 15px;
+            margin: 20px 0 8px;
+            font-weight: 800;
+        }
+
+        /* ============================================================
+     LISTS
+  ============================================================ */
+
+        ul.bullet-list {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        ul.bullet-list li {
+            position: relative;
+            padding: 7px 0 7px 22px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--cream-line);
+        }
+
+        ul.bullet-list li:last-child {
+            border-bottom: none;
+        }
+
+        ul.bullet-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--indigo);
+            font-weight: 800;
+        }
+
+        ul.check-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        ul.check-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--cream-line);
+            font-size: 14px;
+        }
+
+        ul.check-list li:last-child {
+            border-bottom: none;
+        }
+
+        .box {
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--ink);
+            margin-top: 2px;
+            background: #fff;
+        }
+
+        .cols-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+        }
+
+        /* ============================================================
+     TAGS
+  ============================================================ */
+
+        .tag-group {
+            margin: 18px 0 30px;
+        }
+
+        .tag-group .label {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--sub);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tag {
+            border: 2px solid var(--ink);
+            background: #fff;
+            padding: 8px 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition:
+                transform .15s ease,
+                box-shadow .15s ease,
+                background .15s ease;
+        }
+
+        a.tag:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 3px 3px 0 var(--ink);
+            background: #F8F7FF;
+        }
+
+        .tag.filled {
+            background: var(--ink);
+            color: #fff;
+        }
+
+        a.tag.filled:hover {
+            background: var(--indigo);
+        }
+
+        /* ============================================================
+     CALLOUTS / FLOWS
+  ============================================================ */
+
+        .flow-strip {
+            margin-top: 22px;
+            padding: 16px 18px;
+            background: #fff;
+            border: 2px solid var(--ink);
+            font-size: 12.5px;
+            overflow-x: auto;
+            white-space: nowrap;
+            color: var(--sub);
+        }
+
+        .flow-strip b {
+            color: var(--ink);
+        }
+
+        .note-callout {
+            margin-top: 18px;
+            padding: 14px 18px;
+            border: 2px dashed var(--ink);
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .important-callout {
+            margin-top: 22px;
+            padding: 18px 20px;
+            border: 3px solid var(--ink);
+            background: #FFF5F1;
+            box-shadow: var(--shadow-ink-sm);
+            font-size: 13px;
+        }
+
+        .important-callout strong {
+            color: var(--orange);
+        }
+
+        /* ============================================================
+     IMAGE / VIDEO PLACEHOLDERS
+  ============================================================ */
+
+        .img-placeholder {
+            border: 3px dashed var(--ink);
+            background:
+                repeating-linear-gradient(135deg,
+                    #fff,
+                    #fff 10px,
+                    #EFEDE4 10px,
+                    #EFEDE4 20px);
+            padding: 34px 20px;
+            text-align: center;
+            margin: 16px 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .img-placeholder .icon {
+            font-size: 26px;
+        }
+
+        .img-placeholder .label {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--ink);
+        }
+
+        .img-placeholder .hint {
+            font-size: 11.5px;
+            color: var(--sub);
+            max-width: 520px;
+        }
+
+        .video-placeholder {
+            min-height: 280px;
+        }
+
+        /* ============================================================
+     STEPPER
+  ============================================================ */
+
+        ol.stepper {
+            counter-reset: step;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        ol.stepper li {
+            counter-increment: step;
+            position: relative;
+            padding: 14px 0 14px 46px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--cream-line);
+        }
+
+        ol.stepper li:last-child {
+            border-bottom: none;
+        }
+
+        ol.stepper li::before {
+            content: counter(step, decimal-leading-zero);
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            background: var(--indigo);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            border: 2px solid var(--ink);
+        }
+
+        /* ============================================================
+     TERMINAL / COMMAND BLOCKS
+  ============================================================ */
+
+        .terminal {
+            margin: 18px 0;
+            border: 3px solid var(--ink);
+            background: #0E0E0C;
+            box-shadow: var(--shadow-ink-sm);
+            overflow: hidden;
+        }
+
+        .terminal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--ink);
+            color: #fff;
+            padding: 9px 14px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+
+        .terminal-head .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .terminal-head .dots .dot {
+            width: 8px;
+            height: 8px;
+        }
+
+        .terminal pre {
+            margin: 0;
+            padding: 18px 20px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.75;
+            color: #B9F5EA;
+        }
+
+        .terminal .comment {
+            color: #8D8D84;
+        }
+
+        .terminal .cmd {
+            color: #fff;
+        }
+
+        /* ============================================================
+     PROMPT CARDS
+  ============================================================ */
+
+        .prompt-card {
+            border: 3px solid var(--ink);
+            margin-bottom: 26px;
+            background: #fff;
+            box-shadow: var(--shadow-ink-sm);
+        }
+
+        .prompt-card .head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--ink);
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 12px;
+            letter-spacing: .5px;
+        }
+
+        .prompt-card .head .dots {
+            gap: 5px;
+        }
+
+        .prompt-card .head .dot {
+            width: 8px;
+            height: 8px;
+        }
+
+        .prompt-card .term {
+            padding: 20px;
+            font-size: 13px;
+            background: #0E0E0C;
+            color: #B9F5EA;
+            white-space: pre-wrap;
+            line-height: 1.7;
+        }
+
+        .prompt-card .term .field {
+            color: var(--orange);
+        }
+
+        .prompt-card .purpose {
+            padding: 14px 20px;
+            border-top: 2px solid var(--cream-line);
+            font-size: 13px;
+        }
+
+        .prompt-card .purpose b {
+            color: var(--indigo);
+        }
+
+        /* ============================================================
+     REQUIREMENT CARDS
+  ============================================================ */
+
+        .requirement-card {
+            border: 3px solid var(--ink);
+            background: #fff;
+            box-shadow: var(--shadow-ink-sm);
+            margin: 22px 0;
+        }
+
+        .requirement-card .req-head {
+            padding: 12px 18px;
+            border-bottom: 3px solid var(--ink);
+            background: var(--teal);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+        }
+
+        .requirement-card .req-body {
+            padding: 24px;
+        }
+
+        .requirement-card h3 {
+            margin: 0 0 12px;
+            font-size: 21px;
+        }
+
+        .requirement-card p {
+            font-size: 14px;
+        }
+
+        .req-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .req-box {
+            border: 2px solid var(--ink);
+            padding: 16px;
+            background: var(--bg);
+        }
+
+        .req-box .label {
+            font-size: 10.5px;
+            color: var(--indigo);
+            font-weight: 800;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .req-box ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 13px;
+        }
+
+        /* ============================================================
+     TROUBLESHOOTING
+  ============================================================ */
+
+        .fix-card {
+            border: 3px solid var(--ink);
+            background: #fff;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-ink-sm);
+            position: relative;
+        }
+
+        .fix-card .tab {
+            position: absolute;
+            top: -14px;
+            left: 22px;
+            background: var(--orange);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 12px;
+            border: 2px solid var(--ink);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            transform: rotate(-2deg);
+        }
+
+        .fix-card h4 {
+            margin: 14px 0 12px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .fix-card .row {
+            margin-bottom: 10px;
+            font-size: 13.5px;
+        }
+
+        .fix-card .row b {
+            display: block;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--indigo);
+            margin-bottom: 4px;
+        }
+
+        .fix-card .row.fix b {
+            color: var(--teal);
+        }
+
+        /* ============================================================
+     FOOTER
+  ============================================================ */
+
+        footer {
+            padding: 40px 28px 60px;
+            text-align: center;
+            color: var(--sub);
+            font-size: 12px;
+            max-width: 1120px;
+            margin: 0 auto;
+        }
+
+        footer .foot-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 10px;
+        }
+
+        .deco-diamond {
+            position: fixed;
+            width: 180px;
+            height: 180px;
+            border: 2px solid rgba(255, 107, 69, 0.35);
+            transform: rotate(45deg);
+            left: -90px;
+            bottom: 60px;
+            z-index: -1;
+        }
+
+        .deco-circle {
+            position: fixed;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 2px solid rgba(108, 92, 231, 0.18);
+            right: -110px;
+            top: 200px;
+            z-index: -1;
+        }
+
+        /* ============================================================
+     RESPONSIVE
+  ============================================================ */
+
+        @media(max-width:900px) {
+            .crumb {
+                display: none;
+            }
+
+            .req-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:760px) {
+            .cols-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .index-bar {
+                top: 67px;
+            }
+        }
+
+        @media(max-width:700px) {
+            .topbar {
+                padding: 14px 16px;
+            }
+
+            .index-bar {
+                padding: 12px 16px;
+            }
+
+            main {
+                padding: 0 18px;
+            }
+
+            h1.title {
+                font-size: 30px;
+            }
+
+            .browser-body {
+                padding: 24px;
+            }
+
+            h2.sec-title {
+                font-size: 22px;
+            }
+
+            .fact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .fact-grid>div {
+                border-right: none;
+                border-bottom: 2px solid var(--ink);
+            }
+
+            .fact-grid>div:last-child {
+                border-bottom: none;
+            }
+
+            .pill-btn {
+                font-size: 10px;
+                padding: 8px 10px;
+            }
+
+            .brand {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="deco-diamond"></div>
+    <div class="deco-circle"></div>
+
+    <!-- ============================================================
+     HEADER
+============================================================ -->
+
+    <div class="topbar">
+        <a class="brand" href="/archive-project.html#learning-archive" style="text-decoration:none;color:inherit">
+            <span class="mark">✦</span>
+            JAM.26
+        </a>
+
+        <div class="crumb">
+            WORKSHOPS /
+            <b>DAY 1</b>
+            /
+            Planning &amp; Development Workflow
+        </div>
+
+        <a class="pill-btn" href="#exercise">
+            YOUR EXERCISE_
+        </a>
+    </div>
+
+    <nav class="index-bar">
+        <a href="#overview">Overview</a>
+        <a href="#setup">What You Need</a>
+        <a href="#think">1. Think First</a>
+        <a href="#excalidraw">2. Excalidraw</a>
+        <a href="#variant">3. Variant</a>
+        <a href="#devenv">4. Dev Environment</a>
+        <a href="#git">5. Git &amp; GitHub</a>
+        <a href="#ai">6. AI Engineering</a>
+        <a href="#prompts">Prompt Templates</a>
+        <a href="#walkthrough">Worked Example</a>
+        <a href="#exercise">Your Exercise</a>
+        <a href="#troubleshoot">Troubleshooting</a>
+        <a href="#selfcheck">Self-Check</a>
+        <a href="#resources">Resources</a>
+    </nav>
+
+    <main>
+
+        <!-- ============================================================
+     HERO
+============================================================ -->
+
+        <section class="hero" id="overview">
+
+            <span class="kicker">
+                SEASON 2026 // DAY 01 OF 03
+            </span>
+
+            <div class="browser-window">
+
+                <div class="browser-chrome">
+
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+
+                    <div class="addr">
+                        ai-programming-jam.shoug-tech.com /
+                        <b>workshops / day-1</b>
+                    </div>
+
+                </div>
+
+                <div class="browser-body">
+
+                    <div class="readme-tag">
+                        README.md
+                    </div>
+
+                    <h1 class="title">
+                        # Planning and Development
+                        <br>
+                        <span class="accent">Workflow</span>
+                    </h1>
+
+                    <p class="lead">
+                        Before you start building for the competition, you need a repeatable
+                        way to go from "here is what the application should do" to
+                        "here is a working feature."
+                    </p>
+
+                    <p class="lead">
+                        Today you will practice breaking down requirements, visualizing how
+                        an application works in Excalidraw, planning the interface in Variant,
+                        setting up your development environment, using version control, and
+                        directing Codex or Claude Code during implementation.
+                    </p>
+
+                    <p class="lead">
+                        AI can generate substantial parts of your application. Your job is to
+                        direct that work, understand the objective, review what changed, run
+                        the application, test the result, investigate problems, adapt when
+                        requirements change, and decide what happens next.
+                    </p>
+
+                    <p class="lead">
+                        <b>You are not expected to finish an application today.</b>
+                        You are expected to leave with a workflow that you can repeat
+                        independently during the Programming Jam.
+                    </p>
+
+                    <div class="fact-grid">
+
+                        <div>
+                            <div class="k">Today you'll practice</div>
+                            <div class="v">
+                                Plan → Design → Build → Test → Commit
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="k">You'll use</div>
+                            <div class="v">
+                                Excalidraw, Variant, VS Code, Git, Codex, Claude Code
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="k">By the end</div>
+                            <div class="v">
+                                One working, tested, committed feature
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     SETUP
+============================================================ -->
+
+        <section class="block" id="setup">
+
+            <div class="sec-head">
+                <span class="sec-num">00</span>
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    What You Need
+                </h2>
+            </div>
+
+            <p class="sec-sub">
+                Get these ready before the practical portion begins. Ask an instructor
+                if something is not working.
+            </p>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    Accounts
+                </div>
+
+                <div class="tags">
+                    <span class="tag">GitHub</span>
+                    <span class="tag">Claude</span>
+                    <span class="tag">OpenAI / Codex</span>
+                    <span class="tag">Variant</span>
+                </div>
+
+            </div>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    Software
+                </div>
+
+                <div class="tags">
+                    <span class="tag filled">Visual Studio Code</span>
+                    <span class="tag filled">Git</span>
+                    <span class="tag filled">Node.js</span>
+                    <span class="tag filled">npm</span>
+                    <span class="tag filled">Modern Browser</span>
+                    <span class="tag filled">Claude Code</span>
+                    <span class="tag filled">Codex</span>
+                </div>
+
+            </div>
+
+            <div class="note-callout">
+                You do not need prior experience building a complete web application.
+                You should be comfortable opening files and folders, using a browser,
+                and following commands demonstrated by the instructor.
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     THINK BEFORE BUILDING
+============================================================ -->
+
+        <section class="block" id="think">
+
+            <div class="sec-head">
+                <span class="sec-num">01</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Think Before You Build
+                </h2>
+            </div>
+
+            <p class="lead">
+                AI can generate code very quickly, but somebody still has to define what
+                the application is actually supposed to do.
+            </p>
+
+            <p class="lead">
+                Before implementation begins, you should be able to explain the
+                application's <b>users</b>, <b>pages</b>, <b>features</b>,
+                <b>actions</b>, <b>data</b>, and <b>expected behavior</b>.
+            </p>
+
+            <h4 class="mini-title">
+                How to break down a requirement
+            </h4>
+
+            <ul class="bullet-list">
+                <li>Start with the requirement, not the code</li>
+                <li>Identify who will use the application</li>
+                <li>Identify what the user is trying to accomplish</li>
+                <li>Break large requirements into smaller features</li>
+                <li>Identify the pages or areas required</li>
+                <li>Identify the actions the user can perform</li>
+                <li>Identify what information the application needs to store or display</li>
+                <li>Identify how different parts of the application connect</li>
+                <li>Write down unclear requirements before implementation begins</li>
+            </ul>
+
+            <div class="note-callout">
+                Planning also improves AI output. The more clearly you can describe the
+                objective, behavior, and constraints, the more useful the AI assistant
+                can be.
+            </div>
+
+            <div class="important-callout">
+                <strong>Important:</strong>
+                Planning does not mean designing every detail before you start.
+                You only need enough understanding to know what you are building,
+                what should happen, and how you will verify that it works.
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     EXCALIDRAW
+============================================================ -->
+
+        <section class="block" id="excalidraw">
+
+            <div class="sec-head">
+                <span class="sec-num">02</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Functional Planning with Excalidraw
+                </h2>
+            </div>
+
+            <p class="lead">
+                Excalidraw is where you visualize how the application functions.
+                You are not creating a formal enterprise architecture diagram.
+            </p>
+
+            <p class="lead">
+                Your diagram should help you answer one simple question:
+            </p>
+
+            <div class="flow-strip" style="font-size:14px;">
+                <b>What happens when the user does something?</b>
+            </div>
+
+            <h4 class="mini-title">
+                Your diagram should show
+            </h4>
+
+            <ul class="bullet-list">
+                <li>Who the users are</li>
+                <li>The major pages or application areas</li>
+                <li>The important actions users can take</li>
+                <li>Where data is needed</li>
+                <li>How major parts of the application interact</li>
+                <li>The important user flows</li>
+                <li>Only enough detail to make the system understandable</li>
+            </ul>
+
+            <div class="flow-strip">
+                User → Interface → Action → Application Logic → Data → Result
+            </div>
+
+            <!-- USER WILL REPLACE THIS LATER -->
+
+            <div class="img-placeholder">
+                <div class="icon">IMAGE</div>
+
+                <div class="label">
+                    Example Excalidraw Diagram
+                </div>
+
+                <div class="hint">
+                    Add a screenshot of the instructor's Study Task Tracker functional
+                    diagram here.
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     VARIANT
+============================================================ -->
+
+        <section class="block" id="variant">
+
+            <div class="sec-head">
+                <span class="sec-num">03</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    UI/UX Planning with Variant
+                </h2>
+            </div>
+
+            <p class="lead">
+                Your Excalidraw diagram describes how the application works.
+                Variant helps you explore how that functionality should be presented
+                to the user.
+            </p>
+
+            <ul class="bullet-list">
+                <li>Let functionality influence the interface</li>
+                <li>Think about navigation and page hierarchy</li>
+                <li>Identify the application's most important actions</li>
+                <li>Think about forms, buttons, feedback, and empty states</li>
+                <li>Treat generated designs as starting points</li>
+                <li>Evaluate what Variant creates instead of accepting everything automatically</li>
+                <li>Keep visual patterns consistent across the application</li>
+            </ul>
+
+            <h4 class="mini-title">
+                Example design prompt
+            </h4>
+
+            <div class="prompt-card">
+
+                <div class="head">
+                    UI PLANNING PROMPT
+                </div>
+
+                <div class="term">Design a simple web application dashboard for university students to manage study
+                    tasks.
+
+                    The interface should allow the user to:
+                    - view current tasks
+                    - add a new task
+                    - see the course and due date
+                    - mark tasks as complete
+                    - delete tasks
+
+                    Prioritize clarity and usability.
+
+                    Include:
+                    - a clear page hierarchy
+                    - an obvious primary action for adding a task
+                    - readable task cards or rows
+                    - clear completed and incomplete states
+                    - a useful empty state
+
+                    Keep the design simple enough to implement during a beginner workshop.</div>
+
+                <div class="purpose">
+                    <b>Remember:</b>
+                    the generated interface is a proposal. You decide whether the
+                    navigation, hierarchy, actions, and feedback actually make sense.
+                </div>
+
+            </div>
+
+            <!-- USER WILL REPLACE THIS LATER -->
+
+            <div class="img-placeholder">
+
+                <div class="icon">IMAGE</div>
+
+                <div class="label">
+                    Example Variant Design
+                </div>
+
+                <div class="hint">
+                    Add a screenshot of the Study Task Tracker Variant output here.
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     DEVELOPMENT ENVIRONMENT
+============================================================ -->
+
+        <section class="block" id="devenv">
+
+            <div class="sec-head">
+                <span class="sec-num">04</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Your Development Environment
+                </h2>
+            </div>
+
+            <p class="lead">
+                You do not need to memorize commands blindly. Understand what each
+                part of your development environment is responsible for.
+            </p>
+
+            <ul class="bullet-list">
+                <li>
+                    <b>Visual Studio Code</b>
+                    is where you open, inspect, and edit your project
+                </li>
+
+                <li>
+                    <b>The project folder</b>
+                    contains the application's files
+                </li>
+
+                <li>
+                    <b>The terminal</b>
+                    lets you run commands inside the project
+                </li>
+
+                <li>
+                    <b>Node.js</b>
+                    provides the JavaScript runtime used by much of the development tooling
+                </li>
+
+                <li>
+                    <b>npm</b>
+                    manages packages and dependencies used by the project
+                </li>
+
+                <li>
+                    <b>The development server</b>
+                    runs the application locally while you work
+                </li>
+
+                <li>
+                    <b>Browser Developer Tools</b>
+                    help you inspect errors, network requests, page elements, and application behavior
+                </li>
+            </ul>
+
+            <h3 class="sub-title">
+                Two commands you will use constantly
+            </h3>
+
+            <div class="terminal">
+
+                <div class="terminal-head">
+                    <div class="left">
+                        <div class="dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+
+                        terminal
+                    </div>
+
+                    project-folder
+                </div>
+
+                <pre><span class="comment"># Install the packages listed by the project</span>
+<span class="cmd">npm install</span>
+
+<span class="comment"># Start the local development server</span>
+<span class="cmd">npm run dev</span></pre>
+
+            </div>
+
+            <p class="sec-sub">
+                The exact development command can vary between projects. Check
+                <b>package.json</b> or the repository README if <b>npm run dev</b>
+                is not available.
+            </p>
+
+            <h3 class="sub-title">
+                When something breaks
+            </h3>
+
+            <div class="flow-strip">
+                <b>Terminal → Browser Console → Network → Relevant Code → AI Assistant</b>
+            </div>
+
+            <div class="note-callout">
+                Do not skip directly to changing code. First collect evidence about
+                what is actually failing.
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     GIT
+============================================================ -->
+
+        <section class="block" id="git">
+
+            <div class="sec-head">
+                <span class="sec-num">05</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Version Control with Git &amp; GitHub
+                </h2>
+            </div>
+
+            <p class="lead">
+                Git records the history of your project. GitHub gives that repository
+                a remote home and makes collaboration, backup, and later deployment
+                easier.
+            </p>
+
+            <div class="cols-2">
+
+                <ul class="bullet-list">
+
+                    <li>
+                        <b>Repository</b>
+                        is the version-controlled project
+                    </li>
+
+                    <li>
+                        <b>Commit</b>
+                        is a saved checkpoint
+                    </li>
+
+                    <li>
+                        <b>Push</b>
+                        sends local commits to GitHub
+                    </li>
+
+                    <li>
+                        <b>Pull</b>
+                        brings remote changes to your machine
+                    </li>
+
+                </ul>
+
+                <ul class="bullet-list">
+
+                    <li>Commit meaningful working checkpoints</li>
+
+                    <li>Check what changed before committing</li>
+
+                    <li>
+                        Avoid allowing large amounts of AI-generated code to accumulate
+                        without a checkpoint
+                    </li>
+
+                    <li>
+                        Use version history as a safety net when experiments go wrong
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <h3 class="sub-title">
+                Essential Git workflow
+            </h3>
+
+            <div class="terminal">
+
+                <div class="terminal-head">
+
+                    <div class="left">
+
+                        <div class="dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+
+                        terminal
+
+                    </div>
+
+                    git-basics
+
+                </div>
+
+                <pre><span class="comment"># See what has changed</span>
+<span class="cmd">git status</span>
+
+<span class="comment"># Stage your current changes</span>
+<span class="cmd">git add .</span>
+
+<span class="comment"># Save a meaningful checkpoint</span>
+<span class="cmd">git commit -m "Implement task creation"</span>
+
+<span class="comment"># Send your commits to GitHub</span>
+<span class="cmd">git push</span>
+
+<span class="comment"># Get the newest remote changes</span>
+<span class="cmd">git pull</span></pre>
+
+            </div>
+
+            <div class="important-callout">
+                <strong>Commit when something works.</strong>
+                A useful commit gives you a known-good point you can return to if the
+                next change breaks the application.
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     AI ENGINEERING
+============================================================ -->
+
+        <section class="block" id="ai">
+
+            <div class="sec-head">
+                <span class="sec-num">06</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Using Codex &amp; Claude Code as Engineering Assistants
+                </h2>
+            </div>
+
+            <p class="lead">
+                Codex and Claude Code can inspect projects, implement features,
+                modify multiple files, explain code, investigate bugs, run commands,
+                refactor implementations, and assist with testing.
+            </p>
+
+            <p class="lead">
+                They can write a small amount of code or a very large amount of code.
+                That is not the important distinction.
+            </p>
+
+            <p class="lead">
+                <b>
+                    You remain responsible for defining the objective, directing the work,
+                    reviewing the result, testing behavior, debugging problems, and
+                    verifying that the application actually satisfies the requirement.
+                </b>
+            </p>
+
+            <div class="flow-strip">
+                <b>
+                    Describe → Generate or Modify → Review → Run → Test → Debug → Verify
+                </b>
+            </div>
+
+            <h4 class="mini-title">
+                Give AI useful context
+            </h4>
+
+            <ul class="bullet-list">
+                <li>Describe the objective clearly</li>
+                <li>Describe the expected behavior</li>
+                <li>Include important constraints</li>
+                <li>Give it relevant project context</li>
+                <li>Ask it to inspect the existing project before making assumptions</li>
+                <li>Break uncertain work into smaller steps when useful</li>
+                <li>Review the files it changed</li>
+                <li>Run the application after significant changes</li>
+                <li>Test behavior yourself</li>
+                <li>When debugging, provide errors and observations</li>
+            </ul>
+
+            <div class="important-callout">
+                <strong>AI output is not automatically correct.</strong>
+                A generated feature is only finished after you have verified its behavior.
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     PROMPTS
+============================================================ -->
+
+        <section class="block" id="prompts">
+
+            <div class="sec-head">
+
+                <span class="sec-num">07</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Prompt Templates You Can Use
+                </h2>
+
+            </div>
+
+            <p class="sec-sub">
+                These are starting structures, not magic formulas. Change them to match
+                the problem you are solving.
+            </p>
+
+            <!-- PROMPT 1 -->
+
+            <div class="prompt-card">
+
+                <div class="head">
+
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+
+                    01 / understand before implementing
+
+                </div>
+
+                <div class="term">I am working on the following requirement:
+                    <span class="field">[REQUIREMENT]</span>
+
+                    Before writing any code, help me break this requirement down into:
+
+                    - users involved
+                    - required functionality
+                    - pages or components
+                    - user actions
+                    - data requirements
+                    - important interactions
+
+                    Identify anything that is unclear or that I should decide before implementation.
+
+                    Do not implement anything yet.
+                </div>
+
+                <div class="purpose">
+                    <b>Use this:</b>
+                    when you receive a requirement and need to understand the problem
+                    before implementation.
+                </div>
+
+            </div>
+
+            <!-- PROMPT 2 -->
+
+            <div class="prompt-card">
+
+                <div class="head">
+
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+
+                    02 / implement a defined task
+
+                </div>
+
+                <div class="term">I want to implement the following feature:
+                    <span class="field">[FEATURE]</span>
+
+                    Expected behavior:
+                    <span class="field">[EXPECTED BEHAVIOR]</span>
+
+                    Relevant constraints:
+                    <span class="field">[CONSTRAINTS]</span>
+
+                    First inspect the existing project and determine which files are relevant.
+
+                    Explain your implementation approach, then make the required changes.
+
+                    Do not modify unrelated functionality.
+
+                    After implementation, tell me:
+                    1. what you changed
+                    2. what I should test
+                    3. anything that still needs verification
+                </div>
+
+                <div class="purpose">
+                    <b>Use this:</b>
+                    once you understand the feature and are ready to implement it.
+                </div>
+
+            </div>
+
+            <!-- PROMPT 3 -->
+
+            <div class="prompt-card">
+
+                <div class="head">
+
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+
+                    03 / debug using evidence
+
+                </div>
+
+                <div class="term">I expected:
+                    <span class="field">[EXPECTED BEHAVIOR]</span>
+
+                    Instead, I observed:
+                    <span class="field">[ACTUAL BEHAVIOR]</span>
+
+                    Error message or evidence:
+                    <span class="field">[ERROR / CONSOLE OUTPUT / OBSERVATION]</span>
+
+                    Investigate the likely cause before changing the code.
+
+                    Explain what evidence supports your diagnosis.
+
+                    Then propose the smallest appropriate fix.
+
+                    After making the change, tell me exactly how I should verify that the problem is resolved.
+                </div>
+
+                <div class="purpose">
+                    <b>Use this:</b>
+                    when behavior is wrong or an error occurs. Give the assistant evidence
+                    instead of only saying "fix it."
+                </div>
+
+            </div>
+
+            <!-- PROMPT 4 -->
+
+            <div class="prompt-card">
+
+                <div class="head">
+
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+
+                    04 / review what changed
+
+                </div>
+
+                <div class="term">Review the changes you just made.
+
+                    For each changed file, explain:
+                    - why it was changed
+                    - what behavior it is responsible for
+                    - any assumptions you made
+                    - any risks or edge cases I should test
+
+                    Do not make additional changes unless you identify a clear problem that requires one.</div>
+
+                <div class="purpose">
+                    <b>Use this:</b>
+                    after a substantial AI-generated change when you need to understand
+                    what was modified before moving on.
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     WORKED EXAMPLE
+============================================================ -->
+
+        <section class="block" id="walkthrough">
+
+            <div class="sec-head">
+
+                <span class="sec-num">08</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Worked Example
+                </h2>
+
+            </div>
+
+            <p class="lead">
+                Your instructor will demonstrate the complete workflow using a small
+                application called the <b>Study Task Tracker</b>.
+            </p>
+
+            <div class="requirement-card">
+
+                <div class="req-head">
+                    Instructor Example / Requirement Brief
+                </div>
+
+                <div class="req-body">
+
+                    <h3>
+                        Study Task Tracker
+                    </h3>
+
+                    <p>
+                        Build a small web application that helps university students keep
+                        track of academic tasks.
+                    </p>
+
+                    <p>
+                        A student should be able to view current tasks, add a new task,
+                        mark a task as completed, and delete a task.
+                    </p>
+
+                    <div class="req-grid">
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                User
+                            </div>
+
+                            <ul>
+                                <li>University student</li>
+                            </ul>
+
+                        </div>
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                Task Data
+                            </div>
+
+                            <ul>
+                                <li>Task title</li>
+                                <li>Course</li>
+                                <li>Due date</li>
+                                <li>Completion status</li>
+                            </ul>
+
+                        </div>
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                Required Actions
+                            </div>
+
+                            <ul>
+                                <li>View tasks</li>
+                                <li>Add task</li>
+                                <li>Complete task</li>
+                                <li>Delete task</li>
+                            </ul>
+
+                        </div>
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                Scope
+                            </div>
+
+                            <ul>
+                                <li>No authentication required</li>
+                                <li>No database required</li>
+                                <li>Focus on the workflow</li>
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <h3 class="sub-title">
+                Before building, ask questions
+            </h3>
+
+            <ul class="bullet-list">
+                <li>What should happen when there are no tasks?</li>
+                <li>Can a task be created without a title?</li>
+                <li>Is the due date required?</li>
+                <li>Should completed tasks remain visible?</li>
+                <li>Should overdue tasks look different?</li>
+                <li>Can a task be edited?</li>
+                <li>What feedback appears after an action?</li>
+            </ul>
+
+            <div class="note-callout">
+                The requirement tells you what the application needs to accomplish.
+                It does not automatically answer every product and implementation decision.
+            </div>
+
+            <h3 class="sub-title">
+                The complete walkthrough
+            </h3>
+
+            <ol class="stepper">
+
+                <li>
+                    Read the requirement and identify the user, behavior, pages,
+                    actions, and data.
+                </li>
+
+                <li>
+                    Use the first AI prompt to identify unclear requirements and
+                    implementation decisions.
+                </li>
+
+                <li>
+                    Sketch the Study Task Tracker flow in Excalidraw.
+                </li>
+
+                <li>
+                    Turn the functional plan into an initial interface concept in Variant.
+                </li>
+
+                <li>
+                    Open the project in VS Code and explain the project structure.
+                </li>
+
+                <li>
+                    Run <b>npm install</b> if dependencies need to be installed.
+                </li>
+
+                <li>
+                    Run the application locally with <b>npm run dev</b>.
+                </li>
+
+                <li>
+                    Create or connect the GitHub repository.
+                </li>
+
+                <li>
+                    Create an initial Git checkpoint.
+                </li>
+
+                <li>
+                    Give Codex or Claude Code a clearly defined implementation task.
+                </li>
+
+                <li>
+                    Review the files and code changed by the assistant.
+                </li>
+
+                <li>
+                    Run the application again.
+                </li>
+
+                <li>
+                    Test the implemented behavior.
+                </li>
+
+                <li>
+                    If something is wrong, collect evidence and investigate the problem.
+                </li>
+
+                <li>
+                    Use AI to assist with diagnosis and debugging where useful.
+                </li>
+
+                <li>
+                    Verify that the feature now behaves as expected.
+                </li>
+
+                <li>
+                    Commit the working implementation to GitHub.
+                </li>
+
+            </ol>
+
+            <div class="flow-strip">
+                <b>
+                    Requirement → Plan → Diagram → Design → Project → AI Implementation
+                    → Review → Run → Test → Debug → Verify → Commit
+                </b>
+            </div>
+
+            <!-- USER WILL REPLACE THIS LATER -->
+
+            <div class="img-placeholder">
+
+                <div class="icon">
+                    IMAGES
+                </div>
+
+                <div class="label">
+                    Worked Example Screenshots
+                </div>
+
+                <div class="hint">
+                    Add screenshots showing the Study Task Tracker progression:
+                    Excalidraw → Variant → VS Code → Running App → GitHub.
+                </div>
+
+            </div>
+
+            <!-- USER WILL REPLACE THIS LATER -->
+
+            <div class="img-placeholder video-placeholder">
+
+                <div class="icon">
+                    VIDEO
+                </div>
+
+                <div class="label">
+                    Instructor Demo Recording
+                </div>
+
+                <div class="hint">
+                    Add the recorded walkthrough here after the workshop or once the
+                    demonstration video is ready.
+                </div>
+
+            </div>
+
+            <div class="important-callout">
+
+                <strong>The feature is not the lesson.</strong>
+
+                The lesson is the workflow used to move from an unclear requirement
+                to a tested and committed implementation.
+
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     PARTICIPANT EXERCISE
+============================================================ -->
+
+        <section class="block" id="exercise">
+
+            <div class="sec-head">
+
+                <span class="sec-num">09</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Your Exercise
+                </h2>
+
+            </div>
+
+            <p class="lead">
+                Now repeat the same workflow yourself, but with a different application.
+                Do not copy the Study Task Tracker implementation.
+            </p>
+
+            <div class="requirement-card">
+
+                <div class="req-head">
+                    Participant Exercise / Requirement Brief
+                </div>
+
+                <div class="req-body">
+
+                    <h3>
+                        Campus Event Board
+                    </h3>
+
+                    <p>
+                        Build a small web application that helps university students
+                        discover campus events.
+                    </p>
+
+                    <p>
+                        A student should be able to view available events and filter them by
+                        category. The interface should also allow a new event to be added.
+                    </p>
+
+                    <div class="req-grid">
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                User
+                            </div>
+
+                            <ul>
+                                <li>University student</li>
+                            </ul>
+
+                        </div>
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                Event Data
+                            </div>
+
+                            <ul>
+                                <li>Event name</li>
+                                <li>Category</li>
+                                <li>Date</li>
+                                <li>Location</li>
+                                <li>Short description</li>
+                            </ul>
+
+                        </div>
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                Required Actions
+                            </div>
+
+                            <ul>
+                                <li>View events</li>
+                                <li>Add an event</li>
+                                <li>Filter by category</li>
+                            </ul>
+
+                        </div>
+
+                        <div class="req-box">
+
+                            <div class="label">
+                                Scope
+                            </div>
+
+                            <ul>
+                                <li>No authentication required</li>
+                                <li>No database required</li>
+                                <li>Data may exist only while the page is running</li>
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <h3 class="sub-title">
+                Decisions you need to make
+            </h3>
+
+            <p class="sec-sub">
+                The requirement intentionally leaves some details open. You must decide
+                how your application should behave.
+            </p>
+
+            <ul class="bullet-list">
+                <li>Which event categories will exist?</li>
+                <li>What should the empty state look like?</li>
+                <li>Which fields are required when creating an event?</li>
+                <li>How should events be ordered?</li>
+                <li>What should happen after an event is added?</li>
+                <li>How should an active filter be communicated to the user?</li>
+                <li>What happens if no events match the selected category?</li>
+            </ul>
+
+            <h3 class="sub-title">
+                Your workflow
+            </h3>
+
+            <ol class="stepper">
+
+                <li>
+                    Read the Campus Event Board requirement.
+                </li>
+
+                <li>
+                    Identify the users, pages or areas, features, actions, and data.
+                </li>
+
+                <li>
+                    Identify unclear requirements and make reasonable decisions.
+                </li>
+
+                <li>
+                    Create a functional diagram in Excalidraw.
+                </li>
+
+                <li>
+                    Create or refine an interface concept in Variant.
+                </li>
+
+                <li>
+                    Open or create your project in Visual Studio Code.
+                </li>
+
+                <li>
+                    Install dependencies if required.
+                </li>
+
+                <li>
+                    Verify that the project runs locally.
+                </li>
+
+                <li>
+                    Create or connect the project to a GitHub repository.
+                </li>
+
+                <li>
+                    Make an initial commit before major implementation begins.
+                </li>
+
+                <li>
+                    Choose one small feature to implement first.
+                </li>
+
+                <li>
+                    Write down its expected behavior.
+                </li>
+
+                <li>
+                    Use Codex or Claude Code to assist with implementation.
+                </li>
+
+                <li>
+                    Review what the AI changed.
+                </li>
+
+                <li>
+                    Run the application.
+                </li>
+
+                <li>
+                    Test the implemented behavior.
+                </li>
+
+                <li>
+                    Investigate and debug anything that does not work.
+                </li>
+
+                <li>
+                    Verify the feature behaves as expected.
+                </li>
+
+                <li>
+                    Commit your working checkpoint.
+                </li>
+
+            </ol>
+
+            <h3 class="sub-title">
+                You are done when...
+            </h3>
+
+            <ul class="check-list">
+
+                <li>
+                    <span class="box"></span>
+                    You can explain what your application is supposed to do
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You can explain at least one decision that was not explicitly stated
+                    in the requirement
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You have a functional Excalidraw diagram
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You have an initial interface design
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    Your project runs locally
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    Your project is connected to GitHub
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You have at least one meaningful Git commit
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You used Codex or Claude Code during implementation
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You reviewed the generated changes
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You tested the result yourself
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    You committed a working checkpoint
+                </li>
+
+            </ul>
+
+        </section>
+
+        <!-- ============================================================
+     TROUBLESHOOTING
+============================================================ -->
+
+        <section class="block" id="troubleshoot">
+
+            <div class="sec-head">
+
+                <span class="sec-num">10</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Troubleshooting
+                </h2>
+
+            </div>
+
+            <p class="sec-sub">
+                Something going wrong is part of development. Start with evidence.
+            </p>
+
+            <!-- PROBLEM 1 -->
+
+            <div class="fix-card">
+
+                <span class="tab">
+                    If this happens
+                </span>
+
+                <h4>
+                    "The AI changed a lot of files and I don't know what happened."
+                </h4>
+
+                <div class="row">
+
+                    <b>Why it happens</b>
+
+                    The task may have been too broad, or the assistant may have made
+                    implementation decisions you did not expect.
+
+                </div>
+
+                <div class="row fix">
+
+                    <b>What to do</b>
+
+                    Stop making additional changes. Review the changed files, ask the
+                    assistant to explain what it modified, run the application, and
+                    identify which parts actually work before continuing.
+
+                </div>
+
+            </div>
+
+            <!-- PROBLEM 2 -->
+
+            <div class="fix-card">
+
+                <span class="tab">
+                    If this happens
+                </span>
+
+                <h4>
+                    "I gave AI a large task and now I cannot tell which part is broken."
+                </h4>
+
+                <div class="row">
+
+                    <b>Why it happens</b>
+
+                    Large changes introduce many possible failure points at once.
+
+                </div>
+
+                <div class="row fix">
+
+                    <b>What to do</b>
+
+                    Return to the requirement and isolate the failing behavior.
+                    Define what should happen, what is actually happening, and which
+                    part of the application is most likely responsible.
+
+                </div>
+
+            </div>
+
+            <!-- PROBLEM 3 -->
+
+            <div class="fix-card">
+
+                <span class="tab">
+                    If this happens
+                </span>
+
+                <h4>
+                    "My application will not run locally."
+                </h4>
+
+                <div class="row">
+
+                    <b>Possible causes</b>
+
+                    Missing dependencies, the wrong directory, incorrect commands,
+                    configuration problems, occupied ports, or code errors.
+
+                </div>
+
+                <div class="row fix">
+
+                    <b>What to do</b>
+
+                    Read the terminal output first. Confirm the current directory.
+                    Check whether dependencies are installed. Check the scripts in
+                    package.json. Read the first useful error instead of only the final
+                    line of output.
+
+                </div>
+
+            </div>
+
+            <!-- PROBLEM 4 -->
+
+            <div class="fix-card">
+
+                <span class="tab">
+                    If this happens
+                </span>
+
+                <h4>
+                    "The page loads, but the feature does not work."
+                </h4>
+
+                <div class="row">
+
+                    <b>Possible causes</b>
+
+                    The implementation may not match the expected behavior, an event
+                    handler may not run, data may not update correctly, or a runtime
+                    error may occur.
+
+                </div>
+
+                <div class="row fix">
+
+                    <b>What to do</b>
+
+                    Compare expected behavior with actual behavior. Check the browser
+                    console. Reproduce the problem consistently. Then give the AI
+                    assistant those observations.
+
+                </div>
+
+            </div>
+
+            <!-- PROBLEM 5 -->
+
+            <div class="fix-card">
+
+                <span class="tab">
+                    If this happens
+                </span>
+
+                <h4>
+                    "The AI says it fixed the bug, but it is still broken."
+                </h4>
+
+                <div class="row">
+
+                    <b>Why it happens</b>
+
+                    The assistant may have made an incorrect diagnosis, may not have
+                    had enough evidence, or may have verified only that the code compiled.
+
+                </div>
+
+                <div class="row fix">
+
+                    <b>What to do</b>
+
+                    Do not keep asking for random fixes. Reproduce the failure again,
+                    collect new evidence, and update the debugging prompt with exactly
+                    what changed and what still fails.
+
+                </div>
+
+            </div>
+
+            <!-- PROBLEM 6 -->
+
+            <div class="fix-card">
+
+                <span class="tab">
+                    If this happens
+                </span>
+
+                <h4>
+                    "Git says I have changes and I don't know whether I should commit them."
+                </h4>
+
+                <div class="row">
+
+                    <b>What to check</b>
+
+                    Run <b>git status</b>. Understand which files changed. Run and test
+                    the application.
+
+                </div>
+
+                <div class="row fix">
+
+                    <b>What to do</b>
+
+                    Commit when the project is in a meaningful state you would be
+                    comfortable returning to later.
+
+                </div>
+
+            </div>
+
+            <div class="important-callout">
+
+                <strong>Instructor help is not the last resort.</strong>
+
+                If you have collected evidence but still do not understand what is
+                happening, show the instructor what you expected, what you observed,
+                and what you already tried.
+
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+     SELF CHECK
+============================================================ -->
+
+        <section class="block" id="selfcheck">
+
+            <div class="sec-head">
+
+                <span class="sec-num">11</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Self-Check Before You Leave
+                </h2>
+
+            </div>
+
+            <p class="sec-sub">
+                If you cannot complete one of these, ask an instructor before the
+                workshop ends.
+            </p>
+
+            <ul class="check-list">
+
+                <li>
+                    <span class="box"></span>
+                    I can turn a requirement into users, features, actions, and data
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I can identify unclear requirements before coding
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I created a functional application diagram
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I created an initial interface design
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I can run my project locally
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    My project exists in a GitHub repository
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I created at least one meaningful Git commit
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I used Codex or Claude Code to implement or modify functionality
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I reviewed what the AI changed
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I tested the implementation myself
+                </li>
+
+                <li>
+                    <span class="box"></span>
+                    I know where to begin investigating when something does not work
+                </li>
+
+            </ul>
+
+        </section>
+
+        <!-- ============================================================
+     RESOURCES
+============================================================ -->
+
+        <section class="block" id="resources">
+
+            <div class="sec-head">
+
+                <span class="sec-num">12</span>
+
+                <h2 class="sec-title">
+                    <span class="hash">##</span>
+                    Resources
+                </h2>
+
+            </div>
+
+            <p class="sec-sub">
+                Use official documentation when you need to go beyond what we covered
+                in the workshop.
+            </p>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    Planning &amp; Design
+                </div>
+
+                <div class="tags">
+
+                    <a class="tag" href="https://excalidraw.com/" target="_blank" rel="noopener noreferrer">
+                        Open Excalidraw ↗
+                    </a>
+
+                    <a class="tag" href="https://docs.excalidraw.com/" target="_blank" rel="noopener noreferrer">
+                        Excalidraw Docs ↗
+                    </a>
+
+                    <a class="tag" href="https://variant.com/" target="_blank" rel="noopener noreferrer">
+                        Variant ↗
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    Development
+                </div>
+
+                <div class="tags">
+
+                    <a class="tag" href="https://code.visualstudio.com/docs" target="_blank" rel="noopener noreferrer">
+                        VS Code Docs ↗
+                    </a>
+
+                    <a class="tag" href="https://nodejs.org/en/learn" target="_blank" rel="noopener noreferrer">
+                        Node.js ↗
+                    </a>
+
+                    <a class="tag" href="https://docs.npmjs.com/" target="_blank" rel="noopener noreferrer">
+                        npm Docs ↗
+                    </a>
+
+                    <a class="tag" href="https://developer.chrome.com/docs/devtools/" target="_blank"
+                        rel="noopener noreferrer">
+                        Chrome DevTools ↗
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    Version Control
+                </div>
+
+                <div class="tags">
+
+                    <a class="tag" href="https://git-scm.com/doc" target="_blank" rel="noopener noreferrer">
+                        Git Documentation ↗
+                    </a>
+
+                    <a class="tag" href="https://docs.github.com/" target="_blank" rel="noopener noreferrer">
+                        GitHub Docs ↗
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    AI Engineering
+                </div>
+
+                <div class="tags">
+
+                    <a class="tag" href="https://developers.openai.com/codex/" target="_blank"
+                        rel="noopener noreferrer">
+                        Codex Documentation ↗
+                    </a>
+
+                    <a class="tag" href="https://code.claude.com/docs/en/overview" target="_blank"
+                        rel="noopener noreferrer">
+                        Claude Code Docs ↗
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="tag-group">
+
+                <div class="label">
+                    Workshop Quick References
+                </div>
+
+                <div class="tags">
+
+                    <a class="tag filled" href="#devenv">
+                        npm / Dev Environment
+                    </a>
+
+                    <a class="tag filled" href="#git">
+                        Git Quick Reference
+                    </a>
+
+                    <a class="tag filled" href="#prompts">
+                        AI Prompt Templates
+                    </a>
+
+                    <a class="tag filled" href="#troubleshoot">
+                        Troubleshooting Guide
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="important-callout">
+
+                <strong>Your goal is not to memorize everything.</strong>
+
+                Know the workflow, know how to find evidence when something goes wrong,
+                and know where to find documentation when you need more information.
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+     FOOTER
+============================================================ -->
+
+    <footer>
+
+        <div class="foot-mark">
+            ✦ JAM.26
+        </div>
+
+        <div>
+            Programming Jam 2026
+        </div>
+
+        <div>
+            Day 1 / Planning and Development Workflow
+        </div>
+
+    </footer>
+
+</body>
+
+</html>

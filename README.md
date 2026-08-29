@@ -14,14 +14,19 @@ Plain HTML, CSS, and JavaScript. No build step, no dependencies, no framework. O
 index.html            Home — hero, focus areas, team preview, work, archive timeline
 team.html             Full roster — executive council + general assembly
 projects.html         Project archive with category filters and live search
+positions.html        Live project assignments with capacity-aware registration
 join.html             Membership application form + FAQ
 404.html              Not-found page
 
 assets/css/main.css   All styles, shared across every page
 assets/js/main.js     Scroll reveals, mobile nav, footer clock (all pages)
 assets/js/projects.js Category tabs + search (projects page)
+assets/js/positions.js Position loading + assignment signup (positions page)
 assets/js/join.js     FAQ accordion + form submission (join page)
 assets/img/           Logos
+
+projects/             Project source material, public workshop lessons, handouts,
+                      planning records, and reusable templates
 
 apps-script/          Google Apps Script backing the membership form (+ SETUP.md)
 design-template/      Original design mockups. Reference only — not deployed.
@@ -73,6 +78,20 @@ web app that appends each application as a row in the registration spreadsheet.
 The script is `apps-script/Code.gs`; paste its deployed `/exec` URL into
 `FORM_ENDPOINT` at the top of `assets/js/join.js`. Until that is set, the form
 tells applicants to email instead of silently discarding submissions.
+
+## Open project positions
+
+`positions.html` uses the same Apps Script deployment and spreadsheet as the
+membership form. Run `setupPositionSheets` once in Apps Script to create the
+`Positions` and `Position Signups` tabs, then paste the same `/exec` URL into
+`FORM_ENDPOINT` in `assets/js/positions.js`.
+
+Organizers create and edit assignments directly in the `Positions` tab. The
+server locks each submission, recounts accepted signups, and only then reserves
+a place, so concurrent requests cannot exceed capacity. It also prevents the
+same PSU email or student ID from claiming the same role twice and limits each
+student to one assigned role. Set `Waitlist Enabled` to `TRUE` to keep accepting
+timestamped waitlist entries after capacity; otherwise registration closes.
 
 Setup is four steps, summarised at the top of `Code.gs`. If you have not
 deployed an Apps Script web app before, or something is not working,

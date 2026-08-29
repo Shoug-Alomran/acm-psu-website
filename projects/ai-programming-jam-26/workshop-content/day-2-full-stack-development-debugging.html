@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Day 2 | Full-Stack Development & Debugging | JAM.26</title>
+<meta name="description" content="JAM.26 Day 2 workshop: Firebase authentication, Firestore persistence, user-specific data, security rules, debugging with evidence, and optional AI workflow automation.">
+<link rel="canonical" href="https://acm-psu.shoug-tech.com/projects/ai-programming-jam-26/workshop-content/day-2-full-stack-development-debugging.html">
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#F5F4EF;
+    --panel:#FFFFFF;
+    --ink:#111111;
+    --sub:#5B5B55;
+    --indigo:#6C5CE7;
+    --teal:#22C9AE;
+    --orange:#FF6B45;
+    --cream-line:rgba(17,17,17,0.08);
+    --shadow-ink:7px 7px 0 var(--ink);
+    --shadow-ink-sm:4px 4px 0 var(--ink);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'JetBrains Mono', monospace;
+    line-height:1.55;
+    background-image:radial-gradient(circle, rgba(17,17,17,0.10) 1px, transparent 1px);
+    background-size:22px 22px;
+  }
+
+  a{color:inherit;}
+  ::selection{background:var(--indigo);color:#fff;}
+
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:60;
+    background:var(--bg);
+    border-bottom:3px solid var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    padding:16px 28px;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:.5px;
+    white-space:nowrap;
+  }
+
+  .brand .mark{
+    width:34px;
+    height:34px;
+    display:grid;
+    place-items:center;
+    background:var(--indigo);
+    border:3px solid var(--ink);
+    color:#fff;
+    font-size:16px;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+
+  .crumb{
+    font-size:12px;
+    color:var(--sub);
+    text-align:center;
+  }
+
+  .crumb b{color:var(--ink);}
+
+  .pill-btn{
+    background:var(--teal);
+    border:3px solid var(--ink);
+    color:var(--ink);
+    font-family:inherit;
+    font-weight:800;
+    font-size:12px;
+    letter-spacing:1px;
+    padding:9px 16px;
+    box-shadow:3px 3px 0 var(--ink);
+    text-decoration:none;
+    text-transform:uppercase;
+    white-space:nowrap;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+
+  .pill-btn:hover{
+    transform:translate(2px,2px);
+    box-shadow:1px 1px 0 var(--ink);
+  }
+
+  .index-bar{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding:14px 28px;
+    border-bottom:3px solid var(--ink);
+    background:var(--panel);
+    position:sticky;
+    top:69px;
+    z-index:50;
+  }
+
+  .index-bar::-webkit-scrollbar{height:6px;}
+
+  .index-bar a{
+    flex:0 0 auto;
+    text-decoration:none;
+    font-size:11px;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    font-weight:700;
+    color:var(--ink);
+    border:2px solid var(--ink);
+    padding:7px 12px;
+    background:var(--bg);
+    transition:background .15s ease,color .15s ease;
+  }
+
+  .index-bar a:hover{
+    background:var(--indigo);
+    color:#fff;
+  }
+
+  main{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  .hero{padding:56px 0 40px;}
+
+  .kicker{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:2px;
+    font-weight:800;
+    color:var(--indigo);
+    border:2px solid var(--indigo);
+    padding:5px 12px;
+    margin-bottom:18px;
+    background:#fff;
+  }
+
+  .browser-window{
+    border:3px solid var(--ink);
+    background:var(--panel);
+    box-shadow:var(--shadow-ink);
+  }
+
+  .browser-chrome{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    border-bottom:3px solid var(--ink);
+    padding:12px 16px;
+    background:#EDEBE3;
+  }
+
+  .dots{display:flex;gap:7px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.red{background:#FF5F57;}
+  .dot.yellow{background:#FEBC2E;}
+  .dot.green{background:#28C840;}
+
+  .addr{
+    flex:1;
+    background:#fff;
+    border:2px solid var(--ink);
+    font-size:12px;
+    padding:6px 12px;
+    color:var(--sub);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .addr b{color:var(--ink);}
+  .browser-body{padding:40px;}
+
+  .readme-tag{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--sub);
+    margin-bottom:16px;
+  }
+
+  h1.title{
+    font-size:44px;
+    margin:0 0 22px;
+    line-height:1.08;
+    font-weight:800;
+  }
+
+  h1.title .accent{color:var(--indigo);}
+  p.lead{font-size:15px;color:#2b2b28;}
+
+  .fact-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0;
+    border:3px solid var(--ink);
+    box-shadow:var(--shadow-ink-sm);
+    margin-top:26px;
+  }
+
+  .fact-grid > div{
+    padding:20px;
+    border-right:2px solid var(--ink);
+    background:#fff;
+  }
+
+  .fact-grid > div:last-child{border-right:none;}
+
+  .fact-grid .k{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--sub);
+    margin-bottom:6px;
+  }
+
+  .fact-grid .v{
+    font-size:14px;
+    font-weight:800;
+    line-height:1.4;
+  }
+
+  section.block{
+    padding:48px 0;
+    border-bottom:3px solid var(--ink);
+    scroll-margin-top:138px;
+  }
+
+  section.block:last-of-type{border-bottom:none;}
+
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+
+  .sec-num{
+    font-size:12px;
+    font-weight:800;
+    color:#fff;
+    background:var(--ink);
+    padding:4px 9px;
+    flex:0 0 auto;
+  }
+
+  h2.sec-title{
+    font-size:30px;
+    margin:0;
+    font-weight:800;
+  }
+
+  h2.sec-title .hash{color:var(--orange);}
+  p.sec-sub{color:var(--sub);font-size:13px;margin:6px 0 0;}
+  h3.sub-title{font-size:18px;margin:28px 0 12px;font-weight:800;}
+  h4.mini-title{font-size:15px;margin:20px 0 8px;font-weight:800;}
+
+  .badge{
+    display:inline-block;
+    border:2px solid var(--ink);
+    background:var(--orange);
+    color:#fff;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.8px;
+    padding:5px 9px;
+    text-transform:uppercase;
+    transform:rotate(-1deg);
+  }
+
+  ul.bullet-list{
+    margin:0;
+    padding-left:0;
+    list-style:none;
+  }
+
+  ul.bullet-list li{
+    position:relative;
+    padding:7px 0 7px 22px;
+    font-size:14px;
+    border-bottom:1px solid var(--cream-line);
+  }
+
+  ul.bullet-list li:last-child{border-bottom:none;}
+
+  ul.bullet-list li::before{
+    content:"▸";
+    position:absolute;
+    left:0;
+    color:var(--indigo);
+    font-weight:800;
+  }
+
+  ul.check-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+
+  ul.check-list li{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--cream-line);
+    font-size:14px;
+  }
+
+  ul.check-list li:last-child{border-bottom:none;}
+
+  .box{
+    flex:0 0 18px;
+    width:18px;
+    height:18px;
+    border:2px solid var(--ink);
+    margin-top:2px;
+    background:#fff;
+  }
+
+  .cols-2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:36px;
+  }
+
+  .tag-group{margin:18px 0 30px;}
+
+  .tag-group .label{
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--sub);
+    margin-bottom:10px;
+    font-weight:700;
+  }
+
+  .tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .tag{
+    border:2px solid var(--ink);
+    background:#fff;
+    padding:8px 14px;
+    font-size:12.5px;
+    font-weight:600;
+    text-decoration:none;
+    transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+  }
+
+  a.tag:hover{
+    transform:translate(-2px,-2px);
+    box-shadow:3px 3px 0 var(--ink);
+    background:#F8F7FF;
+  }
+
+  .tag.filled{
+    background:var(--ink);
+    color:#fff;
+  }
+
+  a.tag.filled:hover{background:var(--indigo);}
+
+  .flow-strip{
+    margin-top:22px;
+    padding:16px 18px;
+    background:#fff;
+    border:2px solid var(--ink);
+    font-size:12.5px;
+    overflow-x:auto;
+    white-space:nowrap;
+    color:var(--sub);
+  }
+
+  .flow-strip b{color:var(--ink);}
+
+  .note-callout{
+    margin-top:18px;
+    padding:14px 18px;
+    border:2px dashed var(--ink);
+    font-size:13px;
+    background:#fff;
+  }
+
+  .important-callout{
+    margin-top:22px;
+    padding:18px 20px;
+    border:3px solid var(--ink);
+    background:#FFF5F1;
+    box-shadow:var(--shadow-ink-sm);
+    font-size:13px;
+  }
+
+  .important-callout strong{color:var(--orange);}
+
+  .security-callout{
+    margin-top:22px;
+    padding:20px;
+    border:3px solid var(--ink);
+    background:#F0FFFB;
+    box-shadow:var(--shadow-ink-sm);
+  }
+
+  .security-callout .title{
+    font-weight:800;
+    color:var(--teal);
+    margin-bottom:10px;
+  }
+
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-top:18px;
+  }
+
+  .compare-card{
+    border:2px solid var(--ink);
+    background:#fff;
+    padding:18px;
+  }
+
+  .compare-card .label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    font-weight:800;
+    margin-bottom:8px;
+    color:var(--indigo);
+  }
+
+  .img-placeholder{
+    border:3px dashed var(--ink);
+    background:repeating-linear-gradient(135deg,#fff,#fff 10px,#EFEDE4 10px,#EFEDE4 20px);
+    padding:34px 20px;
+    text-align:center;
+    margin:16px 0;
+    min-height:150px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .img-placeholder .icon{font-size:26px;}
+  .img-placeholder .label{
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    color:var(--ink);
+  }
+
+  .img-placeholder .hint{
+    font-size:11.5px;
+    color:var(--sub);
+    max-width:520px;
+  }
+
+  .video-placeholder{min-height:280px;}
+
+  ol.stepper{
+    counter-reset:step;
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+
+  ol.stepper li{
+    counter-increment:step;
+    position:relative;
+    padding:14px 0 14px 46px;
+    font-size:14px;
+    border-bottom:1px solid var(--cream-line);
+  }
+
+  ol.stepper li:last-child{border-bottom:none;}
+
+  ol.stepper li::before{
+    content:counter(step, decimal-leading-zero);
+    position:absolute;
+    left:0;
+    top:12px;
+    width:30px;
+    height:30px;
+    display:grid;
+    place-items:center;
+    background:var(--indigo);
+    color:#fff;
+    font-weight:800;
+    font-size:12px;
+    border:2px solid var(--ink);
+  }
+
+  .prompt-card{
+    border:3px solid var(--ink);
+    margin-bottom:26px;
+    background:#fff;
+    box-shadow:var(--shadow-ink-sm);
+  }
+
+  .prompt-card .head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--ink);
+    color:#fff;
+    padding:10px 16px;
+    font-size:12px;
+    letter-spacing:.5px;
+  }
+
+  .prompt-card .term{
+    padding:20px;
+    font-size:13px;
+    background:#0E0E0C;
+    color:#B9F5EA;
+    white-space:pre-wrap;
+    line-height:1.7;
+  }
+
+  .prompt-card .term .field{color:var(--orange);}
+
+  .prompt-card .purpose{
+    padding:14px 20px;
+    border-top:2px solid var(--cream-line);
+    font-size:13px;
+  }
+
+  .prompt-card .purpose b{color:var(--indigo);}
+
+  .terminal{
+    margin:18px 0;
+    border:3px solid var(--ink);
+    background:#0E0E0C;
+    box-shadow:var(--shadow-ink-sm);
+    overflow:hidden;
+  }
+
+  .terminal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background:var(--ink);
+    color:#fff;
+    padding:9px 14px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+  }
+
+  .terminal pre{
+    margin:0;
+    padding:18px 20px;
+    overflow-x:auto;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    line-height:1.75;
+    color:#B9F5EA;
+  }
+
+  .terminal .comment{color:#8D8D84;}
+  .terminal .cmd{color:#fff;}
+
+  .fix-card{
+    border:3px solid var(--ink);
+    background:#fff;
+    padding:22px;
+    margin-bottom:22px;
+    box-shadow:var(--shadow-ink-sm);
+    position:relative;
+  }
+
+  .fix-card .tab{
+    position:absolute;
+    top:-14px;
+    left:22px;
+    background:var(--orange);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    padding:5px 12px;
+    border:2px solid var(--ink);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    transform:rotate(-2deg);
+  }
+
+  .fix-card h4{
+    margin:14px 0 12px;
+    font-size:16px;
+    font-weight:800;
+  }
+
+  .fix-card .row{
+    margin-bottom:10px;
+    font-size:13.5px;
+  }
+
+  .fix-card .row b{
+    display:block;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    color:var(--indigo);
+    margin-bottom:4px;
+  }
+
+  .fix-card .row.fix b{color:var(--teal);}
+
+  footer{
+    padding:40px 28px 60px;
+    text-align:center;
+    color:var(--sub);
+    font-size:12px;
+    max-width:1120px;
+    margin:0 auto;
+  }
+
+  footer .foot-mark{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:800;
+    color:var(--ink);
+    margin-bottom:10px;
+  }
+
+  .deco-diamond{
+    position:fixed;
+    width:180px;
+    height:180px;
+    border:2px solid rgba(255,107,69,0.35);
+    transform:rotate(45deg);
+    left:-90px;
+    bottom:60px;
+    z-index:-1;
+  }
+
+  .deco-circle{
+    position:fixed;
+    width:220px;
+    height:220px;
+    border-radius:50%;
+    border:2px solid rgba(108,92,231,0.18);
+    right:-110px;
+    top:200px;
+    z-index:-1;
+  }
+
+  @media(max-width:900px){
+    .crumb{display:none;}
+    .compare-grid{grid-template-columns:1fr;}
+  }
+
+  @media(max-width:760px){
+    .cols-2{grid-template-columns:1fr;}
+    .index-bar{top:67px;}
+  }
+
+  @media(max-width:700px){
+    .topbar{padding:14px 16px;}
+    .index-bar{padding:12px 16px;}
+    main{padding:0 18px;}
+    h1.title{font-size:30px;}
+    .browser-body{padding:24px;}
+    h2.sec-title{font-size:22px;}
+    .fact-grid{grid-template-columns:1fr;}
+    .fact-grid > div{border-right:none;border-bottom:2px solid var(--ink);}
+    .fact-grid > div:last-child{border-bottom:none;}
+    .pill-btn{font-size:10px;padding:8px 10px;}
+    .brand{font-size:16px;}
+  }
+</style>
+</head>
+
+<body>
+
+<div class="deco-diamond"></div>
+<div class="deco-circle"></div>
+
+<div class="topbar">
+  <a class="brand" href="/archive-project.html#learning-archive" style="text-decoration:none;color:inherit"><span class="mark">✦</span> JAM.26</a>
+  <div class="crumb"><a href="/archive-project.html#learning-archive" style="color:inherit">ARCHIVE</a> / <a href="https://ai-programming-jam.shoug-tech.com/workshop-day-02.html" style="color:inherit"><b>DAY 2</b></a> / Full-Stack Development &amp; Debugging</div>
+  <a class="pill-btn" href="#exercise">YOUR EXERCISE_</a>
+</div>
+
+<nav class="index-bar">
+  <a href="#overview">Overview</a>
+  <a href="#ready">Before You Start</a>
+  <a href="#auth-vs-data">1. Auth vs Data</a>
+  <a href="#firebase-auth">2. Firebase Auth</a>
+  <a href="#firestore">3. Firestore</a>
+  <a href="#user-data">4. Ownership & Rules</a>
+  <a href="#debugging">5. Debugging</a>
+  <a href="#hooks">6. Hooks</a>
+  <a href="#prompts">Prompt Templates</a>
+  <a href="#walkthrough">Worked Example</a>
+  <a href="#exercise">Your Exercise</a>
+  <a href="#troubleshoot">Troubleshooting</a>
+  <a href="#selfcheck">Self-Check</a>
+  <a href="#resources">Resources</a>
+</nav>
+
+<main>
+
+<section class="hero" id="overview">
+  <span class="kicker">SEASON 2026 // DAY 02 OF 03</span>
+
+  <div class="browser-window">
+    <div class="browser-chrome">
+      <div class="dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="addr">
+        ai-programming-jam.shoug-tech.com / <b>workshops / day-2</b>
+      </div>
+    </div>
+
+    <div class="browser-body">
+      <div class="readme-tag">README.md</div>
+
+      <h1 class="title">
+        # Full-Stack Development<br>
+        and <span class="accent">Debugging</span>
+      </h1>
+
+      <p class="lead">
+        Yesterday you learned how to move from requirements to a planned,
+        locally running application. Today that application becomes full stack:
+        users can sign in, data can persist, and the app can behave differently
+        for different accounts.
+      </p>
+
+      <p class="lead">
+        You will connect Firebase Authentication and Cloud Firestore, learn how
+        user identity connects to application data, and practice debugging
+        full-stack problems using real evidence from DevTools and Firebase.
+      </p>
+
+      <p class="lead">
+        The goal is not simply to "make Firebase work." The goal is to understand
+        the path from interface to application logic to authentication to database
+        and know where to investigate when one layer fails.
+      </p>
+
+      <div class="fact-grid">
+        <div>
+          <div class="k">Today you'll practice</div>
+          <div class="v">Auth → Persistence → Ownership → Debugging</div>
+        </div>
+
+        <div>
+          <div class="k">You'll use</div>
+          <div class="v">Firebase Auth, Firestore, DevTools, Codex, Claude Code</div>
+        </div>
+
+        <div>
+          <div class="k">By the end</div>
+          <div class="v">A working authenticated feature with persistent user data</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="ready">
+  <div class="sec-head">
+    <span class="sec-num">00</span>
+    <h2 class="sec-title"><span class="hash">##</span> Before You Start</h2>
+  </div>
+
+  <p class="sec-sub">
+    Day 2 builds directly on the workflow from Day 1. Flag an instructor if one
+    of these is not working before the practical portion begins.
+  </p>
+
+  <ul class="bullet-list">
+    <li>Run a web application locally</li>
+    <li>Navigate a project in Visual Studio Code</li>
+    <li>Use the integrated terminal</li>
+    <li>Install dependencies using npm</li>
+    <li>Use Codex or Claude Code for basic development tasks</li>
+    <li>Use basic Git and GitHub workflows</li>
+    <li>Commit and push project changes</li>
+    <li>Open Browser Developer Tools</li>
+  </ul>
+
+  <div class="note-callout">
+    Bring the project you worked on during Day 1. The instructor example continues
+    the Study Task Tracker, while the participant exercise continues the Campus Event Board.
+  </div>
+
+  <div class="tag-group" style="margin-top:30px;">
+    <div class="label">Accounts</div>
+    <div class="tags">
+      <span class="tag">Firebase / Google account</span>
+      <span class="tag">GitHub</span>
+      <span class="tag">Claude</span>
+      <span class="tag">OpenAI / Codex</span>
+    </div>
+  </div>
+
+  <div class="tag-group">
+    <div class="label">Software</div>
+    <div class="tags">
+      <span class="tag filled">Visual Studio Code</span>
+      <span class="tag filled">Git</span>
+      <span class="tag filled">Node.js</span>
+      <span class="tag filled">npm</span>
+      <span class="tag filled">Modern Browser</span>
+      <span class="tag filled">Claude Code</span>
+      <span class="tag filled">Codex</span>
+    </div>
+  </div>
+
+  <div class="important-callout">
+    <strong>Workshop standard:</strong>
+    everyone will use Firebase Email/Password Authentication today.
+    Standardizing the authentication path makes setup and debugging much easier
+    for a beginner workshop.
+  </div>
+</section>
+
+<section class="block" id="auth-vs-data">
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <h2 class="sec-title"><span class="hash">##</span> Authentication vs Application Data</h2>
+  </div>
+
+  <p class="lead">
+    Authentication and application data are related, but they solve two different problems.
+  </p>
+
+  <div class="flow-strip" style="font-size:14px;">
+    <b>Authentication</b> answers "Who is this user?" &nbsp;|&nbsp;
+    <b>Firestore</b> answers "What should the application remember?"
+  </div>
+
+  <div class="compare-grid">
+    <div class="compare-card">
+      <div class="label">Authentication</div>
+      <ul class="bullet-list">
+        <li>Creates and identifies users</li>
+        <li>Maintains sign-in state</li>
+        <li>Provides a unique user ID</li>
+        <li>Handles credentials and authentication errors</li>
+      </ul>
+    </div>
+
+    <div class="compare-card">
+      <div class="label">Application Data</div>
+      <ul class="bullet-list">
+        <li>Stores tasks, events, records, and other app information</li>
+        <li>Persists beyond a page refresh</li>
+        <li>Can be associated with a user ID</li>
+        <li>Must be protected by appropriate database rules</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note-callout">
+    Never store user passwords manually in Firestore. Firebase Authentication is responsible for credentials.
+  </div>
+</section>
+
+<section class="block" id="firebase-auth">
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <h2 class="sec-title"><span class="hash">##</span> Firebase Authentication</h2>
+  </div>
+
+  <p class="lead">
+    Firebase Authentication gives your application a reliable way to know who is using it.
+  </p>
+
+  <ul class="bullet-list">
+    <li>User registration with email and password</li>
+    <li>User sign-in</li>
+    <li>User sign-out</li>
+    <li>Authentication state: is somebody currently signed in?</li>
+    <li>User ID: a stable identifier for each account</li>
+    <li>Authentication errors and user feedback</li>
+    <li>Protected functionality that only appears when a user is authenticated</li>
+  </ul>
+
+  <div class="flow-strip">
+    Sign Up → Firebase Authentication → User Account → User ID → Application
+  </div>
+
+  <h3 class="sub-title">What the application should know</h3>
+
+  <ul class="bullet-list">
+    <li>Whether a user is signed in</li>
+    <li>Which user is signed in</li>
+    <li>What UI should appear in each authentication state</li>
+    <li>How to respond when sign-up or sign-in fails</li>
+  </ul>
+
+  <div class="img-placeholder">
+    <div class="icon">IMAGE</div>
+    <div class="label">Firebase Authentication Screenshot</div>
+    <div class="hint">
+      Add a screenshot showing Email/Password authentication enabled in the Firebase console.
+    </div>
+  </div>
+</section>
+
+<section class="block" id="firestore">
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <h2 class="sec-title"><span class="hash">##</span> Persistent Data with Firestore</h2>
+  </div>
+
+  <p class="lead">
+    Cloud Firestore stores application data so it survives refreshes and future sessions.
+  </p>
+
+  <div class="cols-2">
+    <ul class="bullet-list">
+      <li><b>Collection</b>: a group of related documents</li>
+      <li><b>Document</b>: one stored record</li>
+      <li><b>Field</b>: a value inside a document</li>
+      <li>Create data</li>
+    </ul>
+
+    <ul class="bullet-list">
+      <li>Read data</li>
+      <li>Update data</li>
+      <li>Delete data</li>
+      <li>Use document IDs and ownership fields</li>
+    </ul>
+  </div>
+
+  <div class="flow-strip">
+    User Action → Interface → Application Logic → Firestore → Stored Data
+  </div>
+
+  <h3 class="sub-title">A simple task document</h3>
+
+  <div class="terminal">
+    <div class="terminal-head">
+      <span>Firestore document model</span>
+      <span>tasks / task-id</span>
+    </div>
+    <pre>{
+  "title": "Finish project outline",
+  "course": "CS 101",
+  "dueDate": "2026-09-10",
+  "completed": false,
+  "ownerId": "firebase-user-id"
+}</pre>
+  </div>
+
+  <div class="note-callout">
+    Persistence test: create data, refresh the browser, and confirm the data is still there.
+    If refresh destroys your data, it is not actually persistent yet.
+  </div>
+
+  <div class="img-placeholder">
+    <div class="icon">IMAGE</div>
+    <div class="label">Firestore Console Screenshot</div>
+    <div class="hint">
+      Add a screenshot showing the example collection, documents, fields, and ownerId.
+    </div>
+  </div>
+</section>
+
+<section class="block" id="user-data">
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <h2 class="sec-title"><span class="hash">##</span> User Ownership &amp; Security Rules</h2>
+  </div>
+
+  <p class="lead">
+    Authentication becomes useful when application data can be associated with the correct user.
+    The Firebase user ID provides that connection.
+  </p>
+
+  <ul class="bullet-list">
+    <li>Store the authenticated user's ID with records that belong to that user</li>
+    <li>Query for records owned by the current user</li>
+    <li>Test with two different accounts</li>
+    <li>Verify one account cannot see another account's private records</li>
+  </ul>
+
+  <div class="security-callout">
+    <div class="title">A QUERY IS NOT A SECURITY BOUNDARY.</div>
+
+    <p>
+      Filtering by <code>ownerId</code> controls what your interface requests.
+      Firebase Security Rules control what the database is actually willing to return or modify.
+    </p>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="label">Frontend Query</div>
+        <p>
+          "Only request documents where ownerId matches the current user."
+        </p>
+      </div>
+
+      <div class="compare-card">
+        <div class="label">Security Rules</div>
+        <p>
+          "Reject requests for records the authenticated user does not own."
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-strip">
+    Authenticated User → UID → Query + Security Rules → User's Firestore Data
+  </div>
+
+  <h3 class="sub-title">Security mindset</h3>
+
+  <ul class="bullet-list">
+    <li>Authentication proves identity</li>
+    <li>Queries select data</li>
+    <li>Security Rules enforce access</li>
+    <li>Test with more than one account</li>
+    <li>Never assume hiding something in the interface makes it secure</li>
+  </ul>
+</section>
+
+<section class="block" id="debugging">
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <h2 class="sec-title"><span class="hash">##</span> Debugging Full-Stack Applications</h2>
+  </div>
+
+  <p class="lead">
+    Full-stack debugging becomes much easier when you identify which layer is failing before changing code.
+  </p>
+
+  <div class="flow-strip" style="font-size:14px;">
+    <b>Expected → Observed → Evidence → Hypothesis → Fix → Test → Verify</b>
+  </div>
+
+  <h3 class="sub-title">First locate the failing layer</h3>
+
+  <div class="terminal">
+    <div class="terminal-head">
+      <span>debugging map</span>
+      <span>follow the request</span>
+    </div>
+    <pre>UI
+ ↓
+Application Logic
+ ↓
+Authentication
+ ↓
+Firestore Request
+ ↓
+Security Rules
+ ↓
+Database</pre>
+  </div>
+
+  <h4 class="mini-title">What to check before changing code</h4>
+
+  <ul class="bullet-list">
+    <li>What exactly did you expect to happen?</li>
+    <li>What actually happened?</li>
+    <li>Read the browser console error word for word</li>
+    <li>Inspect the Network panel when a request is involved</li>
+    <li>Check terminal output</li>
+    <li>Check whether the current user exists</li>
+    <li>Check the exact Firestore path or query</li>
+    <li>Check Firebase Security Rules when requests are denied</li>
+    <li>Give AI the collected evidence, not just the symptom</li>
+  </ul>
+
+  <div class="important-callout">
+    <strong>Do not debug five layers at once.</strong>
+    Confirm what is working, locate the first layer that fails, then investigate there.
+  </div>
+</section>
+
+<section class="block" id="hooks">
+  <div class="sec-head">
+    <span class="sec-num">06</span>
+    <h2 class="sec-title"><span class="hash">##</span> Hooks &amp; Workflow Automation</h2>
+    <span class="badge">Optional / If Time Allows</span>
+  </div>
+
+  <p class="lead">
+    Once you have repeated a workflow enough times, you may notice checks or actions
+    that are worth automating. Hooks can remove useful repetition from an AI-assisted
+    development workflow.
+  </p>
+
+  <div class="flow-strip">
+    Use AI → Observe Workflow → Identify Repetition → Automate Carefully
+  </div>
+
+  <ul class="bullet-list">
+    <li>Understand the task before automating it</li>
+    <li>Prioritize hooks that prevent mistakes</li>
+    <li>Prefer simple automations over complicated ones</li>
+    <li>Understand exactly what a hook will execute</li>
+    <li>Do not automate a process you do not understand</li>
+  </ul>
+
+  <h3 class="sub-title">Example useful automation</h3>
+
+  <div class="terminal">
+    <div class="terminal-head">
+      <span>example workflow</span>
+      <span>after code changes</span>
+    </div>
+    <pre>AI modifies code
+      ↓
+Run lint / tests
+      ↓
+Report failures
+      ↓
+Developer reviews result</pre>
+  </div>
+
+  <div class="note-callout">
+    Hooks are a bonus topic. If Firebase setup or debugging needs more time, skip this section
+    and return to it later.
+  </div>
+</section>
+
+<section class="block" id="prompts">
+  <div class="sec-head">
+    <span class="sec-num">07</span>
+    <h2 class="sec-title"><span class="hash">##</span> Prompt Templates You Can Use</h2>
+  </div>
+
+  <p class="sec-sub">
+    Use these as starting structures. Replace the bracketed fields with real evidence and project context.
+  </p>
+
+  <div class="prompt-card">
+    <div class="head">01 / plan Firebase integration</div>
+    <div class="term">I want to add Firebase to this application.
+
+For this workshop I need:
+- Email/password authentication
+- Persistent Firestore data
+- Data associated with the authenticated user
+- Firebase Security Rules that protect user-owned data
+
+Before modifying anything, inspect the existing project.
+
+Explain:
+1. How Firebase should integrate with the current structure
+2. Which files will likely need to change
+3. Which dependencies are required
+4. Which Firebase console settings I must configure
+5. Which client configuration values are needed
+6. How user ownership should be represented in Firestore
+7. How Security Rules should protect the data
+
+Do not implement anything yet.</div>
+    <div class="purpose">
+      <b>Use this:</b> before implementation so the assistant understands the project and the intended security model.
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="head">02 / implement authentication</div>
+    <div class="term">Implement email/password authentication for this project.
+
+Required behavior:
+- A user can create an account
+- A user can sign in
+- A user can sign out
+- The app can detect authentication state
+- The interface responds appropriately when no user is signed in
+- Authentication errors are shown clearly to the user
+
+First inspect the existing project and identify the relevant files.
+
+Do not rewrite unrelated functionality.
+
+After implementation, explain:
+1. What changed
+2. How authentication state is handled
+3. What I should test
+4. Any remaining assumptions or risks</div>
+    <div class="purpose">
+      <b>Use this:</b> after Firebase is configured and you are ready to add authentication behavior.
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="head">03 / implement user-owned Firestore data</div>
+    <div class="term">I want to persist the following application data in Firestore:
+<span class="field">[DATA TYPE]</span>
+
+Requirements:
+- Records must survive page refreshes
+- Each record must store the authenticated user's UID as ownerId
+- The app should request only records owned by the current user
+- Firebase Security Rules must prevent one authenticated user from reading or modifying another user's records
+
+Before changing code, inspect the current data flow and explain the proposed Firestore structure.
+
+Then implement the smallest appropriate change.
+
+After implementation, tell me how to test this using two different accounts.</div>
+    <div class="purpose">
+      <b>Use this:</b> when converting local-only data into persistent, user-owned Firestore data.
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="head">04 / debug with evidence</div>
+    <div class="term">I am debugging the following problem.
+
+Expected behavior:
+<span class="field">[EXPECTED BEHAVIOR]</span>
+
+Actual behavior:
+<span class="field">[ACTUAL BEHAVIOR]</span>
+
+Browser console:
+<span class="field">[ERROR OR OUTPUT]</span>
+
+Network information:
+<span class="field">[RELEVANT INFORMATION]</span>
+
+Firebase / Firestore information:
+<span class="field">[RELEVANT INFORMATION]</span>
+
+Authentication state:
+<span class="field">[SIGNED IN? USER ID?]</span>
+
+Other context:
+<span class="field">[CONTEXT]</span>
+
+First identify which layer is most likely failing:
+- UI
+- Application logic
+- Authentication
+- Firestore request
+- Security Rules
+- Database
+
+Explain what evidence supports your diagnosis before changing code.
+
+Then propose the smallest appropriate fix and tell me exactly how to verify it.</div>
+    <div class="purpose">
+      <b>Use this:</b> when something fails. The goal is diagnosis before modification.
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="head">05 / discover useful hooks</div>
+    <div class="term">Based on how I have been using Claude Code in this project, identify repetitive actions or checks that could be automated with hooks.
+
+Suggest only hooks that would improve productivity, code quality, testing, or debugging.
+
+For each suggestion, explain:
+1. What triggers the hook
+2. What the hook would do
+3. Why it would be useful
+4. Any disadvantages or risks
+
+Do not implement anything yet.</div>
+    <div class="purpose">
+      <b>Use this:</b> only after you have enough real workflow repetition to analyze.
+    </div>
+  </div>
+</section>
+
+<section class="block" id="walkthrough">
+  <div class="sec-head">
+    <span class="sec-num">08</span>
+    <h2 class="sec-title"><span class="hash">##</span> Worked Example</h2>
+  </div>
+
+  <p class="lead">
+    The instructor will continue the <b>Study Task Tracker</b> from Day 1 and turn it from
+    a local-only frontend into an authenticated application with persistent, user-owned tasks.
+  </p>
+
+  <div class="flow-strip">
+    <b>
+      Study Task Tracker → Sign Up → Sign In → Save Tasks → ownerId → Security Rules
+      → Sign Out → Sign In Again → Tasks Persist
+    </b>
+  </div>
+
+  <h3 class="sub-title">The complete walkthrough</h3>
+
+  <ol class="stepper">
+    <li>Open the Study Task Tracker from Day 1 and verify it still runs locally.</li>
+    <li>Confirm that task data is currently local-only and disappears when appropriate.</li>
+    <li>Create or open a Firebase project.</li>
+    <li>Register the web application with Firebase.</li>
+    <li>Install and initialize Firebase in the project.</li>
+    <li>Enable Email/Password Authentication.</li>
+    <li>Implement user registration.</li>
+    <li>Implement sign-in and sign-out.</li>
+    <li>Display the appropriate interface based on authentication state.</li>
+    <li>Create a Cloud Firestore database.</li>
+    <li>Design a simple task document structure.</li>
+    <li>Store a task in Firestore.</li>
+    <li>Attach the authenticated user's UID as <b>ownerId</b>.</li>
+    <li>Retrieve only the current user's tasks.</li>
+    <li>Add or review Security Rules for user-owned task data.</li>
+    <li>Refresh the page and verify tasks persist.</li>
+    <li>Test with a second account.</li>
+    <li>Verify one account cannot access another account's private tasks.</li>
+    <li>Introduce or encounter a real failure.</li>
+    <li>Locate the failing layer using DevTools and Firebase evidence.</li>
+    <li>Give that evidence to Codex or Claude Code.</li>
+    <li>Evaluate the diagnosis and proposed fix.</li>
+    <li>Apply the fix.</li>
+    <li>Test again and verify the behavior.</li>
+    <li>Commit the working result to GitHub.</li>
+  </ol>
+
+  <div class="img-placeholder">
+    <div class="icon">IMAGES</div>
+    <div class="label">Worked Example Screenshots</div>
+    <div class="hint">
+      Add screenshots showing Authentication, Firestore data, Security Rules,
+      DevTools evidence, and the working Study Task Tracker.
+    </div>
+  </div>
+
+  <div class="img-placeholder video-placeholder">
+    <div class="icon">VIDEO</div>
+    <div class="label">Instructor Demo Recording</div>
+    <div class="hint">
+      Add the Day 2 walkthrough recording here when it is ready.
+    </div>
+  </div>
+
+  <div class="note-callout">
+    Watch the transformation:
+    Local Website → Authenticated Application → Persistent Data → User-Owned Data → Debugged Full-Stack Feature.
+  </div>
+</section>
+
+<section class="block" id="exercise">
+  <div class="sec-head">
+    <span class="sec-num">09</span>
+    <h2 class="sec-title"><span class="hash">##</span> Your Exercise</h2>
+  </div>
+
+  <p class="lead">
+    Continue the <b>Campus Event Board</b> from Day 1 and convert it into a full-stack application.
+  </p>
+
+  <h3 class="sub-title">Your target</h3>
+
+  <div class="flow-strip">
+    Campus Event Board → Account → Saved Events → ownerId → Security Rules → Persistence
+  </div>
+
+  <h3 class="sub-title">Steps</h3>
+
+  <ol class="stepper">
+    <li>Open your Campus Event Board from Day 1.</li>
+    <li>Verify the project runs locally.</li>
+    <li>Create or configure a Firebase project.</li>
+    <li>Connect Firebase to the application.</li>
+    <li>Enable Email/Password Authentication.</li>
+    <li>Implement user registration.</li>
+    <li>Implement sign-in.</li>
+    <li>Implement sign-out.</li>
+    <li>Make the interface respond appropriately to authentication state.</li>
+    <li>Create a Firestore database.</li>
+    <li>Store event data in Firestore.</li>
+    <li>Add the authenticated user's UID as <b>ownerId</b> when appropriate.</li>
+    <li>Retrieve the correct event data for the authenticated user.</li>
+    <li>Add or review Security Rules that protect user-owned records.</li>
+    <li>Refresh the app and verify persistence.</li>
+    <li>Sign out and sign back in.</li>
+    <li>Verify the correct data still appears.</li>
+    <li>Create or use a second account.</li>
+    <li>Verify private user-owned data is not exposed across accounts.</li>
+    <li>Use DevTools and Firebase evidence to investigate any errors.</li>
+    <li>Use Codex or Claude Code to assist with diagnosis if needed.</li>
+    <li>Test every proposed fix before trusting it.</li>
+    <li>Commit the working checkpoint to GitHub.</li>
+  </ol>
+
+  <h3 class="sub-title">You are done when...</h3>
+
+  <ul class="check-list">
+    <li><span class="box"></span>A user can create an account</li>
+    <li><span class="box"></span>A user can sign in</li>
+    <li><span class="box"></span>A user can sign out</li>
+    <li><span class="box"></span>Authentication state affects application behavior</li>
+    <li><span class="box"></span>Event data is stored in Firestore</li>
+    <li><span class="box"></span>Stored data survives a page refresh</li>
+    <li><span class="box"></span>User-owned records contain the correct ownerId</li>
+    <li><span class="box"></span>Security Rules protect user-owned data</li>
+    <li><span class="box"></span>You tested the application using two accounts</li>
+    <li><span class="box"></span>You can locate browser errors using DevTools</li>
+    <li><span class="box"></span>You can explain which application layer failed during a bug</li>
+    <li><span class="box"></span>Your working Day 2 implementation is committed to GitHub</li>
+  </ul>
+</section>
+
+<section class="block" id="troubleshoot">
+  <div class="sec-head">
+    <span class="sec-num">10</span>
+    <h2 class="sec-title"><span class="hash">##</span> Troubleshooting</h2>
+  </div>
+
+  <p class="sec-sub">
+    When something fails, locate the layer before changing code.
+  </p>
+
+  <div class="fix-card">
+    <span class="tab">If this happens</span>
+    <h4>Firebase fails immediately after setup</h4>
+    <div class="row">
+      <b>Likely causes</b>
+      Incorrect initialization, missing dependencies, configuration mistakes,
+      environment configuration problems, or the wrong Firebase project.
+    </div>
+    <div class="row fix">
+      <b>What to do</b>
+      Check browser console output, terminal output, installed packages, Firebase initialization,
+      and the exact project configuration. Determine whether Firebase itself is unreachable
+      or only one Firebase service is failing.
+    </div>
+  </div>
+
+  <div class="fix-card">
+    <span class="tab">If this happens</span>
+    <h4>Sign-in works, but Firestore reads or writes fail</h4>
+    <div class="row">
+      <b>Likely causes</b>
+      Firestore configuration, incorrect collection paths, Security Rules, malformed data,
+      or a query problem.
+    </div>
+    <div class="row fix">
+      <b>What to do</b>
+      Confirm authentication works independently. Then inspect the exact Firestore request,
+      browser error, collection path, user ID, and Security Rules.
+    </div>
+  </div>
+
+  <div class="fix-card">
+    <span class="tab">If this happens</span>
+    <h4>A user sees another user's private data</h4>
+    <div class="row">
+      <b>Why it happens</b>
+      Ownership is missing, queries are too broad, Security Rules are too permissive, or all three.
+    </div>
+    <div class="row fix">
+      <b>What to do</b>
+      Inspect the stored ownerId, inspect the current user's UID, inspect the query,
+      and inspect the Security Rules. Fix the security model, not only the interface.
+    </div>
+  </div>
+
+  <div class="fix-card">
+    <span class="tab">If this happens</span>
+    <h4>Permission denied</h4>
+    <div class="row">
+      <b>What it means</b>
+      Firebase received the request but Security Rules rejected it.
+    </div>
+    <div class="row fix">
+      <b>What to do</b>
+      Confirm the user is authenticated, inspect the document ownership field,
+      inspect the requested path, and compare the request against the active rules.
+      Do not solve the problem by making the database broadly public.
+    </div>
+  </div>
+
+  <div class="fix-card">
+    <span class="tab">If this happens</span>
+    <h4>Data disappears after refreshing</h4>
+    <div class="row">
+      <b>Likely cause</b>
+      The application may still be reading from local state instead of loading data from Firestore.
+    </div>
+    <div class="row fix">
+      <b>What to do</b>
+      Confirm the record actually exists in Firestore, then confirm the application reads it
+      again when the authenticated session starts or the page reloads.
+    </div>
+  </div>
+
+  <div class="fix-card">
+    <span class="tab">If this happens</span>
+    <h4>AI keeps changing code but the bug remains</h4>
+    <div class="row">
+      <b>Why it happens</b>
+      The assistant does not have enough evidence, or the failing layer has not been isolated.
+    </div>
+    <div class="row fix">
+      <b>What to do</b>
+      Stop making changes. Return to Expected → Observed → Evidence.
+      Identify the first failing layer and give the AI specific console, network,
+      authentication, or Firebase evidence.
+    </div>
+  </div>
+</section>
+
+<section class="block" id="selfcheck">
+  <div class="sec-head">
+    <span class="sec-num">11</span>
+    <h2 class="sec-title"><span class="hash">##</span> Self-Check Before You Leave</h2>
+  </div>
+
+  <p class="sec-sub">
+    If one of these is still unclear, flag an instructor before the workshop ends.
+  </p>
+
+  <ul class="check-list">
+    <li><span class="box"></span>I can explain the difference between authentication and application data</li>
+    <li><span class="box"></span>I can create an account using Email/Password Authentication</li>
+    <li><span class="box"></span>I can sign in and sign out</li>
+    <li><span class="box"></span>I can detect authentication state in the application</li>
+    <li><span class="box"></span>I can store and retrieve Firestore data</li>
+    <li><span class="box"></span>I understand why user-owned records need an ownerId</li>
+    <li><span class="box"></span>I understand the difference between filtering data and securing data</li>
+    <li><span class="box"></span>I tested user-owned data with two different accounts</li>
+    <li><span class="box"></span>I can identify which full-stack layer is failing during debugging</li>
+    <li><span class="box"></span>I can give AI real evidence instead of only saying "fix it"</li>
+    <li><span class="box"></span>I understand when hooks may be useful, even if I did not implement one</li>
+    <li><span class="box"></span>My working Day 2 implementation is committed to GitHub</li>
+  </ul>
+</section>
+
+<section class="block" id="resources">
+  <div class="sec-head">
+    <span class="sec-num">12</span>
+    <h2 class="sec-title"><span class="hash">##</span> Resources</h2>
+  </div>
+
+  <p class="sec-sub">
+    Use the official documentation when you need more detail than the workshop can cover.
+  </p>
+
+  <div class="tag-group">
+    <div class="label">Firebase</div>
+    <div class="tags">
+      <a class="tag" href="https://firebase.google.com/docs/web/setup" target="_blank" rel="noopener noreferrer">Firebase Web Setup ↗</a>
+      <a class="tag" href="https://firebase.google.com/docs/auth/web/start" target="_blank" rel="noopener noreferrer">Firebase Auth ↗</a>
+      <a class="tag" href="https://firebase.google.com/docs/firestore" target="_blank" rel="noopener noreferrer">Cloud Firestore ↗</a>
+      <a class="tag" href="https://firebase.google.com/docs/firestore/security/get-started" target="_blank" rel="noopener noreferrer">Firestore Security Rules ↗</a>
+    </div>
+  </div>
+
+  <div class="tag-group">
+    <div class="label">Debugging</div>
+    <div class="tags">
+      <a class="tag" href="https://developer.chrome.com/docs/devtools/" target="_blank" rel="noopener noreferrer">Chrome DevTools ↗</a>
+      <a class="tag filled" href="#debugging">Debugging Workflow</a>
+      <a class="tag filled" href="#troubleshoot">Troubleshooting Guide</a>
+    </div>
+  </div>
+
+  <div class="tag-group">
+    <div class="label">AI Engineering</div>
+    <div class="tags">
+      <a class="tag" href="https://developers.openai.com/codex/" target="_blank" rel="noopener noreferrer">Codex Documentation ↗</a>
+      <a class="tag" href="https://code.claude.com/docs/en/overview" target="_blank" rel="noopener noreferrer">Claude Code Documentation ↗</a>
+      <a class="tag filled" href="#prompts">Day 2 Prompt Templates</a>
+      <a class="tag filled" href="#hooks">Hooks Reference</a>
+    </div>
+  </div>
+
+  <div class="flow-strip">
+    Auth: Sign Up → Authenticate → UID → Application
+  </div>
+
+  <div class="flow-strip">
+    Data: User Action → Firestore → Persistent Record → Reload
+  </div>
+
+  <div class="flow-strip">
+    Security: Authenticated UID → Query + Rules → Authorized Data
+  </div>
+
+  <div class="flow-strip">
+    Debugging: Expected → Observed → Evidence → Hypothesis → Fix → Test → Verify
+  </div>
+
+  <div class="important-callout">
+    <strong>Your goal is not to memorize Firebase.</strong>
+    Understand the system boundaries, know how identity connects to data,
+    know that Security Rules enforce access, and know how to investigate failures with evidence.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-mark">✦ JAM.26</div>
+  <div>Programming Jam 2026</div>
+  <div>Day 2 / Full-Stack Development &amp; Debugging</div>
+</footer>
+
+</body>
+</html>

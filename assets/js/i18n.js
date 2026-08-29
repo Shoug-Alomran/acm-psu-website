@@ -57,8 +57,8 @@
         'ACM PSU — Digital Archive': 'ACM جامعة الأمير سلطان — الأرشيف الرقمي',
         'ACM.PSU / CURRENT CHAPTER /': 'ACM.PSU / الدفعة الحالية /',
         'Association for Computing Machinery.': 'جمعية آلات الحاسب (ACM).',
-        'The ACM student chapter at the College of Computer & Information Sciences. We run the AI Programming Jam and the ACM/CyberTech CTF, teach the workshops that lead into them, and keep the record of every chapter that came before. This is our digital archive.':
-            'نادي ACM الطلابي في كلية علوم الحاسب والمعلومات. ننظّم معسكر البرمجة بالذكاء الاصطناعي ومسابقة ACM/CyberTech لالتقاط الأعلام، ونقدّم الورش التي تُهيّئ لهما، ونحفظ سجل كل دفعة سبقتنا. هذا هو أرشيفنا الرقمي.',
+        'The ACM student chapter at the College of Computer & Information Sciences. We run programming and cybersecurity competitions, teach the workshops that lead into them, and keep the record of every chapter that came before. This is our digital archive.':
+            'نادي ACM الطلابي في كلية علوم الحاسب والمعلومات. ننظّم مسابقات في البرمجة والأمن السيبراني، ونقدّم الورش التي تُهيّئ لها، ونحفظ سجل كل دفعة سبقتنا. هذا هو أرشيفنا الرقمي.',
         'Explore Projects': 'تصفّح المشاريع',
         'Join ACM': 'انضم إلى ACM',
 
@@ -153,6 +153,7 @@
         'ARCHIVE PENDING': 'بانتظار الأرشفة',
         'ARCHIVED': 'مؤرشَف',
         'Open the CTF 2.0 Results Archive': 'افتح أرشيف نتائج CTF 2.0',
+        'Browse the JAM.26 Resource Archive': 'تصفّح أرشيف موارد JAM.26',
 
         'SYS.MSG: EOF NOT REACHED': 'رسالة النظام: لم نبلغ النهاية بعد',
         "The Archive Isn't Finished.": 'الأرشيف لم يكتمل بعد.',
@@ -171,6 +172,19 @@
         'PRESIDENT': 'رئيس النادي',
         'VICE PRESIDENT': 'نائبة الرئيس',
         'General Assembly': 'الجمعية العمومية',
+        'PEOPLE / PROFILE': 'الأعضاء / الملف الشخصي',
+        'Member profile': 'الملف الشخصي للعضو',
+        'Role': 'الدور',
+        'Major': 'التخصص',
+        'College': 'الكلية',
+        'Chapter': 'الدفعة',
+        'ACM service': 'الخدمة في ACM',
+        'Record ID': 'معرّف السجل',
+        'Current chapter': 'الدفعة الحالية',
+        'BIO': 'نبذة',
+        'ROLE PROGRESSION': 'التدرّج في الأدوار',
+        'CONNECTED SYSTEMS': 'الروابط والمنصات',
+        'Close profile': 'إغلاق الملف الشخصي',
         'LEVEL_02 // ROSTER PENDING': 'المستوى_02 // القائمة قيد الإعداد',
         'Committee roster in progress': 'قائمة اللجان قيد الإعداد',
         'GEN_2026 // ORGANISING COMMITTEE NOT YET PUBLISHED': 'دفعة_2026 // لم تُنشر اللجنة المنظّمة بعد',
@@ -190,7 +204,41 @@
             'إذا كان لديك صور أو قائمة بأعضاء هذه الدفعة، أرسلها إلى اللجنة وسنضيفها إلى الأرشيف.',
 
         /* --- Projects --- */
-        'Projects Archive — ACM PSU': 'أرشيف المشاريع — ACM جامعة الأمير سلطان',
+        'Technical Collection — ACM PSU': 'المجموعة التقنية — ACM جامعة الأمير سلطان',
+        'Workshop Resource Archive': 'أرشيف موارد الورش',
+        '03 DAYS // 14 DOCUMENTS': '03 أيام // 14 مستندًا',
+        'The working library behind JAM.26: participant-facing lessons and checklists, instructor planning records, and reusable templates for future workshops and competitions. Draft planning files are labeled separately from published learning material so participants can tell what is ready to use.':
+            'المكتبة العملية خلف JAM.26: دروس وقوائم تحقق للمشاركين، وسجلات تخطيط للمدربين، وقوالب قابلة لإعادة الاستخدام في الورش والمسابقات المستقبلية. تُصنّف ملفات التخطيط الأولية بصورة منفصلة عن المواد التعليمية المنشورة حتى يعرف المشاركون ما هو جاهز للاستخدام.',
+        'Participant Learning Material': 'مواد تعلم المشاركين',
+        'PUBLISHED': 'منشور',
+        'Planning & Development Workflow': 'التخطيط ومسار التطوير',
+        'Requirements, Excalidraw system mapping, Variant UI planning, local tooling, Git/GitHub and responsible AI-assisted implementation.':
+            'المتطلبات، ورسم النظام في Excalidraw، وتخطيط الواجهة في Variant، وأدوات التطوير المحلية، وGit/GitHub، والتنفيذ المسؤول بمساعدة الذكاء الاصطناعي.',
+        'Read lesson': 'اقرأ الدرس',
+        'Checklist PDF': 'قائمة التحقق PDF',
+        'Full-Stack Development & Debugging': 'تطوير Full-Stack وتصحيح الأخطاء',
+        'Firebase Authentication, Firestore persistence, user-owned data, security rules, browser evidence and systematic debugging.':
+            'مصادقة Firebase، واستمرارية البيانات في Firestore، وملكية المستخدم للبيانات، وقواعد الأمان، وأدلة المتصفح، والتصحيح المنهجي.',
+        'Deployment, Discovery & Optimization': 'النشر والاكتشاف والتحسين',
+        'Vercel deployment, Cloudflare DNS, production verification, search discovery, PageSpeed analysis and production debugging.':
+            'النشر عبر Vercel، وDNS عبر Cloudflare، والتحقق من بيئة الإنتاج، واكتشاف البحث، وتحليل PageSpeed، وتصحيح مشكلات الإنتاج.',
+        'Instructor Workshop Plans': 'خطط الورش للمدربين',
+        'WORKING DRAFTS': 'مسودات عمل',
+        'These filled planning records contain objectives, prerequisites, preparation tasks, lesson timing, demonstrations, exercises, prompt examples, troubleshooting guidance and post-workshop review fields. “TBD” and “Not Started” values remain part of the source planning documents.':
+            'تحتوي سجلات التخطيط المعبأة على الأهداف والمتطلبات السابقة ومهام التحضير وتوقيت الدروس والعروض والتمارين وأمثلة الأوامر وإرشادات معالجة المشكلات وحقول مراجعة ما بعد الورشة. تبقى قيم «يحدد لاحقًا» و«لم يبدأ» جزءًا من مستندات التخطيط الأصلية.',
+        'Planning record · PDF': 'سجل تخطيط · PDF',
+        'Reusable Project Templates': 'قوالب مشاريع قابلة لإعادة الاستخدام',
+        'BLANK TEMPLATES': 'قوالب فارغة',
+        'Blank structures for future ACM projects. These are working templates rather than event announcements; placeholder fields must be completed and reviewed before publication.':
+            'هياكل فارغة لمشاريع ACM المستقبلية. هذه قوالب عمل وليست إعلانات فعاليات؛ يجب إكمال الحقول المؤقتة ومراجعتها قبل النشر.',
+        'Workshop': 'ورشة',
+        'Judging': 'التحكيم',
+        'Challenge': 'التحدي',
+        'Organizer': 'التنظيم',
+        'Supplemental Resource': 'مورد إضافي',
+        'Archive integrity note': 'ملاحظة نزاهة الأرشيف',
+        'A second copy of the JAM planning files was uploaded under the CTF 3.0 workshop directory. File hashes and content are identical, including the AI web-development curriculum, so those copies are retained as source material but are not published or described as CTF training.':
+            'رُفعت نسخة ثانية من ملفات تخطيط JAM داخل دليل ورش CTF 3.0. تتطابق بصمات الملفات ومحتواها، بما في ذلك منهج تطوير الويب بالذكاء الاصطناعي؛ لذلك تُحفظ تلك النسخ كمواد مصدر ولا تُنشر أو توصف كتدريب لمسابقة CTF.',
         'Technical': 'المجموعة',
         'Collection.': 'التقنية.',
         'Filter projects by category': 'تصفية المشاريع حسب التصنيف',
@@ -227,7 +275,7 @@
         'View Case Study': 'عرض دراسة الحالة',
         'Open Event Site': 'افتح موقع الفعالية',
         'View Results': 'عرض النتائج',
-        'View Workshops': 'عرض الورش',
+        'Open Resource Archive': 'افتح أرشيف الموارد',
         'NO RECORDS MATCH THIS QUERY.': 'لا توجد سجلات مطابقة لهذا البحث.',
         'ACM Programming Jam 2026 banner': 'لافتة معسكر ACM للبرمجة 2026',
         'ACM/CyberTech CTF 3.0 banner': 'لافتة مسابقة ACM/CyberTech CTF 3.0',
@@ -486,15 +534,23 @@
 
         var button = document.querySelector('.lang-toggle');
         if (button) {
-            button.textContent = current === 'ar' ? 'EN' : 'عربي';
             button.setAttribute('aria-label',
                 current === 'ar' ? 'Switch to English' : 'التبديل إلى العربية');
-            button.lang = current === 'ar' ? 'en' : 'ar';
+            button.setAttribute('data-active-lang', current);
+            button.querySelectorAll('[data-lang-option]').forEach(function (option) {
+                var isActive = option.getAttribute('data-lang-option') === current;
+                option.classList.toggle('active', isActive);
+                option.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+            });
         }
 
         if (persist) {
             try { localStorage.setItem(STORAGE_KEY, current); } catch (e) { /* private mode */ }
         }
+
+        document.dispatchEvent(new CustomEvent('acm:languagechange', {
+            detail: { language: current }
+        }));
     }
 
     /* The archive page has no <nav>, so the toggle joins its action row. */
@@ -507,10 +563,21 @@
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'lang-toggle mono-meta';
-        button.textContent = 'عربي';
+        button.innerHTML = '<span data-lang-option="ar">AR</span><span class="lang-divider" aria-hidden="true">/</span><span data-lang-option="en">EN</span>';
 
-        var meta = host.querySelector('.nav-meta');
-        if (meta) { host.insertBefore(button, meta); } else { host.appendChild(button); }
+        var utilities = host.querySelector('.nav-utilities');
+        if (!utilities) {
+            utilities = document.createElement('div');
+            utilities.className = 'nav-utilities';
+            var meta = host.querySelector('.nav-meta');
+            if (meta) {
+                host.insertBefore(utilities, meta);
+                utilities.appendChild(meta);
+            } else {
+                host.appendChild(utilities);
+            }
+        }
+        utilities.appendChild(button);
 
         button.addEventListener('click', function () {
             setLanguage(current === 'ar' ? 'en' : 'ar', true);

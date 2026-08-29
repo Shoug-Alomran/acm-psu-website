@@ -34,6 +34,8 @@ jobs:
             --exclude 'tmp' \
             --exclude 'assets/reports/psu-ctf-competition-report.pdf' \
             --exclude 'assets/reports/psu-ctf-2-competition-report.pdf' \
+            --exclude 'projects/ctf-2.0/psu-ctf-2.0-report.pdf' \
+            --exclude 'projects/ctf-3.0/workshop-material' \
             --exclude '_site' \
             ./ _site/
 

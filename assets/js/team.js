@@ -10,7 +10,12 @@
  *   2025: {
  *       label: '2025',                 // shown in the dropdown and chips
  *       leads: [
- *           { name: 'Full Name', role: 'PRESIDENT', major: 'Computer Science // Senior',
+ *           { name: 'Full Name', role: 'PRESIDENT', major: 'Software Engineering',
+ *             college: 'College of Computer & Information Sciences',
+ *             term: 'SEP 2025–MAY 2026', bio: 'Verified short biography.',
+ *             progression: ['SEP 2025–JAN 2026 — Committee Member', 'JAN–MAY 2026 — President'],
+ *             github: 'https://github.com/example', linkedin: 'https://linkedin.com/in/example',
+ *             website: 'https://example.com', work: '', blueprint: '',
  *             id: '0x01_LEAD', photo: 'assets/img/people/2025/name.jpg' }
  *       ],
  *       members: [
@@ -74,8 +79,30 @@
             'font-size:2rem;color:var(--text-dark);">' + esc(initials) + '</div>';
     }
 
+    function profileAttrs(person) {
+        var progression = Array.isArray(person.progression)
+            ? person.progression.join('|')
+            : (person.progression || '');
+        return ' data-person-name="' + esc(person.name) + '"' +
+            ' data-person-role="' + esc(person.role || 'Member') + '"' +
+            ' data-person-major="' + esc(person.major || '') + '"' +
+            ' data-person-college="' + esc(person.college || '') + '"' +
+            ' data-person-id="' + esc(person.id || '—') + '"' +
+            ' data-person-year="' + esc(person.year || '') + '"' +
+            ' data-person-term="' + esc(person.term || '') + '"' +
+            ' data-person-bio="' + esc(person.bio || '') + '"' +
+            ' data-person-progression="' + esc(progression) + '"' +
+            ' data-person-github="' + esc(person.github || '') + '"' +
+            ' data-person-linkedin="' + esc(person.linkedin || '') + '"' +
+            ' data-person-website="' + esc(person.website || '') + '"' +
+            ' data-person-work="' + esc(person.work || '') + '"' +
+            ' data-person-blueprint="' + esc(person.blueprint || '') + '"';
+    }
+
     function renderLead(person) {
-        return '<div class="lead-card">' +
+        return '<div class="lead-card person-card" role="button" tabindex="0" aria-haspopup="dialog"' +
+            ' aria-label="View profile for ' + esc(person.name) + '"' +
+            profileAttrs(person) + '>' +
             photoBox(person, 'lead-img') +
             '<div class="lead-content"><div>' +
             '<span class="tag tag-active">' + esc(person.role || 'OFFICER') + '</span>' +
@@ -86,7 +113,9 @@
     }
 
     function renderMember(person) {
-        return '<div class="member-card">' +
+        return '<div class="member-card person-card" role="button" tabindex="0" aria-haspopup="dialog"' +
+            ' aria-label="View profile for ' + esc(person.name) + '"' +
+            profileAttrs(person) + '>' +
             '<div class="member-img-box">' + photoBox(person, '') + '</div>' +
             '<div class="member-info">' +
             '<h4 class="member-name">' + esc(person.name) + '</h4>' +
@@ -193,4 +222,80 @@
     /* Honour ?year= on first load. */
     var initial = new URLSearchParams(window.location.search).get('year');
     setYear(initial && CHAPTERS[initial] ? initial : CURRENT, false);
+
+    var profileDialog = document.getElementById('person-dialog');
+    var profileClose = profileDialog && profileDialog.querySelector('.person-dialog-close');
+
+    function initials(name) {
+        return String(name || '?').trim().split(/\s+/).slice(0, 2)
+            .map(function (word) { return word.charAt(0); }).join('').toUpperCase();
+    }
+
+    function setProfile(field, value) {
+        var target = profileDialog.querySelector('[data-profile-' + field + ']');
+        if (target) { target.textContent = value || '—'; }
+    }
+
+    function openProfile(card) {
+        if (!profileDialog || !card) { return; }
+        setProfile('name', card.dataset.personName);
+        setProfile('role', card.dataset.personRole);
+        setProfile('major', card.dataset.personMajor);
+        setProfile('college', card.dataset.personCollege || card.dataset.personMajor);
+        setProfile('year', card.dataset.personYear || document.querySelector('[data-year-label]').textContent.replace('/', '').trim());
+        setProfile('id', card.dataset.personId);
+        setProfile('term', card.dataset.personTerm || 'Current chapter');
+        setProfile('service', card.dataset.personTerm || card.dataset.personYear || '—');
+        setProfile('initials', initials(card.dataset.personName));
+
+        var bioSection = profileDialog.querySelector('[data-profile-bio-section]');
+        var bio = card.dataset.personBio || '';
+        setProfile('bio', bio);
+        bioSection.hidden = !bio;
+
+        var majorRow = profileDialog.querySelector('[data-profile-major-row]');
+        majorRow.hidden = !card.dataset.personMajor;
+
+        var progressionSection = profileDialog.querySelector('[data-profile-progression-section]');
+        var progression = (card.dataset.personProgression || '').split('|').filter(Boolean);
+        progressionSection.hidden = !progression.length;
+        profileDialog.querySelector('[data-profile-progression]').innerHTML = progression.map(function (item) {
+            var parts = item.split(' — ');
+            return '<li><span>' + esc(parts.shift()) + '</span><strong>' + esc(parts.join(' — ')) + '</strong></li>';
+        }).join('');
+
+        var linkData = [
+            ['GitHub', card.dataset.personGithub],
+            ['LinkedIn', card.dataset.personLinkedin],
+            ['SHOUG.TECH', card.dataset.personWebsite],
+            ['Work Hub', card.dataset.personWork],
+            ['Blueprint', card.dataset.personBlueprint]
+        ].filter(function (entry) { return entry[1]; });
+        var linksSection = profileDialog.querySelector('[data-profile-links-section]');
+        linksSection.hidden = !linkData.length;
+        profileDialog.querySelector('[data-profile-links]').innerHTML = linkData.map(function (entry) {
+            return '<a href="' + esc(entry[1]) + '" rel="noopener">' + esc(entry[0]) + '<span>↗</span></a>';
+        }).join('');
+        profileDialog.showModal();
+    }
+
+    roster.addEventListener('click', function (event) {
+        var card = event.target.closest('.person-card');
+        if (card) { openProfile(card); }
+    });
+
+    roster.addEventListener('keydown', function (event) {
+        var card = event.target.closest('.person-card');
+        if (card && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            openProfile(card);
+        }
+    });
+
+    if (profileClose) {
+        profileClose.addEventListener('click', function () { profileDialog.close(); });
+        profileDialog.addEventListener('click', function (event) {
+            if (event.target === profileDialog) { profileDialog.close(); }
+        });
+    }
 }());

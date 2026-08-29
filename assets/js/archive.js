@@ -14,6 +14,8 @@
     var crumb = document.querySelector('[data-crumb]');
     var preview = document.getElementById('preview');
     var closeBtn = document.getElementById('preview-close');
+    var openLink = document.querySelector('[data-preview-open]');
+    var downloadLink = document.querySelector('[data-preview-download]');
 
     var section = 'all';
     var type = 'all';
@@ -52,6 +54,13 @@
         set('uploaded', d.uploaded || d.updated);
         set('path', d.path);
         set('sha', d.sha);
+
+        if (openLink && d.url) { openLink.href = d.url; }
+        if (downloadLink && d.url) {
+            downloadLink.href = d.url;
+            if (/^https?:\/\//.test(d.url)) { downloadLink.removeAttribute('download'); }
+            else { downloadLink.setAttribute('download', ''); }
+        }
 
         if (preview) { preview.hidden = false; }
     }

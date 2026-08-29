@@ -5,5 +5,8 @@ Allow: /
 # canonical content. Keep the binaries out of the index so they do not
 # compete with, or outrank, the pages that describe them.
 Disallow: /assets/reports/
+Disallow: /projects/ai-programming-jam-26/workshop-content/workshop-notion-template/
+Disallow: /projects/ctf-3.0/workshop-material/
+Disallow: /projects/ctf-2.0/
 
 Sitemap: https://acm-psu.shoug-tech.com/sitemap.xml
