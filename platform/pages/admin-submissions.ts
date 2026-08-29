@@ -1,17 +1,15 @@
 /**
- * Archive submission review — the page the AI assistant lives on.
+ * Archive submission review.
  *
- * The assistant reads the submission's metadata and proposes a category, a
- * title, a description, tags and a visibility, and raises flags for things a
- * human should look at — student IDs, personal details, possible duplicates.
+ * The Cloudflare Workers AI assistant is advisory only.
+ * It can summarize, classify, flag and recommend metadata, but it cannot:
+ * - approve
+ * - reject
+ * - publish
+ * - change visibility
+ * - change administrative roles
  *
- * Every suggestion has ACCEPT / EDIT / IGNORE beside it and none of them do
- * anything until the admin fills the form and presses Publish.
- *
- * The AI cannot publish. publish_archive_submission() requires an
- * authenticated club admin, and there is no code path from the assistant to
- * it — the suggestions land in a separate table that the publish function
- * never reads.
+ * Human administrators remain responsible for every archive decision.
  */
 
 import {
@@ -52,12 +50,10 @@ import {
 import {
   publishSubmission,
   decideSubmission,
-  requestAiReview,
 } from '../lib/admin.js';
 
 import {
   submissionQueue,
-  submissionAi,
   archiveCategories,
   archiveFolders,
   projects,
@@ -66,19 +62,109 @@ import {
 } from '../lib/api.js';
 
 import {
+  requireClient,
+} from '../lib/supabase.js';
+
+import {
   archiveDate,
   fileSize,
 } from '../lib/format.js';
 
 import type {
-  AiFlag,
-  AiSuggestions,
   ArchiveCategory,
   ArchiveFolder,
   ContentVisibility,
   Project,
   ReviewStatus,
 } from '../lib/types.js';
+
+const AI_REVIEW_URL =
+  'https://acm-psu-ai-review.shoug-alomran.workers.dev';
+
+type ConfidenceLevel =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'very_high';
+
+interface AiConfidence {
+  score: number;
+  level: ConfidenceLevel;
+  reason: string;
+}
+
+interface AiSuggestedCategory {
+  name: string | null;
+  reason: string | null;
+}
+
+interface AiSuggestedProject {
+  id: string | null;
+  title: string | null;
+  reason: string | null;
+}
+
+interface AiSuggestedVisibility {
+  value: string | null;
+  reason: string | null;
+}
+
+interface WorkerAiSuggestion {
+  brief: string;
+
+  confidence: AiConfidence;
+
+  suggested_title: string | null;
+
+  suggested_description: string | null;
+
+  suggested_category:
+  AiSuggestedCategory;
+
+  suggested_project:
+  AiSuggestedProject;
+
+  suggested_tags: string[];
+
+  suggested_visibility:
+  AiSuggestedVisibility;
+
+  sensitive_information:
+  string[];
+
+  duplicate_concerns:
+  string[];
+
+  missing_information:
+  string[];
+
+  warnings:
+  string[];
+
+  review_notes:
+  string[];
+}
+
+interface WorkerAiResponse {
+  ok: boolean;
+
+  submission_id?: string;
+
+  reviewer?: {
+    user_id: string;
+    role: string;
+  };
+
+  ai?: {
+    model: string;
+    advisory_only: boolean;
+  };
+
+  suggestion?:
+  WorkerAiSuggestion;
+
+  error?: string;
+}
 
 const FILTERS:
   Array<
@@ -164,6 +250,98 @@ function errorMessage(
   return 'An unknown error occurred.';
 }
 
+function confidenceLabel(
+  level: ConfidenceLevel,
+): string {
+  switch (level) {
+    case 'very_high':
+      return 'VERY HIGH';
+
+    case 'high':
+      return 'HIGH';
+
+    case 'medium':
+      return 'MEDIUM';
+
+    default:
+      return 'LOW';
+  }
+}
+
+async function requestWorkerAiReview(
+  submissionId: string,
+): Promise<WorkerAiResponse> {
+  const client =
+    requireClient();
+
+  const {
+    data,
+    error,
+  } =
+    await client.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  if (
+    !data.session
+      ?.access_token
+  ) {
+    throw new Error(
+      'You must be signed in to use AI review.',
+    );
+  }
+
+  const response =
+    await fetch(
+      AI_REVIEW_URL,
+      {
+        method:
+          'POST',
+
+        headers: {
+          Authorization:
+            `Bearer ${data.session.access_token}`,
+
+          'Content-Type':
+            'application/json',
+        },
+
+        body:
+          JSON.stringify({
+            submission_id:
+              submissionId,
+          }),
+      },
+    );
+
+  let payload:
+    WorkerAiResponse;
+
+  try {
+    payload =
+      await response.json() as
+      WorkerAiResponse;
+  } catch {
+    throw new Error(
+      `AI review returned an unreadable response (${response.status}).`,
+    );
+  }
+
+  if (
+    !response.ok ||
+    !payload.ok
+  ) {
+    throw new Error(
+      payload.error ??
+      `AI review failed with status ${response.status}.`,
+    );
+  }
+
+  return payload;
+}
+
 async function start(): Promise<void> {
   const viewer =
     await requireAdmin(
@@ -197,10 +375,6 @@ async function start(): Promise<void> {
   let aiEnabled =
     false;
 
-  /*
-   * Core archive metadata is required for the review form.
-   * AI settings are optional and should never prevent the page from loading.
-   */
   try {
     [
       categories,
@@ -241,7 +415,9 @@ async function start(): Promise<void> {
         h(
           'button',
           {
-            type: 'button',
+            type:
+              'button',
+
             class:
               'btn-ghost',
 
@@ -302,10 +478,13 @@ async function start(): Promise<void> {
       field({
         label:
           'Archive title',
+
         name:
           'title',
+
         value:
           row.title,
+
         maxlength:
           200,
       }),
@@ -320,10 +499,13 @@ async function start(): Promise<void> {
         field({
           label:
             'Category',
+
           name:
             'category',
+
           type:
             'select',
+
           value:
             row.category ??
             '',
@@ -332,6 +514,7 @@ async function start(): Promise<void> {
             {
               value:
                 '',
+
               label:
                 '— none —',
             },
@@ -343,6 +526,7 @@ async function start(): Promise<void> {
               ) => ({
                 value:
                   category.slug,
+
                 label:
                   category.label,
               }),
@@ -353,10 +537,13 @@ async function start(): Promise<void> {
         field({
           label:
             'Project',
+
           name:
             'project_id',
+
           type:
             'select',
+
           value:
             row.project_id ??
             '',
@@ -365,6 +552,7 @@ async function start(): Promise<void> {
             {
               value:
                 '',
+
               label:
                 '— none —',
             },
@@ -376,6 +564,7 @@ async function start(): Promise<void> {
               ) => ({
                 value:
                   project.id,
+
                 label:
                   project.title,
               }),
@@ -394,10 +583,13 @@ async function start(): Promise<void> {
         field({
           label:
             'Folder',
+
           name:
             'folder_id',
+
           type:
             'select',
+
           value:
             row.folder_id ??
             '',
@@ -406,6 +598,7 @@ async function start(): Promise<void> {
             {
               value:
                 '',
+
               label:
                 '— project root —',
             },
@@ -417,6 +610,7 @@ async function start(): Promise<void> {
               ) => ({
                 value:
                   folder.id,
+
                 label:
                   folder.name,
               }),
@@ -427,12 +621,16 @@ async function start(): Promise<void> {
         field({
           label:
             'Section',
+
           name:
             'section',
+
           type:
             'select',
+
           value:
             'files',
+
           options:
             SECTIONS,
         }),
@@ -441,12 +639,16 @@ async function start(): Promise<void> {
       field({
         label:
           'Description',
+
         name:
           'description',
+
         type:
           'textarea',
+
         rows:
           4,
+
         value:
           row.description,
       }),
@@ -454,10 +656,13 @@ async function start(): Promise<void> {
       field({
         label:
           'Visibility',
+
         name:
           'visibility',
+
         type:
           'select',
+
         value:
           row.suggested_visibility,
 
@@ -465,6 +670,7 @@ async function start(): Promise<void> {
           {
             value:
               'internal',
+
             label:
               'Internal — members and admins only',
           },
@@ -472,6 +678,7 @@ async function start(): Promise<void> {
           {
             value:
               'public',
+
             label:
               'Public — anyone on the website',
           },
@@ -523,65 +730,531 @@ async function start(): Promise<void> {
         },
       );
 
+    function recommendation(
+      label: string,
+      value: string | null,
+      target: string,
+      reason?: string | null,
+    ): HTMLElement | null {
+      if (!value) {
+        return null;
+      }
+
+      return h(
+        'div',
+        {
+          class:
+            'ai-suggestion',
+        },
+
+        h(
+          'span',
+          {
+            class:
+              'mono-meta dim-text',
+          },
+          label,
+        ),
+
+        h(
+          'strong',
+          value,
+        ),
+
+        reason
+          ? h(
+            'p',
+            {
+              class:
+                'dim-text',
+            },
+            reason,
+          )
+          : null,
+
+        h(
+          'div',
+          {
+            class:
+              'button-row',
+          },
+
+          h(
+            'button',
+            {
+              type:
+                'button',
+
+              class:
+                'btn-ghost',
+
+              onclick:
+                () => {
+                  setField(
+                    target,
+                    value,
+                  );
+
+                  acceptedSuggestions.add(
+                    target,
+                  );
+
+                  toast(
+                    'Applied to the review form. You remain the deciding administrator.',
+                  );
+                },
+            },
+            'Accept',
+          ),
+
+          h(
+            'button',
+            {
+              type:
+                'button',
+
+              class:
+                'btn-ghost',
+
+              onclick:
+                () => {
+                  setField(
+                    target,
+                    value,
+                  );
+
+                  acceptedSuggestions.add(
+                    `${target}:edited`,
+                  );
+
+                  form.querySelector<
+                    HTMLElement
+                  >(
+                    `[name="${target}"]`,
+                  )?.focus();
+                },
+            },
+            'Edit',
+          ),
+
+          h(
+            'button',
+            {
+              type:
+                'button',
+
+              class:
+                'btn-ghost',
+
+              onclick:
+                (
+                  event:
+                    Event,
+                ) => {
+                  (
+                    event.currentTarget as
+                    HTMLElement
+                  )
+                    .closest(
+                      '.ai-suggestion',
+                    )
+                    ?.remove();
+                },
+            },
+            'Ignore',
+          ),
+        ),
+      );
+    }
+
+    function flagGroup(
+      title: string,
+      items: string[],
+      severity:
+        'info' |
+        'warn' |
+        'danger' =
+        'warn',
+    ): HTMLElement | null {
+      if (
+        !items.length
+      ) {
+        return null;
+      }
+
+      return h(
+        'div',
+        {
+          class:
+            'ai-suggestion',
+        },
+
+        h(
+          'span',
+          {
+            class:
+              'mono-meta dim-text',
+          },
+          title,
+        ),
+
+        h(
+          'div',
+          {},
+
+          items.map(
+            (
+              item,
+            ) =>
+              h(
+                'div',
+                {
+                  class:
+                    `ai-flag ai-flag--${severity}`,
+                },
+
+                h(
+                  'span',
+                  item,
+                ),
+              ),
+          ),
+        ),
+      );
+    }
+
     function drawAi(
-      suggestions:
-        AiSuggestions |
-        null,
-
-      flags:
-        AiFlag[],
-
-      model:
-        string |
+      result:
+        WorkerAiResponse |
         null,
 
       failure:
         string |
         null,
     ): void {
-      const rows:
-        HTMLElement[] =
-        [];
-
       const suggestion =
-        (
-          label:
-            string,
+        result?.suggestion ??
+        null;
 
-          value:
-            string |
-            null,
+      if (
+        failure
+      ) {
+        render(
+          aiHost,
 
-          target:
-            string,
-        ): void => {
-          if (!value) {
-            return;
-          }
+          h(
+            'div',
+            {
+              class:
+                'panel-head',
+            },
 
-          rows.push(
             h(
-              'div',
+              'h2',
+              'AI review',
+            ),
+          ),
+
+          notice(
+            'warn',
+            failure,
+          ),
+
+          h(
+            'p',
+            {
+              class:
+                'ai-disclaimer',
+            },
+            'ADVISORY ONLY. THE ASSISTANT CANNOT APPROVE, PUBLISH, REJECT OR CHANGE VISIBILITY.',
+          ),
+        );
+
+        return;
+      }
+
+      if (
+        !suggestion
+      ) {
+        render(
+          aiHost,
+
+          h(
+            'div',
+            {
+              class:
+                'panel-head',
+            },
+
+            h(
+              'h2',
+              'AI review',
+            ),
+          ),
+
+          h(
+            'div',
+            {
+              class:
+                'ai-suggestion',
+            },
+
+            h(
+              'span',
               {
                 class:
-                  'ai-suggestion',
+                  'mono-meta dim-text',
               },
+              'NO AI REVIEW YET',
+            ),
 
-              h(
-                'span',
+            h(
+              'p',
+              {
+                class:
+                  'dim-text',
+              },
+              'Ask the assistant to generate a quick brief, confidence score, classification suggestions and review flags.',
+            ),
+          ),
+
+          h(
+            'p',
+            {
+              class:
+                'ai-disclaimer',
+            },
+            'ADVISORY ONLY. THE ASSISTANT CANNOT APPROVE, PUBLISH, REJECT OR CHANGE VISIBILITY.',
+          ),
+        );
+
+        return;
+      }
+
+      const suggestedCategoryName =
+        suggestion
+          .suggested_category
+          ?.name
+          ?.trim()
+          .toLowerCase() ??
+        '';
+
+      const categoryMatch =
+        categories.find(
+          (
+            category:
+              ArchiveCategory,
+          ) =>
+            category.label
+              .toLowerCase() ===
+            suggestedCategoryName ||
+            category.slug
+              .toLowerCase() ===
+            suggestedCategoryName,
+        ) ??
+        null;
+
+      const projectMatch =
+        suggestion
+          .suggested_project
+          ?.id
+          ? projectList.find(
+            (
+              project,
+            ) =>
+              project.id ===
+              suggestion
+                .suggested_project
+                .id,
+          )
+          : projectList.find(
+            (
+              project,
+            ) =>
+              project.title
+                .toLowerCase() ===
+              (
+                suggestion
+                  .suggested_project
+                  ?.title ??
+                ''
+              ).toLowerCase(),
+          );
+
+      const confidence =
+        suggestion.confidence;
+
+      const score =
+        Math.max(
+          0,
+          Math.min(
+            100,
+            confidence.score,
+          ),
+        );
+
+      const suggestionRows:
+        Array<
+          HTMLElement |
+          null
+        > = [
+          recommendation(
+            'SUGGESTED TITLE',
+            suggestion
+              .suggested_title,
+            'title',
+          ),
+
+          recommendation(
+            'SUGGESTED DESCRIPTION',
+            suggestion
+              .suggested_description,
+            'description',
+          ),
+
+          recommendation(
+            'SUGGESTED CATEGORY',
+            categoryMatch
+              ?.label ??
+            suggestion
+              .suggested_category
+              ?.name ??
+            null,
+
+            'category',
+
+            suggestion
+              .suggested_category
+              ?.reason ??
+            null,
+          ),
+
+          recommendation(
+            'SUGGESTED VISIBILITY',
+            suggestion
+              .suggested_visibility
+              ?.value ??
+            null,
+
+            'visibility',
+
+            suggestion
+              .suggested_visibility
+              ?.reason ??
+            null,
+          ),
+        ];
+
+      /*
+       * Category values in the form use the category slug.
+       * Override the generic display-value behaviour when we have
+       * an authoritative category match.
+       */
+      if (
+        categoryMatch
+      ) {
+        const categoryRecommendation =
+          suggestionRows[2];
+
+        if (
+          categoryRecommendation
+        ) {
+          const buttons =
+            categoryRecommendation
+              .querySelectorAll<
+                HTMLButtonElement
+              >(
+                'button',
+              );
+
+          if (
+            buttons[0]
+          ) {
+            buttons[0].onclick =
+              () => {
+                setField(
+                  'category',
+                  categoryMatch.slug,
+                );
+
+                acceptedSuggestions.add(
+                  'category',
+                );
+
+                toast(
+                  'Category applied.',
+                );
+              };
+          }
+
+          if (
+            buttons[1]
+          ) {
+            buttons[1].onclick =
+              () => {
+                setField(
+                  'category',
+                  categoryMatch.slug,
+                );
+
+                acceptedSuggestions.add(
+                  'category:edited',
+                );
+
+                form.querySelector<
+                  HTMLElement
+                >(
+                  '[name="category"]',
+                )?.focus();
+              };
+          }
+        }
+      }
+
+      const projectRecommendation =
+        suggestion
+          .suggested_project
+          ?.title
+          ? h(
+            'div',
+            {
+              class:
+                'ai-suggestion',
+            },
+
+            h(
+              'span',
+              {
+                class:
+                  'mono-meta dim-text',
+              },
+              'LIKELY PROJECT',
+            ),
+
+            h(
+              'strong',
+              suggestion
+                .suggested_project
+                .title,
+            ),
+
+            suggestion
+              .suggested_project
+              .reason
+              ? h(
+                'p',
                 {
                   class:
-                    'mono-meta dim-text',
+                    'dim-text',
                 },
-                label,
-              ),
+                suggestion
+                  .suggested_project
+                  .reason,
+              )
+              : null,
 
-              h(
-                'strong',
-                value,
-              ),
-
-              h(
+            projectMatch
+              ? h(
                 'div',
                 {
                   class:
@@ -593,22 +1266,23 @@ async function start(): Promise<void> {
                   {
                     type:
                       'button',
+
                     class:
                       'btn-ghost',
 
                     onclick:
                       () => {
                         setField(
-                          target,
-                          value,
+                          'project_id',
+                          projectMatch.id,
                         );
 
                         acceptedSuggestions.add(
-                          target,
+                          'project_id',
                         );
 
                         toast(
-                          'Applied to the form. You are still the one deciding.',
+                          'Project applied.',
                         );
                       },
                   },
@@ -620,253 +1294,41 @@ async function start(): Promise<void> {
                   {
                     type:
                       'button',
+
                     class:
                       'btn-ghost',
 
                     onclick:
                       () => {
                         setField(
-                          target,
-                          value,
+                          'project_id',
+                          projectMatch.id,
                         );
 
                         acceptedSuggestions.add(
-                          `${target}:edited`,
+                          'project_id:edited',
                         );
 
                         form.querySelector<
                           HTMLElement
                         >(
-                          `[name="${target}"]`,
+                          '[name="project_id"]',
                         )?.focus();
                       },
                   },
                   'Edit',
                 ),
-
-                h(
-                  'button',
-                  {
-                    type:
-                      'button',
-                    class:
-                      'btn-ghost',
-
-                    onclick:
-                      (
-                        event:
-                          Event,
-                      ) => {
-                        (
-                          event.currentTarget as
-                          HTMLElement
-                        )
-                          .closest(
-                            '.ai-suggestion',
-                          )
-                          ?.remove();
-                      },
-                  },
-                  'Ignore',
-                ),
-              ),
-            ),
-          );
-        };
-
-      if (
-        suggestions
-      ) {
-        suggestion(
-          'SUGGESTED TITLE',
-          suggestions.title,
-          'title',
-        );
-
-        suggestion(
-          'SUGGESTED DESCRIPTION',
-          suggestions.description,
-          'description',
-        );
-
-        suggestion(
-          'SUGGESTED CATEGORY',
-          suggestions.category,
-          'category',
-        );
-
-        suggestion(
-          'SUGGESTED VISIBILITY',
-          suggestions.visibility,
-          'visibility',
-        );
-
-        if (
-          suggestions.project_hint
-        ) {
-          const hint =
-            suggestions.project_hint;
-
-          const match =
-            projectList.find(
-              (
-                project:
-                  Project,
-              ) =>
-                project.title
-                  .toLowerCase()
-                  .includes(
-                    hint.toLowerCase(),
-                  ) ||
-                project.slug ===
-                hint,
-            );
-
-          rows.push(
-            h(
-              'div',
-              {
-                class:
-                  'ai-suggestion',
-              },
-
-              h(
+              )
+              : h(
                 'span',
                 {
                   class:
                     'mono-meta dim-text',
                 },
-                'LIKELY PROJECT',
+                'NO MATCHING PROJECT — VERIFY MANUALLY',
               ),
-
-              h(
-                'strong',
-                hint,
-              ),
-
-              match
-                ? h(
-                  'div',
-                  {
-                    class:
-                      'button-row',
-                  },
-
-                  h(
-                    'button',
-                    {
-                      type:
-                        'button',
-                      class:
-                        'btn-ghost',
-
-                      onclick:
-                        () => {
-                          setField(
-                            'project_id',
-                            match.id,
-                          );
-
-                          acceptedSuggestions.add(
-                            'project_id',
-                          );
-
-                          toast(
-                            'Applied.',
-                          );
-                        },
-                    },
-                    'Accept',
-                  ),
-                )
-                : h(
-                  'span',
-                  {
-                    class:
-                      'mono-meta dim-text',
-                  },
-                  'NO MATCHING PROJECT — SET IT MANUALLY',
-                ),
-            ),
-          );
-        }
-
-        if (
-          suggestions.tags
-            .length
-        ) {
-          rows.push(
-            h(
-              'div',
-              {
-                class:
-                  'ai-suggestion',
-              },
-
-              h(
-                'span',
-                {
-                  class:
-                    'mono-meta dim-text',
-                },
-                'SUGGESTED TAGS',
-              ),
-
-              h(
-                'div',
-                {},
-
-                suggestions.tags.map(
-                  (
-                    tag,
-                  ) =>
-                    h(
-                      'span',
-                      {
-                        class:
-                          'tag',
-
-                        style: {
-                          marginRight:
-                            '0.35rem',
-                        },
-                      },
-                      tag,
-                    ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        if (
-          suggestions.reasoning
-        ) {
-          rows.push(
-            h(
-              'div',
-              {
-                class:
-                  'ai-suggestion',
-              },
-
-              h(
-                'span',
-                {
-                  class:
-                    'mono-meta dim-text',
-                },
-                'REASONING',
-              ),
-
-              h(
-                'p',
-                suggestions.reasoning,
-              ),
-            ),
-          );
-        }
-      }
+          )
+          : null;
 
       render(
         aiHost,
@@ -880,7 +1342,7 @@ async function start(): Promise<void> {
 
           h(
             'h2',
-            'Review assistant',
+            'AI review',
           ),
 
           h(
@@ -889,81 +1351,343 @@ async function start(): Promise<void> {
               class:
                 'mono-meta dim-text',
             },
-            model ??
+            result?.ai
+              ?.model ??
             '',
           ),
         ),
 
-        failure
-          ? notice(
-            'warn',
-            failure,
-          )
-          : null,
+        /*
+         * QUICK BRIEF
+         */
+        h(
+          'div',
+          {
+            class:
+              'ai-suggestion',
+          },
 
-        flags.length
+          h(
+            'span',
+            {
+              class:
+                'mono-meta dim-text',
+            },
+            'QUICK BRIEF',
+          ),
+
+          h(
+            'p',
+            {
+              style: {
+                fontSize:
+                  '1rem',
+
+                lineHeight:
+                  '1.65',
+
+                marginBottom:
+                  '0',
+              },
+            },
+            suggestion.brief,
+          ),
+        ),
+
+        /*
+         * CONFIDENCE
+         */
+        h(
+          'div',
+          {
+            class:
+              'ai-suggestion',
+          },
+
+          h(
+            'div',
+            {
+              style: {
+                display:
+                  'flex',
+
+                justifyContent:
+                  'space-between',
+
+                alignItems:
+                  'baseline',
+
+                gap:
+                  '1rem',
+              },
+            },
+
+            h(
+              'span',
+              {
+                class:
+                  'mono-meta dim-text',
+              },
+              'AI CONFIDENCE',
+            ),
+
+            h(
+              'strong',
+              {
+                style: {
+                  fontSize:
+                    '1.5rem',
+                },
+              },
+              `${score}%`,
+            ),
+          ),
+
+          h(
+            'div',
+            {
+              style: {
+                width:
+                  '100%',
+
+                height:
+                  '8px',
+
+                border:
+                  '1px solid var(--border-color)',
+
+                margin:
+                  '0.75rem 0',
+
+                overflow:
+                  'hidden',
+              },
+            },
+
+            h(
+              'div',
+              {
+                style: {
+                  width:
+                    `${score}%`,
+
+                  height:
+                    '100%',
+
+                  background:
+                    'var(--accent-blue)',
+                },
+              },
+            ),
+          ),
+
+          h(
+            'strong',
+            {
+              class:
+                'mono-meta',
+            },
+            confidenceLabel(
+              confidence.level,
+            ),
+          ),
+
+          h(
+            'p',
+            {
+              class:
+                'dim-text',
+            },
+            confidence.reason,
+          ),
+
+          h(
+            'p',
+            {
+              class:
+                'mono-meta dim-text',
+            },
+            'CONFIDENCE MEASURES THE RELIABILITY OF THE AI ANALYSIS — NOT THE LIKELIHOOD OF APPROVAL.',
+          ),
+        ),
+
+        /*
+         * CLASSIFICATION
+         */
+        h(
+          'div',
+          {
+            class:
+              'ai-suggestion',
+          },
+
+          h(
+            'span',
+            {
+              class:
+                'mono-meta dim-text',
+            },
+            'CLASSIFICATION',
+          ),
+
+          h(
+            'div',
+            {
+              style: {
+                display:
+                  'grid',
+
+                gap:
+                  '0.5rem',
+
+                marginTop:
+                  '0.75rem',
+              },
+            },
+
+            h(
+              'div',
+              {},
+              h(
+                'strong',
+                'Category: ',
+              ),
+              suggestion
+                .suggested_category
+                ?.name ??
+              '—',
+            ),
+
+            h(
+              'div',
+              {},
+              h(
+                'strong',
+                'Project: ',
+              ),
+              suggestion
+                .suggested_project
+                ?.title ??
+              '—',
+            ),
+
+            h(
+              'div',
+              {},
+              h(
+                'strong',
+                'Visibility: ',
+              ),
+              suggestion
+                .suggested_visibility
+                ?.value ??
+              '—',
+            ),
+          ),
+        ),
+
+        /*
+         * TAGS
+         */
+        suggestion
+          .suggested_tags
+          .length
           ? h(
             'div',
-            {},
+            {
+              class:
+                'ai-suggestion',
+            },
 
-            flags.map(
-              (
-                flag,
-              ) =>
-                h(
-                  'div',
-                  {
-                    class:
-                      `ai-flag ai-flag--${flag.severity}`,
-                  },
+            h(
+              'span',
+              {
+                class:
+                  'mono-meta dim-text',
+              },
+              'SUGGESTED TAGS',
+            ),
 
-                  h(
-                    'span',
-                    {
-                      class:
-                        'mono-meta',
-                    },
-                    flag.kind
-                      .replaceAll(
-                        '_',
-                        ' ',
-                      )
-                      .toUpperCase(),
-                  ),
+            h(
+              'div',
+              {
+                style: {
+                  marginTop:
+                    '0.75rem',
+                },
+              },
 
-                  h(
-                    'span',
-                    flag.detail,
-                  ),
+              suggestion
+                .suggested_tags
+                .map(
+                  (
+                    tag,
+                  ) =>
+                    h(
+                      'span',
+                      {
+                        class:
+                          'tag',
+
+                        style: {
+                          marginRight:
+                            '0.35rem',
+
+                          marginBottom:
+                            '0.35rem',
+                        },
+                      },
+                      tag,
+                    ),
                 ),
             ),
           )
           : null,
 
-        rows.length
-          ? h(
-            'div',
-            {},
-            rows,
-          )
-          : failure
-            ? null
-            : h(
-              'div',
-              {
-                class:
-                  'ai-suggestion',
-              },
+        /*
+         * APPLYABLE SUGGESTIONS
+         */
+        ...suggestionRows,
 
-              h(
-                'span',
-                {
-                  class:
-                    'mono-meta dim-text',
-                },
-                'NO SUGGESTIONS YET',
-              ),
-            ),
+        projectRecommendation,
+
+        /*
+         * REVIEW FLAGS
+         */
+        flagGroup(
+          'SENSITIVE INFORMATION',
+          suggestion
+            .sensitive_information,
+          'danger',
+        ),
+
+        flagGroup(
+          'MISSING INFORMATION',
+          suggestion
+            .missing_information,
+          'warn',
+        ),
+
+        flagGroup(
+          'POSSIBLE DUPLICATES',
+          suggestion
+            .duplicate_concerns,
+          'warn',
+        ),
+
+        flagGroup(
+          'WARNINGS',
+          suggestion
+            .warnings,
+          'warn',
+        ),
+
+        flagGroup(
+          'REVIEW NOTES',
+          suggestion
+            .review_notes,
+          'info',
+        ),
 
         h(
           'p',
@@ -971,54 +1695,23 @@ async function start(): Promise<void> {
             class:
               'ai-disclaimer',
           },
-          'ADVISORY ONLY. THE ASSISTANT CANNOT APPROVE, PUBLISH OR CHANGE VISIBILITY. ' +
-          'NOTHING HAPPENS UNTIL YOU PRESS PUBLISH, AND THE AUDIT RECORD NAMES ' +
-          'YOU — NOT THE ASSISTANT — AS THE DECIDING ADMIN.',
+          'ADVISORY ONLY. THE ASSISTANT CANNOT APPROVE, PUBLISH, REJECT OR CHANGE VISIBILITY. ' +
+          'NOTHING HAPPENS UNTIL A HUMAN ADMINISTRATOR TAKES ACTION. ' +
+          'THE AUDIT RECORD IDENTIFIES THE HUMAN ADMINISTRATOR AS THE DECISION MAKER.',
         ),
       );
     }
 
     /*
-     * Cached AI suggestions are optional. A broken AI record must not stop
-     * an administrator from reviewing the submission manually.
+     * Initial AI panel.
+     *
+     * The new Cloudflare Worker does not automatically write its output
+     * into the archive decision path. A fresh review is requested explicitly.
      */
-    try {
-      const cached =
-        await submissionAi(
-          row.id,
-        );
-
-      drawAi(
-        cached &&
-          Object.keys(
-            cached.suggestions,
-          ).length
-          ? cached.suggestions as
-          AiSuggestions
-          : null,
-
-        cached?.flags ??
-        [],
-
-        cached?.model ??
-        null,
-
-        cached?.error ??
-        null,
-      );
-    } catch (error) {
-      console.error(
-        'Could not load cached AI review:',
-        error,
-      );
-
-      drawAi(
-        null,
-        [],
-        null,
-        `Could not load previous assistant suggestions: ${errorMessage(error)}`,
-      );
-    }
+    drawAi(
+      null,
+      null,
+    );
 
     const preview =
       h(
@@ -1053,6 +1746,7 @@ async function start(): Promise<void> {
                   style: {
                     padding:
                       '2rem',
+
                     textAlign:
                       'center',
                   },
@@ -1072,8 +1766,10 @@ async function start(): Promise<void> {
                   {
                     href:
                       row.external_url,
+
                     target:
                       '_blank',
+
                     rel:
                       'noopener noreferrer',
                   },
@@ -1146,6 +1842,7 @@ async function start(): Promise<void> {
                 {
                   src:
                     url,
+
                   alt:
                     row.title,
                 },
@@ -1169,8 +1866,10 @@ async function start(): Promise<void> {
                 {
                   src:
                     url,
+
                   title:
                     `${row.title} preview`,
+
                   loading:
                     'lazy',
                 },
@@ -1189,6 +1888,7 @@ async function start(): Promise<void> {
                 style: {
                   padding:
                     '2rem',
+
                   textAlign:
                     'center',
                 },
@@ -1211,8 +1911,10 @@ async function start(): Promise<void> {
                 {
                   href:
                     url,
+
                   target:
                     '_blank',
+
                   rel:
                     'noopener',
                 },
@@ -1255,8 +1957,10 @@ async function start(): Promise<void> {
               style: {
                 display:
                   'flex',
+
                 flexDirection:
                   'column',
+
                 gap:
                   '1.25rem',
               },
@@ -1265,6 +1969,7 @@ async function start(): Promise<void> {
             metaList([
               [
                 'Submitted by',
+
                 row.member
                   ?.full_name ??
                 '—',
@@ -1272,6 +1977,7 @@ async function start(): Promise<void> {
 
               [
                 'Email',
+
                 row.member
                   ?.email ??
                 '—',
@@ -1279,6 +1985,7 @@ async function start(): Promise<void> {
 
               [
                 'Submitted',
+
                 archiveDate(
                   row.created_at,
                 ),
@@ -1286,6 +1993,7 @@ async function start(): Promise<void> {
 
               [
                 'File',
+
                 row.file_name ??
                 (
                   row.external_url
@@ -1296,12 +2004,14 @@ async function start(): Promise<void> {
 
               [
                 'Type',
+
                 row.mime_type ??
                 '—',
               ],
 
               [
                 'Size',
+
                 fileSize(
                   row.size_bytes,
                 ),
@@ -1309,12 +2019,14 @@ async function start(): Promise<void> {
 
               [
                 'Suggested visibility',
+
                 row.suggested_visibility
                   .toUpperCase(),
               ],
 
               [
                 'Other contributors',
+
                 row.contributor_names
                   .join(
                     ', ',
@@ -1324,6 +2036,7 @@ async function start(): Promise<void> {
 
               [
                 'Member notes',
+
                 row.notes ??
                 '—',
               ],
@@ -1346,8 +2059,10 @@ async function start(): Promise<void> {
               style: {
                 display:
                   'flex',
+
                 flexDirection:
                   'column',
+
                 gap:
                   '1rem',
               },
@@ -1376,36 +2091,32 @@ async function start(): Promise<void> {
                         },
                         'ANALYSING SUBMISSION…',
                       ),
+
+                      h(
+                        'p',
+                        {
+                          class:
+                            'dim-text',
+                        },
+                        'Generating the administrator brief, confidence score, classifications and review flags.',
+                      ),
                     ),
                   );
 
                   try {
                     const result =
-                      await requestAiReview(
+                      await requestWorkerAiReview(
                         row.id,
                       );
 
                     drawAi(
-                      result.suggestions as
-                      AiSuggestions |
+                      result,
                       null,
-
-                      result.flags as
-                      AiFlag[],
-
-                      null,
-
-                      result.error,
                     );
 
                     toast(
-                      result.error
-                        ? 'The assistant had trouble — see the panel.'
-                        : 'Suggestions ready.',
-
-                      result.error
-                        ? 'err'
-                        : 'ok',
+                      'AI review ready.',
+                      'ok',
                     );
                   } catch (error) {
                     console.error(
@@ -1414,8 +2125,6 @@ async function start(): Promise<void> {
                     );
 
                     drawAi(
-                      null,
-                      [],
                       null,
                       `Assistant review failed: ${errorMessage(error)}`,
                     );
@@ -1429,7 +2138,7 @@ async function start(): Promise<void> {
               )
               : notice(
                 'info',
-                'The review assistant is switched off. Turn it on in Administration → Settings once Cloudflare Workers AI is configured.',
+                'The review assistant is switched off. Turn it on in Administration → Settings.',
               ),
 
             aiHost,
@@ -1755,6 +2464,7 @@ async function start(): Promise<void> {
                 {
                   type:
                     'button',
+
                   class:
                     'btn-ghost',
 
@@ -1764,6 +2474,7 @@ async function start(): Promise<void> {
                       ? {
                         borderColor:
                           'var(--accent-blue)',
+
                         color:
                           'var(--accent-blue)',
                       }
@@ -1897,6 +2608,7 @@ async function start(): Promise<void> {
                       {
                         type:
                           'button',
+
                         class:
                           'link-button',
 
@@ -1953,6 +2665,7 @@ async function start(): Promise<void> {
             {
               type:
                 'button',
+
               class:
                 'btn-ghost',
 
