@@ -298,12 +298,8 @@ function setupPositionSheets() {
 
     if (positions.getLastRow() === 0) {
         positions.appendRow(POSITION_HEADERS);
-        positions.getRange(2, 1, 4, POSITION_HEADERS.length).setValues([
-            ['JAM26-PRESENTER', 'ACM Programming Jam 2026', 'Workshop Presenter', 'Teach one preparation session and help members apply the workflow during guided practice.', 'Prepare slides and examples|Deliver one rehearsal|Present the session|Share final resources', 'Comfortable speaking to a group|Working knowledge of the workshop topic|Can attend rehearsal and event', '4–6 hours preparation + 90-minute session', 2, '7 Sep 2026', 'First come, first served; requirements verified afterward', 'Open', false],
-            ['JAM26-DEMO', 'ACM Programming Jam 2026', 'Demo Video Recorder', 'Record a concise walkthrough showing participants how to use the competition tooling.', 'Plan a short script|Record screen and voice|Edit captions and mistakes|Deliver source and final MP4', 'Clear spoken explanation|Screen-recording access|Basic video editing', '3–5 hours total', 2, '10 Sep 2026', 'First come, first served', 'Open', false],
-            ['JAM26-CONTENT', 'ACM Programming Jam 2026', 'Content Creator', 'Create accurate announcement and recap content for the event channels.', 'Draft announcement copy|Create event-day updates|Prepare recap post|Follow the ACM visual and writing style', 'Strong written communication|Reliable response time|Design experience is helpful', '2–3 hours per week', 3, '10 Sep 2026', 'First come, first served', 'Open', false],
-            ['CTF3-MEDIA', 'ACM/CyberTech CTF 3.0', 'Event Media Recorder', 'Capture useful event footage and organize it for the final competition recap.', 'Follow the shot list|Record horizontal and vertical footage|Collect participant consent when required|Upload labeled original files', 'Available throughout the event|Phone or camera with adequate storage|Can transfer large files', '4 hours on event day + 1 hour upload', 2, '17 Oct 2026', 'First come, first served', 'Open', false]
-        ]);
+        var defaults = defaultPositionRows();
+        positions.getRange(2, 1, defaults.length, POSITION_HEADERS.length).setValues(defaults);
     }
     if (signups.getLastRow() === 0) { signups.appendRow(POSITION_SIGNUP_HEADERS); }
     [positions, signups].forEach(function (sheet) {

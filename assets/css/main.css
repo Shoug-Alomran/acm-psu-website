@@ -1156,6 +1156,11 @@ html[dir="rtl"] select { text-align: right; }
     z-index: 1;
 }
 
+.person-dialog-head > div {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .person-dialog-head h2 {
     margin-top: 0.75rem;
     font-size: clamp(3rem, 7vw, 7.5rem);
@@ -1165,9 +1170,8 @@ html[dir="rtl"] select { text-align: right; }
 }
 
 .person-profile-role {
-    position: absolute;
-    right: clamp(7rem, 13vw, 14rem);
-    bottom: 3.25rem;
+    position: static;
+    margin-top: 0.85rem;
     color: var(--accent-blue);
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -1176,9 +1180,8 @@ html[dir="rtl"] select { text-align: right; }
 }
 
 .person-dialog-close {
-    position: absolute;
-    top: 2.5rem;
-    right: clamp(2rem, 6vw, 7rem);
+    position: static;
+    align-self: flex-start;
     width: 3.5rem;
     height: 3.5rem;
     flex: 0 0 auto;
@@ -1249,6 +1252,7 @@ html[dir="rtl"] select { text-align: right; }
     color: var(--text-muted);
     font-size: 1rem;
     line-height: 1.75;
+    text-align: start;
 }
 
 .person-profile-bio p {
@@ -1266,6 +1270,19 @@ html[dir="rtl"] select { text-align: right; }
     line-height: 1.45;
     letter-spacing: -0.02em;
 }
+
+html[dir="rtl"] .person-dialog-head h2 {
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+html[dir="rtl"] .person-profile-timeline li {
+    padding-right: 1.5rem;
+    padding-left: 0;
+}
+
+html[dir="rtl"] .person-profile-timeline li::before { right: 0; left: auto; }
+html[dir="rtl"] .person-profile-timeline li::after { right: 3px; left: auto; }
 
 .person-profile-details { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border-color); }
 .person-profile-details div { min-height: 105px; padding: 1.4rem; border-bottom: none; }
@@ -1291,7 +1308,7 @@ html[dir="rtl"] select { text-align: right; }
     .person-dialog-head { min-height: 165px; align-items: flex-end; padding: 2rem; }
     .person-dialog-head h2 { font-size: clamp(2.75rem, 12vw, 5rem); }
     .person-profile-role { position: static; margin-top: 0.75rem; }
-    .person-dialog-close { top: 1.5rem; right: 1.5rem; }
+    .person-dialog-close { align-self: flex-start; }
     .person-dialog-body { height: auto; min-height: calc(100dvh - 165px); grid-template-columns: 1fr; padding: 0 2rem; }
     .person-profile-aside { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-right: none; border-bottom: 1px solid var(--border-color); padding: 2rem 0; }
     .person-profile-mark { width: 120px; grid-row: span 2; font-size: 3.5rem; }
@@ -1673,6 +1690,51 @@ html[dir="rtl"] select { text-align: right; }
     gap: 0.5rem;
 }
 
+.input-group--wide { grid-column: 1 / -1; }
+
+.interest-picker {
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #0d0d12;
+}
+
+.interest-picker:focus { outline: none; border-color: var(--accent-blue); }
+
+.interest-picker legend {
+    width: 100%;
+    padding: 0 0 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.interest-picker legend .field-hint { float: right; }
+.interest-group-label { margin: 0.75rem 0 0.5rem; color: var(--accent-blue); font-size: 0.62rem; }
+.interest-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+
+.interest-options label {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 44px;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-transform: none;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.interest-options label:hover { color: var(--text-main); border-color: var(--border-strong); }
+.interest-options label:has(input:checked) { color: var(--text-main); border-color: var(--accent-blue); background: var(--accent-blue-dim); }
+.interest-options input { width: 1rem; height: 1rem; flex: 0 0 auto; padding: 0; accent-color: var(--accent-blue); }
+
+html[dir="rtl"] .interest-picker legend .field-hint { float: left; }
+
 .label-wrap {
     display: flex;
     justify-content: space-between;
@@ -1975,6 +2037,7 @@ input::placeholder, textarea::placeholder { color: var(--text-dark); }
     .nav-logo { gap: 0.65rem; font-size: 1.05rem; }
     .nav-logo img { height: 26px; }
     .nav-links { top: var(--nav-height); padding-left: 1rem; padding-right: 1rem; }
+    .interest-options { grid-template-columns: 1fr; }
     .hero {
         min-height: 100svh;
         padding-top: calc(var(--nav-height) + 2rem);

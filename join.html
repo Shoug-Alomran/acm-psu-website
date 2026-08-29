@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Initialize Membership — ACM PSU</title>
-    <meta name="description" content="Apply to join the ACM student chapter at Prince Sultan University for the 2026 cohort.">
+    <meta name="description"
+        content="Apply to join the ACM student chapter at Prince Sultan University for the 2026 cohort.">
 
     <link rel="canonical" href="https://acm-psu.shoug-tech.com/join.html">
     <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
@@ -24,6 +26,7 @@
 
     <link rel="stylesheet" href="assets/css/main.css?v=20260829-3">
 </head>
+
 <body>
 
     <a class="skip-link" href="#main">Skip to content</a>
@@ -38,16 +41,21 @@
                 <span class="divider">/</span>
                 <span>PSU</span>
             </a>
-            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
+                aria-controls="nav-links">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
             </button>
             <div class="nav-links" id="nav-links">
                 <a href="index.html#about">About</a>
-                <a href="team.html">Team</a>
-                <a href="projects.html">Projects</a>
                 <a href="positions.html">Positions</a>
-                <a href="projects.html#workshops">Archive</a>
+                <a href="projects.html">Projects</a>
+                <a href="archive.html">Archive</a>
+                <a href="team.html">Team</a>
                 <a href="join.html" class="active" aria-current="page">Join</a>
+                <a href="/portal/index.html" class="accent-text">Portal</a>
             </div>
             <div class="nav-meta mono-meta">
                 STATUS: ENROLLMENT_OPEN
@@ -61,7 +69,7 @@
             <h1 class="page-title">Join the Collective</h1>
             <p class="mono-meta membership-intro">
                 ACM PSU is looking for the next generation of engineers, researchers, and hackers.
-                Complete the handshake protocol below to apply for the 2026 cohort.
+                Complete the handshake protocol below to apply for the current cohort.
             </p>
 
             <div class="grid-layout">
@@ -73,98 +81,40 @@
                             <div class="dot"></div>
                             <div class="dot"></div>
                         </div>
-                        <div class="mono-meta terminal-filename">application_v2.0.sh</div>
+                        <div class="mono-meta terminal-filename">membership_protocol.md</div>
                     </div>
 
-                    <form class="form-body" id="membership-form" novalidate>
-                        <div class="input-group">
-                            <div class="label-wrap">
-                                <label for="field-name">Full Name</label>
-                                <span class="mono-meta field-hint">STR_REQ</span>
-                            </div>
-                            <input id="field-name" name="name" type="text" placeholder="e.g. Faisal Al-Dosari" autocomplete="name" required>
+                    <div class="form-body">
+                        <p class="mono-meta accent-text">STEP_01 // CREATE AN ACCOUNT</p>
+                        <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem;">
+                            Applications are made from your own ACM account, so you can check on
+                            your application, and so your member dashboard is ready the moment you
+                            are accepted.
+                        </p>
+
+                        <p class="mono-meta accent-text">STEP_02 // SUBMIT THE APPLICATION</p>
+                        <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem;">
+                            Name, student ID, PSU email, major, academic year and what you would
+                            like to get experience in. It takes a couple of minutes.
+                            <b>No technical experience is required</b> — the club exists to give you
+                            that experience, not to test for it.
+                        </p>
+
+                        <p class="mono-meta accent-text">STEP_03 // WE READ IT</p>
+                        <p style="color: var(--text-muted); margin: 0.5rem 0 2rem;">
+                            An organiser reviews every application. Some applicants are invited for
+                            a short, informal chat. You will see the outcome on your status page.
+                        </p>
+
+                        <div class="hero-ctas">
+                            <a class="btn btn-primary btn-lg" href="/portal/signup.html">Create account &amp; apply</a>
+                            <a class="btn btn-secondary btn-lg" href="/portal/login.html">I already have an account</a>
                         </div>
 
-                        <div class="input-group">
-                            <div class="label-wrap">
-                                <label for="field-email">PSU Email</label>
-                                <span class="mono-meta field-hint">EMAIL_VALIDATE</span>
-                            </div>
-                            <input id="field-email" name="email" type="email" placeholder="you@psu.edu.sa" autocomplete="email" required>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="input-group">
-                                <div class="label-wrap">
-                                    <label for="field-student-id">Student ID</label>
-                                    <span class="mono-meta field-hint">ID_REQ</span>
-                                </div>
-                                <input id="field-student-id" name="studentId" type="text" inputmode="numeric" placeholder="e.g. 221100234" required>
-                            </div>
-                            <div class="input-group">
-                                <div class="label-wrap">
-                                    <label for="field-major">Major</label>
-                                    <span class="mono-meta field-hint">STR_REQ</span>
-                                </div>
-                                <input id="field-major" name="major" type="text" list="major-options" placeholder="e.g. Computer Science" required>
-                                <datalist id="major-options">
-                                    <option value="Computer Science"></option>
-                                    <option value="Software Engineering"></option>
-                                    <option value="Information Systems"></option>
-                                    <option value="Data Science"></option>
-                                    <option value="Cybersecurity"></option>
-                                    <option value="Computer Engineering"></option>
-                                </datalist>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label for="field-year">Academic Year</label>
-                                <select id="field-year" name="year" required>
-                                    <option value="" disabled selected>Select Year</option>
-                                    <option>Freshman (Y1)</option>
-                                    <option>Sophomore (Y2)</option>
-                                    <option>Junior (Y3)</option>
-                                    <option>Senior (Y4)</option>
-                                    <option>Graduate</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label for="field-track">What are you interested in?</label>
-                                <select id="field-track" name="interests" required>
-                                    <option value="" disabled selected>Select Core</option>
-                                    <option>Software Engineering</option>
-                                    <option>Cybersecurity</option>
-                                    <option>AI / Data Science</option>
-                                    <option>Competitive Programming</option>
-                                    <option>UI/UX Design</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <div class="label-wrap">
-                                <label for="field-url">LinkedIn / GitHub / Portfolio</label>
-                                <span class="mono-meta field-hint">OPTIONAL</span>
-                            </div>
-                            <input id="field-url" name="portfolio" type="url" placeholder="https://github.com/username">
-                        </div>
-
-                        <div class="input-group">
-                            <label for="field-about">What would you like to gain experience in?</label>
-                            <textarea id="field-about" name="experience" rows="4" placeholder="Briefly describe your interests and what you hope to contribute..."></textarea>
-                        </div>
-
-                        <div class="input-group form-trap" aria-hidden="true">
-                            <label for="field-website">Leave this field empty</label>
-                            <input id="field-website" name="website" type="text" tabindex="-1" autocomplete="off">
-                        </div>
-
-                        <p class="form-status" id="form-status" role="status" hidden></p>
-
-                        <button type="submit" class="btn-submit">Execute Handshake [Enter]</button>
-                    </form>
+                        <p class="mono-meta dim-text" style="margin-top: 1.5rem;">
+                            A PSU email address is required for membership.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="sidebar">
@@ -173,15 +123,18 @@
                         <ul class="benefits-list">
                             <li class="benefit-item">
                                 <span class="benefit-icon">01</span>
-                                <span class="benefit-text">Access to <b>ACM Lab Hardware</b> (GPU clusters, IoT kits).</span>
+                                <span class="benefit-text">Access to <b>ACM Lab Hardware</b> (GPU clusters, IoT
+                                    kits).</span>
                             </li>
                             <li class="benefit-item">
                                 <span class="benefit-icon">02</span>
-                                <span class="benefit-text">Exclusive entry to <b>Member Jams</b> and regional ICPC training.</span>
+                                <span class="benefit-text">Exclusive entry to <b>Member Jams</b> and regional ICPC
+                                    training.</span>
                             </li>
                             <li class="benefit-item">
                                 <span class="benefit-icon">03</span>
-                                <span class="benefit-text">Professional <b>Network Tunneling</b> to PSU alumni at tech giants.</span>
+                                <span class="benefit-text">Professional <b>Network Tunneling</b> to PSU alumni at tech
+                                    giants.</span>
                             </li>
                             <li class="benefit-item">
                                 <span class="benefit-icon">04</span>
@@ -195,7 +148,10 @@
                         <div class="faq-item">
                             <button class="faq-trigger" type="button" aria-expanded="false">
                                 Do I need prior experience?
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" aria-hidden="true">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
                             </button>
                             <div class="faq-content">
                                 No. We look for curiosity and logical aptitude. If you can learn, you can join.
@@ -204,7 +160,10 @@
                         <div class="faq-item">
                             <button class="faq-trigger" type="button" aria-expanded="false">
                                 What is the time commitment?
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" aria-hidden="true">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
                             </button>
                             <div class="faq-content">
                                 Standard members commit ~3-5 hours/week for workshops and project sprints.
@@ -213,7 +172,10 @@
                         <div class="faq-item">
                             <button class="faq-trigger" type="button" aria-expanded="false">
                                 Application deadline?
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" aria-hidden="true">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
                             </button>
                             <div class="faq-content">
                                 Recruitment cycles happen at the start of every semester. Current cycle ends Oct 15.
@@ -246,9 +208,10 @@
         <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
     </footer>
 
-    <script src="assets/js/i18n.js?v=20260829-2" defer></script>
+    <script src="assets/js/i18n.js?v=20260829-6" defer></script>
     <script src="assets/js/main.js?v=20260829-2" defer></script>
     <script src="assets/js/join.js" defer></script>
 
 </body>
+
 </html>

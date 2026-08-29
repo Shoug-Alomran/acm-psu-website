@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Positions — ACM PSU</title>
-    <meta name="description" content="Claim an open assignment on an active ACM PSU project. Every role includes its responsibilities, requirements, capacity, and selection method.">
+    <meta name="description"
+        content="Claim an open assignment on an active ACM PSU project. Every role includes its responsibilities, requirements, capacity, and selection method.">
     <link rel="canonical" href="https://acm-psu.shoug-tech.com/positions.html">
     <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
@@ -19,6 +21,7 @@
     <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
     <link rel="stylesheet" href="assets/css/main.css?v=20260829-4">
 </head>
+
 <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="ambient-glow ambient-glow--corner"></div>
@@ -28,11 +31,18 @@
             <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
                 <img src="assets/img/acm.png" alt=""><span>ACM</span><span class="divider">/</span><span>PSU</span>
             </a>
-            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
+                aria-controls="nav-links">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
             </button>
             <div class="nav-links" id="nav-links">
-                <a href="index.html#about">About</a><a href="team.html">Team</a><a href="projects.html">Projects</a><a href="positions.html" class="active" aria-current="page">Positions</a><a href="projects.html#workshops">Archive</a><a href="join.html">Join</a>
+                <a href="index.html#about">About</a><a href="positions.html" class="active"
+                    aria-current="page">Positions</a><a href="projects.html">Projects</a><a
+                    href="projects.html#workshops">Archive</a><a href="team.html">Team</a><a href="join.html">Join</a>
+                <a href="/portal/index.html" class="accent-text">Portal</a>
             </div>
             <div class="nav-meta mono-meta">STATUS: RECRUITING</div>
         </div>
@@ -43,8 +53,12 @@
             <div class="mono-meta accent-text">DIR: /PROJECTS/OPEN_ASSIGNMENTS</div>
             <h1 class="page-title">Choose Your<br>Contribution.</h1>
             <div class="positions-intro">
-                <p>Every opening shows the same information to every member: the work, requirements, commitment, capacity, deadline, and selection method. Places are confirmed by the server in submission order.</p>
-                <div class="fairness-note mono-meta"><span>FAIR_ACCESS_PROTOCOL</span> One active assignment per student. Registration closes automatically at capacity; organizers may enable a timestamped waitlist.</div>
+                <p>Every opening shows the same information to every member: the work, requirements, commitment,
+                    capacity, deadline, and selection method. Places are confirmed by the server in submission order.
+                </p>
+                <div class="fairness-note mono-meta"><span>FAIR_ACCESS_PROTOCOL</span> One active assignment per
+                    student. Registration closes automatically at capacity; organizers may enable a timestamped
+                    waitlist.</div>
             </div>
         </header>
 
@@ -54,37 +68,65 @@
                     <p class="mono-meta accent-text">LIVE REGISTRY</p>
                     <h2 id="open-positions-title">Open assignments</h2>
                 </div>
-                <button class="btn-ghost positions-refresh" id="positions-refresh" type="button">Refresh availability</button>
+                <button class="btn-ghost positions-refresh" id="positions-refresh" type="button">Refresh
+                    availability</button>
             </div>
-            <p class="positions-load-state mono-meta" id="positions-load-state" role="status">CONNECTING TO ASSIGNMENT REGISTRY...</p>
+            <p class="positions-load-state mono-meta" id="positions-load-state" role="status">CONNECTING TO ASSIGNMENT
+                REGISTRY...</p>
             <div class="position-list" id="position-list" aria-live="polite"></div>
         </section>
     </main>
 
     <dialog class="position-dialog" id="position-dialog" aria-labelledby="position-dialog-title">
         <div class="position-dialog-head">
-            <div><p class="mono-meta accent-text" id="position-dialog-project">PROJECT</p><h2 id="position-dialog-title">Claim position</h2></div>
+            <div>
+                <p class="mono-meta accent-text" id="position-dialog-project">PROJECT</p>
+                <h2 id="position-dialog-title">Claim position</h2>
+            </div>
             <button class="position-dialog-close" type="button" aria-label="Close">×</button>
         </div>
         <form class="form-body position-form" id="position-form" novalidate>
             <input id="position-id" name="positionId" type="hidden">
-            <div class="input-group"><div class="label-wrap"><label for="position-name">Full name</label><span class="mono-meta field-hint">REQUIRED</span></div><input id="position-name" name="name" type="text" autocomplete="name" required></div>
-            <div class="form-row">
-                <div class="input-group"><label for="position-email">PSU email</label><input id="position-email" name="email" type="email" placeholder="you@psu.edu.sa" autocomplete="email" required></div>
-                <div class="input-group"><label for="position-student-id">Student ID</label><input id="position-student-id" name="studentId" type="text" inputmode="numeric" required></div>
+            <div class="input-group">
+                <div class="label-wrap"><label for="position-name">Full name</label><span
+                        class="mono-meta field-hint">REQUIRED</span></div><input id="position-name" name="name"
+                    type="text" autocomplete="name" required>
             </div>
-            <div class="input-group"><div class="label-wrap"><label for="position-note">Why are you interested?</label><span class="mono-meta field-hint">MAX 600 CHARACTERS</span></div><textarea id="position-note" name="note" rows="4" maxlength="600" placeholder="Briefly explain your interest and any relevant experience." required></textarea></div>
-            <div class="input-group form-trap" aria-hidden="true"><label for="position-website">Leave empty</label><input id="position-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
-            <label class="position-confirm"><input name="commitment" type="checkbox" value="yes" required><span>I have read the responsibilities, availability, and time commitment, and I can complete this assignment.</span></label>
+            <div class="form-row">
+                <div class="input-group"><label for="position-email">PSU email</label><input id="position-email"
+                        name="email" type="email" placeholder="you@psu.edu.sa" autocomplete="email" required></div>
+                <div class="input-group"><label for="position-student-id">Student ID</label><input
+                        id="position-student-id" name="studentId" type="text" inputmode="numeric" required></div>
+            </div>
+            <div class="input-group">
+                <div class="label-wrap"><label for="position-note">Why are you interested?</label><span
+                        class="mono-meta field-hint">MAX 600 CHARACTERS</span></div><textarea id="position-note"
+                    name="note" rows="4" maxlength="600"
+                    placeholder="Briefly explain your interest and any relevant experience." required></textarea>
+            </div>
+            <div class="input-group form-trap" aria-hidden="true"><label for="position-website">Leave
+                    empty</label><input id="position-website" name="website" type="text" tabindex="-1"
+                    autocomplete="off"></div>
+            <label class="position-confirm"><input name="commitment" type="checkbox" value="yes" required><span>I have
+                    read the responsibilities, availability, and time commitment, and I can complete this
+                    assignment.</span></label>
             <p class="form-status" id="position-form-status" role="status" hidden></p>
             <button class="btn-submit" type="submit">Submit assignment request</button>
         </form>
     </dialog>
 
-    <footer class="container site-footer mono-meta"><div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div><div class="footer-logos"><img src="assets/img/acm.png" alt="Association for Computing Machinery"><img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University"><img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences"></div><div>ACCESS: <span class="meta-value">ALL_MEMBERS</span></div><div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div></footer>
+    <footer class="container site-footer mono-meta">
+        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div class="footer-logos"><img src="assets/img/acm.png" alt="Association for Computing Machinery"><img
+                src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University"><img
+                src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences"></div>
+        <div>ACCESS: <span class="meta-value">ALL_MEMBERS</span></div>
+        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
+    </footer>
 
-    <script src="assets/js/i18n.js?v=20260829-3" defer></script>
+    <script src="assets/js/i18n.js?v=20260829-6" defer></script>
     <script src="assets/js/main.js?v=20260829-2" defer></script>
     <script src="assets/js/positions.js?v=20260829-1" defer></script>
 </body>
+
 </html>

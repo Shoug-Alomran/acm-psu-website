@@ -8,3 +8,15 @@
 
 # Logs
 *.log
+
+# Platform
+node_modules/
+.env.local
+.env
+_site/
+supabase/.temp/
+supabase/.branches/
+
+# Google service account credentials
+acm-psu-*.json
+*service-account*.json

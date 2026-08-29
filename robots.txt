@@ -9,4 +9,10 @@ Disallow: /projects/ai-programming-jam-26/workshop-content/workshop-notion-templ
 Disallow: /projects/ctf-3.0/workshop-material/
 Disallow: /projects/ctf-2.0/
 
+# The member portal and admin console are application surfaces behind a login.
+# They also carry <meta name="robots" content="noindex, nofollow">; this keeps
+# crawlers from spending requests on them at all.
+Disallow: /portal/
+Disallow: /admin/
+
 Sitemap: https://acm-psu.shoug-tech.com/sitemap.xml

@@ -1,0 +1,26 @@
+{
+  "name": "acm-psu-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ACM PSU — public digital archive, member portal, and club management platform.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run build",
+    "serve": "python3 -m http.server 8000",
+    "dev": "node build.mjs --watch & python3 -m http.server 8000",
+    "types:pull": "supabase gen types typescript --linked > platform/lib/database.types.ts",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "functions:deploy": "supabase functions deploy ai-review && supabase functions deploy records-export"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACM/CyberTech CTF 3.0 — ACM PSU</title>
+    <meta name="description"
+        content="ACM/CyberTech CTF 3.0 at Prince Sultan University: a three-hour Capture The Flag competition on 24 October 2026 for teams of 2–3, covering cryptography, web security, forensics and OSINT.">
+    <link rel="canonical" href="https://acm-psu.shoug-tech.com/projects/ctfs/ctf-3.0/">
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#050507">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ACM PSU">
+    <meta property="og:title" content="ACM/CyberTech CTF 3.0 — ACM PSU">
+    <meta property="og:description"
+        content="Three hours. Four cybersecurity categories. Teams of two to three. The complete CTF 3.0 event guide.">
+    <meta property="og:url" content="https://acm-psu.shoug-tech.com/projects/ctfs/ctf-3.0/">
+    <meta property="og:image" content="https://ctf-psu.shoug-tech.com/assets/brand/og-banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="assets/css/main.css?v=20260829-3">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "ACM PSU", "item": "https://acm-psu.shoug-tech.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Projects", "item": "https://acm-psu.shoug-tech.com/projects.html" },
+            { "@type": "ListItem", "position": 3, "name": "ACM/CyberTech CTF 3.0", "item": "https://acm-psu.shoug-tech.com/projects/ctfs/ctf-3.0/" }
+          ]
+        },
+        {
+          "@type": "Event",
+          "name": "ACM/CyberTech CTF 3.0",
+          "description": "A three-hour cybersecurity Capture The Flag competition for teams of two to three across cryptography, web security, digital forensics and OSINT.",
+          "startDate": "2026-10-24T10:00:00+03:00",
+          "endDate": "2026-10-24T13:00:00+03:00",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+          "url": "https://ctf-psu.shoug-tech.com/",
+          "location": {
+            "@type": "Place",
+            "name": "Auditorium B105, 2nd Floor, Prince Sultan University",
+            "address": { "@type": "PostalAddress", "addressLocality": "Riyadh", "addressCountry": "SA" }
+          },
+          "organizer": [
+            { "@type": "Organization", "name": "ACM Club, Prince Sultan University", "url": "https://acm-psu.shoug-tech.com/" },
+            { "@type": "Organization", "name": "CyberTech Club, Prince Sultan University" }
+          ]
+        }
+      ]
+    }
+    </script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="ambient-glow ambient-glow--corner"></div>
+    <nav>
+        <div class="container nav-inner">
+            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+                <img src="assets/img/acm.png" alt=""><span>ACM</span><span class="divider">/</span><span>PSU</span>
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
+                aria-controls="nav-links">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="index.html#about">About</a><a href="positions.html">Positions</a><a
+                    href="projects.html">Projects</a><a href="projects.html#workshops">Archive</a><a
+                    href="team.html">Team</a><a href="join.html">Join</a>
+            </div>
+            <div class="nav-meta mono-meta">SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE</div>
+        </div>
+    </nav>
+
+    <header class="page-header container">
+        <div class="breadcrumb mono-meta"><span>PROJECTS</span><span class="dim-text">/</span><span>CTF</span><span
+                class="dim-text">/</span><span class="accent-text">3.0</span></div>
+        <h1 class="page-title">Capture The Flag <br>3.0.</h1>
+        <p class="hero-desc" style="margin-top: 2rem;">ACM/CyberTech CTF 3.0 is a jeopardy-style cybersecurity
+            competition at Prince Sultan University. Teams investigate controlled challenges, recover hidden flags and
+            submit them for points across four attack vectors: cryptography, web security, digital forensics and
+            open-source intelligence.</p>
+        <div class="hero-ctas" style="margin-top: 2.5rem;">
+            <a href="https://ctf-psu.shoug-tech.com/" class="btn btn-primary" rel="noopener">Register on Event Site</a>
+            <a href="https://ctf-psu.shoug-tech.com/rules.html" class="btn btn-secondary" rel="noopener">Read Official
+                Rules</a>
+        </div>
+    </header>
+
+    <main id="main" class="container">
+        <section class="reveal" aria-labelledby="parameters-heading">
+            <div class="section-header">
+                <h2 id="parameters-heading">Mission Parameters</h2><span class="mono-meta">SATURDAY // RIYADH</span>
+            </div>
+            <div class="stat-strip">
+                <div class="stat-cell stat-cell--accent"><span class="stat-value">24 OCT</span><span
+                        class="stat-label">Competition date</span></div>
+                <div class="stat-cell"><span class="stat-value">10–13</span><span class="stat-label">Time (UTC+3)</span>
+                </div>
+                <div class="stat-cell"><span class="stat-value">3 HRS</span><span class="stat-label">Continuous
+                        play</span></div>
+                <div class="stat-cell"><span class="stat-value">2–3</span><span class="stat-label">Members per
+                        team</span></div>
+                <div class="stat-cell"><span class="stat-value">B105</span><span class="stat-label">Auditorium, 2nd
+                        floor</span></div>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="vectors-heading">
+            <div class="section-header">
+                <h2 id="vectors-heading">Attack Vectors</h2><span class="mono-meta">04 CATEGORIES // FLAGS
+                    CLASSIFIED</span>
+            </div>
+            <div class="note-grid">
+                <div class="note-card">
+                    <h3>Cryptography</h3>
+                    <p>Recognize patterns, decode information, analyze historical and modern encryption methods, and
+                        recover hidden messages.</p>
+                    <ul>
+                        <li><span>Skills</span><span>Ciphers, encoding, hashing</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>Web Security</h3>
+                    <p>Inspect how applications behave, identify insecure code or configuration, and find a route to
+                        protected information.</p>
+                    <ul>
+                        <li><span>Skills</span><span>HTTP, source analysis, vulnerabilities</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>Digital Forensics</h3>
+                    <p>Follow evidence across files, metadata, logs, network data and other artifacts to reconstruct
+                        what happened.</p>
+                    <ul>
+                        <li><span>Skills</span><span>File analysis, metadata, logs</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>OSINT</h3>
+                    <p>Search public sources effectively, correlate clues and identify the intelligence needed to reach
+                        the flag.</p>
+                    <ul>
+                        <li><span>Skills</span><span>Search, reconnaissance, correlation</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="collaboration-heading">
+            <div class="section-header">
+                <h2 id="collaboration-heading">The Collaboration</h2><span class="mono-meta">ACM CLUB × CYBERTECH
+                    CLUB</span>
+            </div>
+            <div class="note-grid">
+                <div class="note-card">
+                    <h3>A continuing joint series</h3>
+                    <p>CTF 3.0 continues the Capture The Flag series organized jointly by the ACM Club and CyberTech
+                        Club at Prince Sultan University's College of Computer and Information Sciences. The
+                        collaboration connects ACM's wider computing community with CyberTech's cybersecurity focus in
+                        one practical programme.</p>
+                </div>
+                <div class="note-card">
+                    <h3>Workshops before competition</h3>
+                    <p>The shared programme is broader than competition day. Preparation workshops introduce the same
+                        four domains used in the CTF—cryptography, web security, digital forensics and OSINT—before
+                        participants enter the cyber range.</p>
+                </div>
+                <div class="note-card">
+                    <h3>A record across editions</h3>
+                    <p>The archive identifies CTF 1.0 as the inaugural joint edition, preserves verified results and
+                        aggregate analytics from CTF 2.0, and documents the schedule and format of CTF 3.0 as the
+                        current collaboration.</p>
+                    <p style="margin-top: 1.25rem;"><a href="projects/ctfs/ctf-2.0/" class="link-arrow">Open the
+                            collaboration
+                            archive <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" aria-hidden="true">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg></a></p>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="protocol-heading">
+            <div class="section-header">
+                <h2 id="protocol-heading">Competition Protocol</h2><span class="mono-meta">ACCESS → INVESTIGATE →
+                    CAPTURE → SCORE</span>
+            </div>
+            <div class="timeline">
+                <div class="timeline-row">
+                    <div class="year">01</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">FORM A TEAM</span><span
+                                class="mono-meta meta-value">REGISTER 2–3 MEMBERS; SOLO ENTRY IS NOT ALLOWED</span>
+                        </div>
+                    </div>
+                    <div class="timeline-status"><span class="tag">REGISTER</span></div>
+                </div>
+                <div class="timeline-row">
+                    <div class="year">02</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">ACCESS THE RANGE</span><span
+                                class="mono-meta meta-value">CONNECT TO THE COMPETITION PLATFORM USING ON-SITE NETWORK
+                                ACCESS</span></div>
+                    </div>
+                    <div class="timeline-status"><span class="tag">CONNECT</span></div>
+                </div>
+                <div class="timeline-row">
+                    <div class="year">03</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">SOLVE &amp; CAPTURE</span><span
+                                class="mono-meta meta-value">INVESTIGATE PROVIDED TARGETS AND SUBMIT FLAGS AS
+                                ACM{...}</span></div>
+                    </div>
+                    <div class="timeline-status"><span class="tag">COMPETE</span></div>
+                </div>
+                <div class="timeline-row">
+                    <div class="year">04</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">CLIMB THE SCOREBOARD</span><span
+                                class="mono-meta meta-value">VALID FLAGS ADD POINTS; HIGHEST FINAL SCORES RANK
+                                FIRST</span></div>
+                    </div>
+                    <div class="timeline-status"><span class="tag active">SCORE</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="workshops-heading">
+            <div class="section-header">
+                <h2 id="workshops-heading">Workshops &amp; Readiness</h2><span class="mono-meta">21–22 OCT 2026</span>
+            </div>
+            <div class="note-grid">
+                <div class="note-card">
+                    <h3>Preparation workshops</h3>
+                    <p>Public workshops are scheduled by category before the competition: web and cryptography on 21
+                        October; forensics and OSINT on 22 October. Session times, locations, instructors and detailed
+                        prerequisites have not yet been announced.</p>
+                    <p style="margin-top: 1.25rem;"><a href="https://ctf-psu.shoug-tech.com/workshops.html"
+                            class="link-arrow" rel="noopener">Check workshop updates <svg width="16" height="16"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                aria-hidden="true">
+                                <path d="M7 17L17 7M17 7H7M17 7V17" />
+                            </svg></a></p>
+                </div>
+                <div class="note-card">
+                    <h3>What to bring</h3>
+                    <p>Every participant must bring a personal laptop and charger. Organizers provide network access on
+                        site. Any workshop-specific software or virtual-machine requirements will be announced with the
+                        workshop details.</p>
+                    <ul>
+                        <li><span>Laptop</span><span>Required</span></li>
+                        <li><span>Charger</span><span>Required</span></li>
+                        <li><span>Network access</span><span>Provided on site</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>Scope and safety</h3>
+                    <p>Participants may interact only with systems, files and targets explicitly provided for the
+                        competition. Unauthorized scanning, attacks on out-of-scope infrastructure, interference with
+                        other teams or credential misuse can result in disqualification.</p>
+                </div>
+                <div class="note-card">
+                    <h3>Difficulty and scoring</h3>
+                    <p>Challenges range from Very Easy to Insane. Point values may vary and can be assigned dynamically
+                        based on solve rates; the exact challenge database remains classified until competition day.</p>
+                    <ul>
+                        <li><span>Difficulty range</span><span>Very Easy → Insane</span></li>
+                        <li><span>Scoreboard</span><span>Activates competition day</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="archive-heading">
+            <div class="section-header">
+                <h2 id="archive-heading">Previous Edition</h2><span class="mono-meta">CTF 2.0 // VERIFIED ARCHIVE</span>
+            </div>
+            <div class="stat-strip">
+                <div class="stat-cell"><span class="stat-value">11</span><span class="stat-label">Teams ranked</span>
+                </div>
+                <div class="stat-cell"><span class="stat-value">16+</span><span class="stat-label">Challenges</span>
+                </div>
+                <div class="stat-cell"><span class="stat-value">852</span><span class="stat-label">Flag
+                        submissions</span></div>
+                <div class="stat-cell stat-cell--accent"><span class="stat-value">89</span><span
+                        class="stat-label">Successful captures</span></div>
+                <div class="stat-cell"><span class="stat-value">HZ</span><span class="stat-label">Winner, 3,800
+                        points</span></div>
+            </div>
+            <p class="mono-meta" style="margin-top: 2rem;"><a href="projects/ctfs/ctf-2.0/" class="link-arrow">Explore
+                    the CTF
+                    2.0 results and report <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg></a> · <a href="projects/ctfs/ctf-2.0/archive.html" class="link-arrow">Browse the CTF 2.0
+                    workshop
+                    archive</a></p>
+        </section>
+
+        <section class="ending reveal">
+            <p class="ending-desc">REGISTRATION STATUS: OPEN</p>
+            <h2 class="ending-title">Enter the Cyber Range.</h2>
+            <p class="hero-desc" style="margin-bottom: 3rem; text-align: center;">Form your team, review the official
+                rules and arrive with your laptop ready.</p>
+            <a href="https://ctf-psu.shoug-tech.com/" class="btn btn-primary btn-lg" rel="noopener">Open CTF 3.0 Event
+                Site</a>
+        </section>
+    </main>
+
+    <footer class="container site-footer mono-meta">
+        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div class="footer-logos"><img src="assets/img/acm.png" alt="Association for Computing Machinery"><img
+                src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University"><img
+                src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences"></div>
+        <div>EVENT: <span class="accent-text">SCHEDULED</span></div>
+        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
+    </footer>
+    <script src="assets/js/i18n.js?v=20260829-6" defer></script>
+    <script src="assets/js/main.js?v=20260829-2" defer></script>
+</body>
+
+</html>

@@ -37,6 +37,8 @@
         'Positions': 'المهام',
         'Archive': 'الأرشيف',
         'Join': 'انضم إلينا',
+        'Portal': 'البوابة',
+        'Digital Archive': 'الأرشيف الرقمي',
         'SYS.ARCHIVE_': 'الأرشيف_',
         '// ONLINE': '// متصل',
         'SYS.ARCHIVE // 404': 'الأرشيف // 404',
@@ -182,11 +184,13 @@
         'Chapter': 'الدفعة',
         'ACM service': 'الخدمة في ACM',
         'Record ID': 'معرّف السجل',
+        'RECORD:': 'السجل:',
         'Current chapter': 'الدفعة الحالية',
         'BIO': 'نبذة',
         'ROLE PROGRESSION': 'التدرّج في الأدوار',
         'CONNECTED SYSTEMS': 'الروابط والمنصات',
         'Close profile': 'إغلاق الملف الشخصي',
+        'BLUEPRINT ↗': 'بلو برنت ↗',
         'LEVEL_02 // ROSTER PENDING': 'المستوى_02 // القائمة قيد الإعداد',
         'Committee roster in progress': 'قائمة اللجان قيد الإعداد',
         'GEN_2026 // ORGANISING COMMITTEE NOT YET PUBLISHED': 'دفعة_2026 // لم تُنشر اللجنة المنظّمة بعد',
@@ -341,11 +345,24 @@
         'Graduate': 'دراسات عليا',
         'What are you interested in?': 'ما الذي يهمّك؟',
         'Select Core': 'اختر المجال',
+        'Select an interest': 'اختر اهتمامًا',
+        'Technical tracks': 'المسارات التقنية',
+        'Club contribution roles': 'أدوار المساهمة في النادي',
+        'SELECT ALL THAT APPLY': 'اختر كل ما ينطبق',
+        'SELECT AT LEAST ONE INTEREST.': 'اختر اهتمامًا واحدًا على الأقل.',
         'Software Engineering': 'هندسة البرمجيات',
         'Cybersecurity': 'الأمن السيبراني',
         'AI / Data Science': 'الذكاء الاصطناعي / علم البيانات',
         'Competitive Programming': 'البرمجة التنافسية',
         'UI/UX Design': 'تصميم تجربة المستخدم',
+        'Workshop Content Development': 'إعداد محتوى الورش',
+        'Workshop Presenting / Teaching': 'تقديم الورش / التدريب',
+        'Content Writing / Social Media': 'كتابة المحتوى / التواصل الاجتماعي',
+        'Graphic Design / Branding': 'التصميم الجرافيكي / الهوية البصرية',
+        'Photography / Video Production': 'التصوير / إنتاج الفيديو',
+        'Event Planning / Operations': 'تخطيط الفعاليات / التشغيل',
+        'Community Outreach / Partnerships': 'التواصل المجتمعي / الشراكات',
+        'Website / Technical Support': 'الموقع الإلكتروني / الدعم التقني',
         'LinkedIn / GitHub / Portfolio': 'لينكدإن / GitHub / معرض الأعمال',
         'OPTIONAL': 'اختياري',
         'What would you like to gain experience in?': 'في أي مجال تودّ اكتساب الخبرة؟',
@@ -478,8 +495,16 @@
     /* Whitespace-normalised lookup, so wrapped source paragraphs match the
      * single-line keys written above. */
     var LOOKUP = {};
+    var REVERSE_LOOKUP = {};
     Object.keys(DICT).forEach(function (key) {
-        LOOKUP[key.replace(/\s+/g, ' ').trim()] = DICT[key];
+        var english = key.replace(/\s+/g, ' ').trim();
+        var arabic = DICT[key].replace(/\s+/g, ' ').trim();
+        LOOKUP[english] = DICT[key];
+        /* Keep the first English source when two labels intentionally share
+         * one Arabic translation. Either source restores readable English. */
+        if (!Object.prototype.hasOwnProperty.call(REVERSE_LOOKUP, arabic)) {
+            REVERSE_LOOKUP[arabic] = key;
+        }
     });
 
     var originalText = new WeakMap();   // text node -> English source
@@ -507,6 +532,18 @@
         return null;
     }
 
+    /* Dynamic components can be inserted between a language click and the
+     * MutationObserver callback. If their first observed value is Arabic,
+     * recover the authored English here instead of caching Arabic as source. */
+    function englishSource(value) {
+        var parts = /^(\s*)([\s\S]*?)(\s*)$/.exec(value);
+        var normalised = parts[2].replace(/\s+/g, ' ');
+        if (Object.prototype.hasOwnProperty.call(REVERSE_LOOKUP, normalised)) {
+            return parts[1] + REVERSE_LOOKUP[normalised] + parts[3];
+        }
+        return value;
+    }
+
     function applyToTextNodes(root, lang) {
         if (!root) { return; }
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -523,7 +560,9 @@
 
         var node;
         while ((node = walker.nextNode())) {
-            if (!originalText.has(node)) { originalText.set(node, node.nodeValue); }
+            if (!originalText.has(node)) {
+                originalText.set(node, englishSource(node.nodeValue));
+            }
             var source = originalText.get(node);
             var next = (lang === 'ar' && translate(source)) || source;
             if (node.nodeValue !== next) { node.nodeValue = next; }
@@ -543,7 +582,9 @@
 
             ATTRS.forEach(function (attr) {
                 if (!el.hasAttribute(attr)) { return; }
-                if (!(attr in cache)) { cache[attr] = el.getAttribute(attr); }
+                if (!(attr in cache)) {
+                    cache[attr] = englishSource(el.getAttribute(attr));
+                }
                 var source = cache[attr];
                 el.setAttribute(attr, (lang === 'ar' && translate(source)) || source);
             });
@@ -631,7 +672,7 @@
          * load; translate whatever they insert. */
         if ('MutationObserver' in window) {
             new MutationObserver(function (records) {
-                if (applying || current !== 'ar') { return; }
+                if (applying) { return; }
                 records.forEach(function (record) {
                     Array.prototype.forEach.call(record.addedNodes, function (node) {
                         if (node.nodeType === 1) { apply(node, current); }

@@ -1,0 +1,41 @@
+# Supabase CLI project configuration.
+# Link this repository to the project once with:
+#     supabase link --project-ref <your-project-ref>
+
+project_id = "acm-psu-platform"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "https://acm-psu.shoug-tech.com"
+additional_redirect_urls = [
+  "https://acm-psu.shoug-tech.com/portal/auth-callback.html",
+  "http://localhost:8000/portal/auth-callback.html"
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+
+[auth.email]
+enable_signup = true
+# Membership belongs to a real person at PSU, so the address must be proven.
+enable_confirmations = true
+double_confirm_changes = true
+secure_password_change = true
+
+# Edge Functions. verify_jwt is on: both require a signed-in caller and then
+# re-check the caller's admin role internally.
+[functions.ai-review]
+verify_jwt = true
+
+[functions.records-export]
+verify_jwt = true

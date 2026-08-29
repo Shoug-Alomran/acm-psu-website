@@ -16,6 +16,9 @@
  *             progression: ['SEP 2025–JAN 2026 — Committee Member', 'JAN–MAY 2026 — President'],
  *             github: 'https://github.com/example', linkedin: 'https://linkedin.com/in/example',
  *             website: 'https://example.com', work: '', blueprint: '',
+ *             nameAr: 'الاسم الكامل', roleAr: 'الرئيس', majorAr: 'هندسة البرمجيات',
+ *             collegeAr: 'كلية علوم الحاسب والمعلومات', termAr: 'سبتمبر 2025–مايو 2026',
+ *             bioAr: 'نبذة عربية موثقة.', progressionAr: ['سبتمبر 2025–يناير 2026 — عضو'],
  *             id: '0x01_LEAD', photo: 'assets/img/people/2025/name.jpg' }
  *       ],
  *       members: [
@@ -32,6 +35,26 @@
     'use strict';
 
     var CURRENT = '2026';
+
+    /* Current static cards use this translation layer. Archived/future members
+       can provide the same fields directly as nameAr, roleAr, bioAr, etc. */
+    var PROFILE_AR = {
+        '0x01_LEAD': {
+            name: 'محمد ياور حياة',
+            role: 'رئيس النادي',
+            college: 'كلية علوم الحاسب والمعلومات',
+            term: 'الدفعة الحالية'
+        },
+        '0x02_LEAD': {
+            name: 'شوق العمران',
+            role: 'نائبة الرئيس',
+            major: 'هندسة البرمجيات والأمن السيبراني',
+            college: 'كلية علوم الحاسب والمعلومات',
+            term: 'نوفمبر 2025–حتى الآن',
+            bio: 'شوق العمران طالبة في هندسة البرمجيات والأمن السيبراني بجامعة الأمير سلطان، ومطوّرة تقنية ومدرّبة ومؤسِّسة استوديو بلو برنت. تمتد أعمالها عبر تطوير الأنظمة المتكاملة، والأمن السيبراني، ودمج الذكاء الاصطناعي، والتعليم التقني، والتوثيق الموجّه للمطورين.\n\nصمّمت شوق ونشرت منصات ويب ومشاريع في الأمن السيبراني وأنظمة مدعومة بالذكاء الاصطناعي، من بينها «فرصة»، وهو نموذج أولي عامل طُوّر خلال هاكاثون للذكاء الاصطناعي مع دمج كلاودفلير ووركرز للذكاء الاصطناعي. وتشمل محفظة أعمالها أيضًا منصات أكاديمية، وبنية تحتية للمسابقات، وموارد تقنية تحوّل الأفكار المعقدة والعمل التطبيقي إلى أنظمة واضحة وقابلة للاستخدام.\n\nبصفتها نائبة رئيس نادي ACM في جامعة الأمير سلطان، تعمل شوق على عدة مبادرات رئيسية في وقت واحد. تدير مسؤوليات تقنية وتنظيمية متداخلة تشمل تطوير موقع النادي وأرشيفه الرقمي، ومعسكر البرمجة بالذكاء الاصطناعي، ومسابقات CTF، والهاكاثونات، والورش، ومشاريع النادي الأخرى. وتمتد مسؤولياتها إلى تطوير المنصات، وتخطيط الفعاليات، والمحتوى التقني، وتصميم المسابقات، والتوثيق، وتنسيق الفرق، والنشر؛ بما يتطلب دفع عدة مشاريع مكثفة إلى الأمام بالتوازي.\n\nإلى جانب تنظيم المبادرات التقنية، تمتلك شوق خبرة في تقديمها مباشرة. فقد قدّمت ورشة في الأمن السيبراني لإحدى مسابقات CTF، وقدّمت ورشة «رحلتي كمدرّسة زميلة» عبر مركز الكتابة والإرشاد في جامعة الأمير سلطان، مستندة إلى خبرتها كمدرّسة زميلة. وتجمع خبرتها التعليمية بين التدريب التقني، وتعليم الأقران، والتحدث أمام الجمهور، وتطوير موارد تعليمية منظمة.\n\nتجمع شوق في أعمالها بين هندسة البرمجيات، والأمن السيبراني، والذكاء الاصطناعي، والتدريب التقني، وتنسيق المشاريع، والقيادة المجتمعية. ومن السمات المميزة لعملها قدرتها على تولّي عدة مبادرات عالية المتطلبات في الوقت نفسه، والتنقل بين المسؤوليات التقنية والقيادية، وقيادة المشاريع من التخطيط والتوثيق المبكرين إلى التنفيذ والنشر والتسليم.',
+            progression: ['نوفمبر 2025–أبريل 2026 — مسؤولة الاتصال', 'أبريل 2026–حتى الآن — نائبة الرئيس']
+        }
+    };
 
     var CHAPTERS = {
         '2026': { label: '2026', current: true },
@@ -83,6 +106,9 @@
         var progression = Array.isArray(person.progression)
             ? person.progression.join('|')
             : (person.progression || '');
+        var progressionAr = Array.isArray(person.progressionAr)
+            ? person.progressionAr.join('|')
+            : (person.progressionAr || '');
         return ' data-person-name="' + esc(person.name) + '"' +
             ' data-person-role="' + esc(person.role || 'Member') + '"' +
             ' data-person-major="' + esc(person.major || '') + '"' +
@@ -96,7 +122,14 @@
             ' data-person-linkedin="' + esc(person.linkedin || '') + '"' +
             ' data-person-website="' + esc(person.website || '') + '"' +
             ' data-person-work="' + esc(person.work || '') + '"' +
-            ' data-person-blueprint="' + esc(person.blueprint || '') + '"';
+            ' data-person-blueprint="' + esc(person.blueprint || '') + '"' +
+            ' data-person-name-ar="' + esc(person.nameAr || '') + '"' +
+            ' data-person-role-ar="' + esc(person.roleAr || '') + '"' +
+            ' data-person-major-ar="' + esc(person.majorAr || '') + '"' +
+            ' data-person-college-ar="' + esc(person.collegeAr || '') + '"' +
+            ' data-person-term-ar="' + esc(person.termAr || '') + '"' +
+            ' data-person-bio-ar="' + esc(person.bioAr || '') + '"' +
+            ' data-person-progression-ar="' + esc(progressionAr) + '"';
     }
 
     function renderLead(person) {
@@ -225,6 +258,7 @@
 
     var profileDialog = document.getElementById('person-dialog');
     var profileClose = profileDialog && profileDialog.querySelector('.person-dialog-close');
+    var activeProfileCard = null;
 
     function initials(name) {
         return String(name || '?').trim().split(/\s+/).slice(0, 2)
@@ -236,20 +270,33 @@
         if (target) { target.textContent = value || '—'; }
     }
 
+    function profileLanguage() {
+        return window.ACMLang && window.ACMLang.get() === 'ar' ? 'ar' : 'en';
+    }
+
+    function profileValue(card, field) {
+        var englishKey = 'person' + field.charAt(0).toUpperCase() + field.slice(1);
+        if (profileLanguage() !== 'ar') { return card.dataset[englishKey] || ''; }
+        var record = PROFILE_AR[card.dataset.personId] || {};
+        var arabicKey = englishKey + 'Ar';
+        return record[field] || card.dataset[arabicKey] || card.dataset[englishKey] || '';
+    }
+
     function openProfile(card) {
         if (!profileDialog || !card) { return; }
-        setProfile('name', card.dataset.personName);
-        setProfile('role', card.dataset.personRole);
-        setProfile('major', card.dataset.personMajor);
-        setProfile('college', card.dataset.personCollege || card.dataset.personMajor);
+        activeProfileCard = card;
+        setProfile('name', profileValue(card, 'name'));
+        setProfile('role', profileValue(card, 'role'));
+        setProfile('major', profileValue(card, 'major'));
+        setProfile('college', profileValue(card, 'college') || profileValue(card, 'major'));
         setProfile('year', card.dataset.personYear || document.querySelector('[data-year-label]').textContent.replace('/', '').trim());
         setProfile('id', card.dataset.personId);
-        setProfile('term', card.dataset.personTerm || 'Current chapter');
-        setProfile('service', card.dataset.personTerm || card.dataset.personYear || '—');
-        setProfile('initials', initials(card.dataset.personName));
+        setProfile('term', profileValue(card, 'term') || (profileLanguage() === 'ar' ? 'الدفعة الحالية' : 'Current chapter'));
+        setProfile('service', profileValue(card, 'term') || card.dataset.personYear || '—');
+        setProfile('initials', initials(profileValue(card, 'name')));
 
         var bioSection = profileDialog.querySelector('[data-profile-bio-section]');
-        var bio = card.dataset.personBio || '';
+        var bio = profileValue(card, 'bio');
         var bioContainer = profileDialog.querySelector('[data-profile-bio]');
         var bioParagraphs = bio.trim().split(/\n\s*\n/).filter(Boolean);
         bioContainer.innerHTML = bioParagraphs.map(function (paragraph, index) {
@@ -259,29 +306,33 @@
         bioSection.hidden = !bio;
 
         var majorRow = profileDialog.querySelector('[data-profile-major-row]');
-        majorRow.hidden = !card.dataset.personMajor;
+        majorRow.hidden = !profileValue(card, 'major');
 
         var progressionSection = profileDialog.querySelector('[data-profile-progression-section]');
-        var progression = (card.dataset.personProgression || '').split('|').filter(Boolean);
+        var localizedProgression = profileValue(card, 'progression');
+        var progression = Array.isArray(localizedProgression)
+            ? localizedProgression
+            : String(localizedProgression || '').split('|').filter(Boolean);
         progressionSection.hidden = !progression.length;
         profileDialog.querySelector('[data-profile-progression]').innerHTML = progression.map(function (item) {
             var parts = item.split(' — ');
             return '<li><span>' + esc(parts.shift()) + '</span><strong>' + esc(parts.join(' — ')) + '</strong></li>';
         }).join('');
 
+        var arabic = profileLanguage() === 'ar';
         var linkData = [
             ['GitHub', card.dataset.personGithub],
             ['LinkedIn', card.dataset.personLinkedin],
             ['SHOUG.TECH', card.dataset.personWebsite],
-            ['Work Hub', card.dataset.personWork],
-            ['Blueprint', card.dataset.personBlueprint]
+            [arabic ? 'مركز الأعمال' : 'Work Hub', card.dataset.personWork],
+            [arabic ? 'بلو برنت' : 'Blueprint', card.dataset.personBlueprint]
         ].filter(function (entry) { return entry[1]; });
         var linksSection = profileDialog.querySelector('[data-profile-links-section]');
         linksSection.hidden = !linkData.length;
         profileDialog.querySelector('[data-profile-links]').innerHTML = linkData.map(function (entry) {
             return '<a href="' + esc(entry[1]) + '" rel="noopener">' + esc(entry[0]) + '<span>↗</span></a>';
         }).join('');
-        profileDialog.showModal();
+        if (!profileDialog.open) { profileDialog.showModal(); }
     }
 
     roster.addEventListener('click', function (event) {
@@ -303,4 +354,10 @@
             if (event.target === profileDialog) { profileDialog.close(); }
         });
     }
+
+    document.addEventListener('acm:languagechange', function () {
+        if (profileDialog && profileDialog.open && activeProfileCard) {
+            openProfile(activeProfileCard);
+        }
+    });
 }());

@@ -1,0 +1,180 @@
+/**
+ * Google Sheets export.
+ *
+ * ONE workbook, many worksheets. GOOGLE_SHEETS_SPREADSHEET_ID identifies the
+ * single private "ACM PSU — Club Records" file; each dataset becomes a tab
+ * inside it, created on first use. There is no expectation of a separate
+ * spreadsheet per dataset.
+ *
+ * Supabase stays the operational system. This writes snapshots out and never
+ * reads back, so the workbook cannot become a second, diverging source of
+ * truth.
+ *
+ * Authentication is a service account: a JWT signed with the account's private
+ * key is exchanged for an access token. The key lives in an Edge Function
+ * secret. Nothing here is reachable from a browser.
+ *
+ * Required secrets (see docs/SETUP.md step 5):
+ *   GOOGLE_SERVICE_ACCOUNT_EMAIL
+ *   GOOGLE_PRIVATE_KEY               (the PEM; literal \n sequences are fine)
+ *   GOOGLE_SHEETS_SPREADSHEET_ID
+ */
+
+/** The single workbook every worksheet lives in. */
+export const WORKBOOK_NAME = 'ACM PSU — Club Records';
+
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+function base64url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+function encodeJson(value: unknown): string {
+  return base64url(new TextEncoder().encode(JSON.stringify(value)));
+}
+
+/** Turns a PEM private key into a Web Crypto signing key. */
+async function importPrivateKey(pem: string): Promise<CryptoKey> {
+  const body = pem
+    .replace(/\\n/g, '\n')                       // survive single-line .env storage
+    .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
+    .replace(/\s+/g, '');
+
+  const der = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
+
+  return crypto.subtle.importKey(
+    'pkcs8',
+    der,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+}
+
+async function accessToken(): Promise<string> {
+  const email = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+  const key = Deno.env.get('GOOGLE_PRIVATE_KEY');
+
+  if (!email || !key) {
+    throw new Error(
+      'Google Sheets export is not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and ' +
+      'GOOGLE_PRIVATE_KEY as Edge Function secrets — see docs/SETUP.md step 5. ' +
+      'CSV and XLSX export work without this.',
+    );
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const claim = encodeJson({ alg: 'RS256', typ: 'JWT' }) + '.' + encodeJson({
+    iss: email,
+    scope: SCOPE,
+    aud: TOKEN_URL,
+    iat: now,
+    exp: now + 3600,
+  });
+
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    await importPrivateKey(key),
+    new TextEncoder().encode(claim),
+  );
+
+  const response = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: `${claim}.${base64url(new Uint8Array(signature))}`,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      `Google rejected the service account: ${payload.error_description ?? payload.error}`,
+    );
+  }
+  return payload.access_token as string;
+}
+
+async function sheetsRequest(
+  token: string,
+  spreadsheetId: string,
+  path: string,
+  init: RequestInit = {},
+): Promise<Record<string, unknown>> {
+  const response = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}${path}`,
+    {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(init.headers ?? {}),
+      },
+    },
+  );
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload?.error?.message ?? `Sheets API error ${response.status}`);
+  }
+  return payload;
+}
+
+/**
+ * Replaces one worksheet's contents with the given matrix and returns a link
+ * to that tab within the workbook. The tab is created on first use, so adding
+ * a dataset needs no manual setup in Google.
+ *
+ * The whole sheet is cleared before writing rather than updated in place: a
+ * snapshot that still contained last month's departed members would be worse
+ * than no snapshot at all.
+ */
+export async function pushToGoogleSheet(
+  tabName: string,
+  matrix: Array<Array<unknown>>,
+): Promise<string> {
+  const spreadsheetId = Deno.env.get('GOOGLE_SHEETS_SPREADSHEET_ID');
+  if (!spreadsheetId) {
+    throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID is not set — see docs/SETUP.md step 5.');
+  }
+
+  const token = await accessToken();
+
+  const meta = await sheetsRequest(token, spreadsheetId, '') as {
+    properties?: { title?: string };
+    sheets?: Array<{ properties: { title: string; sheetId: number } }>;
+  };
+  let existing = meta.sheets?.find((s) => s.properties.title === tabName);
+
+  if (!existing) {
+    const created = await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
+      method: 'POST',
+      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tabName } } }] }),
+    }) as { replies?: Array<{ addSheet?: { properties: { title: string; sheetId: number } } }> };
+    const props = created.replies?.[0]?.addSheet?.properties;
+    if (props) existing = { properties: props };
+  } else {
+    await sheetsRequest(token, spreadsheetId, `/values/${encodeURIComponent(tabName)}:clear`, {
+      method: 'POST',
+    });
+  }
+
+  await sheetsRequest(
+    token,
+    spreadsheetId,
+    `/values/${encodeURIComponent(tabName)}!A1?valueInputOption=RAW`,
+    {
+      method: 'PUT',
+      // RAW means Sheets stores every cell verbatim, so a value beginning with
+      // "=" stays text rather than becoming a formula.
+      body: JSON.stringify({ values: matrix.map((row) => row.map((c) => c ?? '')) }),
+    },
+  );
+
+  const gid = existing?.properties.sheetId;
+  return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` +
+    (gid !== undefined ? `#gid=${gid}` : '');
+}

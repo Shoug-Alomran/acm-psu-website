@@ -1,99 +1,163 @@
 # acm-psu-website
 
-Official website of the ACM Club at Prince Sultan University — showcasing our members, projects, events, and history.
+Official website of the ACM Club at Prince Sultan University — the public
+digital archive, plus the member portal and admin console that keep it running.
 
 **Live:** https://acm-psu.shoug-tech.com/
 
-## Stack
+---
 
-Plain HTML, CSS, and JavaScript. No build step, no dependencies, no framework. Open any `.html` file in a browser and it works.
+## What this is
+
+Three things in one repository:
+
+1. **The public website** — plain HTML, CSS and JavaScript. No build step.
+   Open any `.html` file in a browser and it works.
+2. **The member portal** (`/portal/`) — apply for membership, keep a profile,
+   volunteer for events, submit work for verification, submit files to the
+   archive, and make privacy or membership requests.
+3. **The admin console** (`/admin/`) — applications, members, positions,
+   projects, review queues, member requests, university exports, admin roles,
+   and a full audit and decision history.
+
+The portals are TypeScript compiled to static files, so the whole site still
+deploys to GitHub Pages. Behind them is a Supabase Postgres database where all
+the access rules actually live.
+
+> **The rule the system is built on:** members control who they are, ACM
+> verifies what they did, and the archive preserves both.
+
+---
+
+## Setup
+
+New to this repository, or setting it up for a new committee? Start with
+**[docs/SETUP.md](docs/SETUP.md)** — numbered steps, nothing assumed.
+
+```sh
+npm install
+npm run build      # compile the portal
+npm run serve      # http://localhost:8000
+```
+
+The public pages work without any of that. `npm run build` is only needed after
+changing something in `platform/`.
+
+---
 
 ## Layout
 
 ```
 index.html            Home — hero, focus areas, team preview, work, archive timeline
-team.html             Full roster — executive council + general assembly
+team.html             Roster — hand-written cards plus members who opted in publicly
 projects.html         Project archive with category filters and live search
-positions.html        Live project assignments with capacity-aware registration
-join.html             Membership application form + FAQ
+archive.html          Searchable index across every project's archive
+positions.html        Live project assignments
+join.html             What membership involves, and where to apply
 404.html              Not-found page
 
-assets/css/main.css   All styles, shared across every page
-assets/js/main.js     Scroll reveals, mobile nav, footer clock (all pages)
-assets/js/projects.js Category tabs + search (projects page)
-assets/js/positions.js Position loading + assignment signup (positions page)
-assets/js/join.js     FAQ accordion + form submission (join page)
-assets/img/           Logos
+portal/               Member portal (sign-in, application, dashboard, profile,
+                      record, opportunities, contributions, submissions, requests)
+admin/                Admin console (overview, applications, members, positions,
+                      projects, review queues, requests, university records,
+                      audit history, administration)
 
-projects/             Project source material, public workshop lessons, handouts,
-                      planning records, and reusable templates
+platform/             TypeScript source for both portals
+  lib/                supabase client, session/guards, UI kit, data access
+  pages/              one entry point per page
+build.mjs             esbuild bundler -> assets/js/app/
 
-apps-script/          Google Apps Script backing the membership form (+ SETUP.md)
+supabase/
+  migrations/         the database: tables, policies, functions, seed data
+  functions/          Edge Functions (AI review, university export)
+  config.toml         Supabase CLI configuration
+
+assets/css/main.css   Public site styles
+assets/css/portal.css Portal styles, built on the same tokens
+assets/js/            Public site scripts (no build step)
+assets/js/app/        Compiled portal bundles — committed, do not edit by hand
+
+projects/             Project source material, workshop lessons, handouts,
+                      planning records and reusable templates
+docs/                 Setup, architecture, handover, operations
+apps-script/          The old Google Apps Script form backend (superseded)
 design-template/      Original design mockups. Reference only — not deployed.
-CNAME                 Custom domain for GitHub Pages
 ```
 
-## Local development
+---
 
-```sh
-python3 -m http.server 8000
-```
+## Documentation
 
-Then open http://localhost:8000. A plain server is needed rather than opening the
-files directly so that root-relative paths behave the same as in production.
+| Document | Read it when |
+|---|---|
+| **[docs/SETUP.md](docs/SETUP.md)** | Setting up Supabase, Cloudflare or Google Sheets |
+| **[docs/OPERATIONS.md](docs/OPERATIONS.md)** | Doing the everyday committee tasks |
+| **[docs/HANDOVER.md](docs/HANDOVER.md)** | Passing the system to next year's committee |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Understanding why it is built this way |
+| **[docs/AUDIT.md](docs/AUDIT.md)** | Working out who decided something, and why |
+
+---
+
+## Security in one paragraph
+
+Every consequential action is a database function that performs the change and
+writes its audit entry in the same transaction, so an approval can never exist
+without a record of who made it and why — see
+[docs/AUDIT.md](docs/AUDIT.md). Authorization is enforced by the database, not
+the interface. Every table has
+row level security; `supabase/migrations/*_row_level_security.sql` is the
+authoritative statement of who can do what, and it holds for anyone with a
+browser console. The Supabase anon key compiled into the site is public by
+design and grants nothing on its own. Privileged credentials — the service role
+key, the Cloudflare token, Google's private key — exist only as Supabase Edge
+Function secrets and never appear in this repository or in a bundle.
+
+---
 
 ## Deployment
 
-Every push to `main` triggers `.github/workflows/deploy.yml`, which stages the
-repo (minus `design-template/` and CI files) and publishes it to GitHub Pages.
+Every push to `main` triggers `.github/workflows/deploy.yml`, which type-checks
+the portal, rebuilds its bundles, stages the repository (minus `platform/`,
+`supabase/`, `docs/`, `design-template/` and CI files) and publishes to GitHub
+Pages.
 
-One-time setup in the GitHub repo settings:
+One-time setup in the GitHub repository settings:
 
-1. **Settings → Pages → Build and deployment → Source:** select **GitHub Actions**.
-2. **Settings → Pages → Custom domain:** enter `acm-psu.shoug-tech.com`, then tick
-   **Enforce HTTPS** once the certificate finishes provisioning.
-3. Add this DNS record at the `shoug-tech.com` registrar:
+1. **Settings → Pages → Build and deployment → Source:** select
+   **GitHub Actions**.
+2. **Settings → Pages → Custom domain:** enter `acm-psu.shoug-tech.com`, then
+   tick **Enforce HTTPS** once the certificate finishes provisioning.
+3. **Settings → Secrets and variables → Actions → Variables:** add
+   `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY`.
+4. Add this DNS record at the `shoug-tech.com` registrar:
 
    | Type  | Name      | Value                        |
    |-------|-----------|------------------------------|
    | CNAME | `acm-psu` | `shoug-alomran.github.io.`   |
 
+---
+
 ## Editing content
 
-Content lives directly in the HTML — there is no CMS.
+- **A team member:** they set their profile to Public in the portal and appear
+  on `team.html` automatically. Hand-written `.member-card` blocks still work.
+- **A project:** create it in **Admin → Projects & Events**, or copy a
+  `.case-study-card` block in `projects.html` and set `data-category`.
+- **An archive year:** copy a `.timeline-row` in `index.html`.
+- **A translation:** add `"English source": "Arabic"` to `DICT` in
+  `assets/js/i18n.js`.
 
-- **Add a team member:** copy a `.member-card` block in `team.html`.
-- **Add a project:** copy a `.case-study-card` block in `projects.html` and set
-  `data-category` to one of `ai-jam`, `cyber`, `hackathon`, or `systems` so the
-  filter tabs pick it up.
-- **Add an archive year:** copy a `.timeline-row` in `index.html`.
+Anything that would otherwise be hardcoded — the current chapter year, whether
+applications are open, the club email, accepted PSU email domains — is edited
+in **Admin → Administration → Settings**, not in the code.
 
-Placeholder names and Unsplash portraits are carried over from the design
-mockups — swap them for real people and photos before announcing the site.
+---
 
-## Membership form
+## The old membership form
 
-GitHub Pages serves static files only, so the form posts to a Google Apps Script
-web app that appends each application as a row in the registration spreadsheet.
-The script is `apps-script/Code.gs`; paste its deployed `/exec` URL into
-`FORM_ENDPOINT` at the top of `assets/js/join.js`. Until that is set, the form
-tells applicants to email instead of silently discarding submissions.
-
-## Open project positions
-
-`positions.html` uses the same Apps Script deployment and spreadsheet as the
-membership form. Run `setupPositionSheets` once in Apps Script to create the
-`Positions` and `Position Signups` tabs, then paste the same `/exec` URL into
-`FORM_ENDPOINT` in `assets/js/positions.js`.
-
-Organizers create and edit assignments directly in the `Positions` tab. The
-server locks each submission, recounts accepted signups, and only then reserves
-a place, so concurrent requests cannot exceed capacity. It also prevents the
-same PSU email or student ID from claiming the same role twice and limits each
-student to one assigned role. Set `Waitlist Enabled` to `TRUE` to keep accepting
-timestamped waitlist entries after capacity; otherwise registration closes.
-
-Setup is four steps, summarised at the top of `Code.gs`. If you have not
-deployed an Apps Script web app before, or something is not working,
-`apps-script/SETUP.md` walks through it click by click with a troubleshooting
-section.
+`apps-script/` holds the Google Apps Script that used to receive membership
+applications when the site was static-only. Applications now go through the
+portal, where they get an account, a status page and a member dashboard on
+approval. The script is kept for reference and for `positions.html`, which
+still uses it; it can be retired once event opportunities fully replace that
+page.
