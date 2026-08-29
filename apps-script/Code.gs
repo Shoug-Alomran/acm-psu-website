@@ -241,9 +241,6 @@ function registerForPosition(data) {
         if (prior.some(function (signup) { return String(signup['Position ID']) === positionId; })) {
             throw new Error('You already requested this position');
         }
-        if (prior.some(function (signup) { return String(signup['Status']).toLowerCase() === 'assigned'; })) {
-            throw new Error('You already hold an active assignment');
-        }
 
         var assignedCount = signups.filter(function (signup) {
             return String(signup['Position ID']) === positionId && String(signup['Status']).toLowerCase() === 'assigned';

@@ -59,11 +59,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: true, rows: records.length }, 200, origin);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Google Sheets sync failed.';
+    console.error('[member-sheet-sync] Google Sheets sync failed:', error);
     await service.rpc('finish_member_sheet_sync', {
       succeeded: false,
       failure_message: message.slice(0, 500),
       synced_rows: records.length,
     });
-    return fail(message, 503, origin);
+    return json({ ok: false, skipped: 'sheet_failed', error: message }, 200, origin);
   }
 });

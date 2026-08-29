@@ -60,10 +60,10 @@ async function start(): Promise<void> {
     panel('Position history',
       history.length
         ? h('div', { class: 'history-list' },
-            history.map((row) => h('div', { class: 'history-row' },
-              h('span', { class: 'mono-meta' }, term(row.started_on, row.ended_on)),
-              h('div', {}, h('strong', row.title_snapshot),
-                row.ended_on ? null : h('span', { class: 'mono-meta accent-text' }, '  CURRENT')))))
+          history.map((row) => h('div', { class: 'history-row' },
+            h('span', { class: 'mono-meta' }, term(row.started_on, row.ended_on)),
+            h('div', {}, h('strong', row.title_snapshot),
+              row.ended_on ? null : h('span', { class: 'mono-meta accent-text' }, '  CURRENT')))))
         : emptyState('No positions recorded yet.')),
 
     panel('Verified contributions',
@@ -98,9 +98,9 @@ async function start(): Promise<void> {
 
     pending.length
       ? panel('Still under review',
-          metaList(pending.map((c) => [c.title, statusPill(c.status)] as [string, HTMLElement])),
-          h('p', { class: 'mono-meta dim-text' },
-            'These are not yet part of your verified record.'))
+        metaList(pending.map((c) => [c.title, statusPill(c.status)] as [string, HTMLElement])),
+        h('p', { class: 'mono-meta dim-text' },
+          'These are not yet part of your verified record.'))
       : null,
   );
 }

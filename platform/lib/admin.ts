@@ -7,7 +7,7 @@
  * this file is what grants permission.
  */
 import { requireClient, callFunction } from './supabase.js';
-import { unwrap } from './api.js';
+import { unwrap, bestEffortFunctionSync } from './api.js';
 import type {
   AdminAssignment, AdminRole, Application, ApplicationNote, AuditEntry,
   ContentVisibility, MembershipStatus, MemberRequest, PositionChangeRequest,
@@ -555,17 +555,31 @@ export async function decideMemberRequest(
 export async function decideEventRequest(
   requestId: string, approve: boolean, reason: string | null,
 ): Promise<void> {
+  const client = requireClient();
+
   if (approve) {
-    const { error } = await requireClient()
+    const { error } = await client
       .rpc('approve_event_position_application', { request_id: requestId, reason });
     if (error) throw new Error(error.message);
-    return;
+  } else {
+    // Declining is recorded by the event_position_applications path in the
+    // requests queue; the row trigger picks up the change.
+    const { data: session } = await client.auth.getSession();
+    const decidedBy = session?.user?.id;
+
+    unwrap(await client.from('event_position_applications').update({
+      status: 'rejected',
+      admin_note: reason,
+      decided_by: decidedBy || null,
+      decided_at: new Date().toISOString(),
+    }).eq('id', requestId).select('id'));
   }
-  // Declining is recorded by the event_position_applications path in the
-  // requests queue; the row trigger picks up the change.
-  unwrap(await requireClient().from('event_position_applications').update({
-    status: 'rejected', admin_note: reason, decided_at: new Date().toISOString(),
-  }).eq('id', requestId).select('id'));
+
+  /*
+   * Refresh the Position Applications worksheet after any decision.
+   * Google Sheets failures are best-effort and do not affect the decision.
+   */
+  await bestEffortFunctionSync('position-application-sheet-sync');
 }
 
 export async function eventRequests(statuses: string[]) {

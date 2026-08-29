@@ -19,6 +19,39 @@ function unwrap<T>(result: { data: T | null; error: unknown }): T {
   if (result.error) throw new Error(readableError(result.error));
   return result.data as T;
 }
+/**
+ * Invokes a Supabase Edge Function without allowing an export/integration
+ * failure to undo a successful database write.
+ *
+ * Supabase remains the source of truth. Google Sheets is only a synchronized
+ * administrative snapshot, so failures are logged rather than propagated.
+ */
+export async function bestEffortFunctionSync(
+  functionName: string,
+): Promise<void> {
+  try {
+    const client = requireClient();
+
+    const { error } = await client.functions.invoke(
+      functionName,
+      {
+        body: {},
+      },
+    );
+
+    if (error) {
+      console.error(
+        `[Edge Function] ${functionName} failed:`,
+        error,
+      );
+    }
+  } catch (error) {
+    console.error(
+      `[Edge Function] ${functionName} failed:`,
+      error,
+    );
+  }
+}
 
 /* ----------------------------------------------------------------- settings */
 
@@ -93,15 +126,46 @@ export async function submitApplication(input: {
 /* ------------------------------------------------------------------ profile */
 
 export async function saveProfile(
-  userId: string, patch: Partial<MemberProfile>,
+  userId: string,
+  patch: Partial<MemberProfile>,
 ): Promise<MemberProfile> {
-  return unwrap(await requireClient().from('member_profiles')
-    .update(patch).eq('user_id', userId).select('*').single());
+  const client = requireClient();
+
+  const profile = unwrap(
+    await client
+      .from('member_profiles')
+      .update(patch)
+      .eq('user_id', userId)
+      .select('*')
+      .single(),
+  ) as MemberProfile;
+
+  await bestEffortFunctionSync(
+    'member-sheet-sync',
+  );
+
+  return profile;
 }
 
-export async function saveName(userId: string, fullName: string): Promise<void> {
-  unwrap(await requireClient().from('app_users')
-    .update({ full_name: fullName }).eq('id', userId).select('id'));
+export async function saveName(
+  userId: string,
+  fullName: string,
+): Promise<void> {
+  const client = requireClient();
+
+  unwrap(
+    await client
+      .from('app_users')
+      .update({
+        full_name: fullName,
+      })
+      .eq('id', userId)
+      .select('id'),
+  );
+
+  await bestEffortFunctionSync(
+    'member-sheet-sync',
+  );
 }
 
 export async function memberStats(userId: string): Promise<MemberStats> {
@@ -138,8 +202,10 @@ export async function saveContribution(
 }
 
 export async function reviewQueue(statuses: ReviewStatus[] = ['submitted']): Promise<
-  Array<Contribution & { member: { full_name: string; email: string } | null;
-                        project: { title: string } | null }>
+  Array<Contribution & {
+    member: { full_name: string; email: string } | null;
+    project: { title: string } | null
+  }>
 > {
   return unwrap(await requireClient().from('contributions')
     .select('*, member:app_users!contributions_user_id_fkey(full_name, email), project:projects(title)')
@@ -181,8 +247,10 @@ export async function mySubmissions(userId: string): Promise<ArchiveSubmission[]
 }
 
 export async function submissionQueue(statuses: ReviewStatus[] = ['submitted']): Promise<
-  Array<ArchiveSubmission & { member: { full_name: string; email: string } | null;
-                              project: { id: string; title: string } | null }>
+  Array<ArchiveSubmission & {
+    member: { full_name: string; email: string } | null;
+    project: { id: string; title: string } | null
+  }>
 > {
   return unwrap(await requireClient().from('archive_submissions')
     .select('*, member:app_users!archive_submissions_submitted_by_fkey(full_name, email), project:projects(id, title)')
@@ -227,10 +295,33 @@ export async function myEventApplications(userId: string) {
 }
 
 export async function registerInterest(input: {
-  event_position_id: string; user_id: string; availability: string | null; note: string | null;
+  event_position_id: string;
+  user_id: string;
+  availability: string | null;
+  note: string | null;
 }): Promise<void> {
-  unwrap(await requireClient().from('event_position_applications')
-    .insert(input).select('id').single());
+  const client = requireClient();
+
+  /*
+   * Supabase is authoritative. The application is committed first.
+   */
+  unwrap(
+    await client
+      .from('event_position_applications')
+      .insert(input)
+      .select('id')
+      .single(),
+  );
+
+  /*
+   * Refresh the Position Applications worksheet.
+   *
+   * A Google Sheets failure is deliberately non-fatal because the user's
+   * application has already been successfully stored in Supabase.
+   */
+  await bestEffortFunctionSync(
+    'position-application-sheet-sync',
+  );
 }
 
 /* ----------------------------------------------------------------- requests */

@@ -42,3 +42,6 @@ verify_jwt = true
 
 [functions.member-sheet-sync]
 verify_jwt = true
+
+[functions.position-application-sheet-sync]
+verify_jwt = true

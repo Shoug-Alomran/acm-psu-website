@@ -296,8 +296,8 @@
         'Every opening shows the same information to every member: the work, requirements, commitment, capacity, deadline, and selection method. Places are confirmed by the server in submission order.':
             'تُعرض المعلومات نفسها لكل عضو في كل مهمة: العمل المطلوب، والمتطلبات، والالتزام، والسعة، والموعد النهائي، وطريقة الاختيار. يؤكد النظام المقاعد حسب ترتيب وصول الطلبات.',
         'FAIR_ACCESS_PROTOCOL': 'بروتوكول_الفرص_العادلة',
-        'One active assignment per student. Registration closes automatically at capacity; organizers may enable a timestamped waitlist.':
-            'مهمة نشطة واحدة لكل طالب. يُغلق التسجيل تلقائيًا عند اكتمال العدد، ويمكن للمنظمين تفعيل قائمة انتظار مؤرخة.',
+        'Members may apply to more than one role. Registration closes automatically at capacity, and organizers may enable a timestamped waitlist.':
+            'يمكن للأعضاء التقديم إلى أكثر من دور واحد. يُغلق التسجيل تلقائيًا عند اكتمال العدد، ويمكن للمنظمين تفعيل قائمة انتظار مؤرخة.',
         'LIVE REGISTRY': 'السجل المباشر',
         'Open assignments': 'المهام المتاحة',
         'Refresh availability': 'تحديث المقاعد',
