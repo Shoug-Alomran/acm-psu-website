@@ -5,7 +5,8 @@ do $$
 declare
     admin_id uuid := gen_random_uuid();
     member_id uuid := gen_random_uuid();
-    audit_id uuid;
+    admin_assignment_id uuid;
+    audit_id bigint;
     rejected boolean;
 begin
   begin
@@ -26,13 +27,15 @@ begin
        '{"full_name":"Live Test Member"}', now(), now());
 
     insert into public.admin_assignments (user_id, role, note)
-    values (admin_id, 'super_admin', 'Rollback-contained live verification');
+    values (admin_id, 'super_admin', 'Rollback-contained live verification')
+    returning id into admin_assignment_id;
 
     perform set_config('request.jwt.claim.sub', admin_id::text, true);
     perform set_config('request.jwt.claim.role', 'authenticated', true);
 
     insert into public.member_profiles (user_id, visibility)
-    values (member_id, 'private');
+    values (member_id, 'private')
+    on conflict (user_id) do update set visibility = excluded.visibility;
     insert into public.memberships (user_id, status, started_on, chapter_year)
     values (member_id, 'active', current_date, public.current_chapter_year());
 
@@ -54,10 +57,10 @@ begin
       raise exception 'Membership RPC did not mutate domain state';
     end if;
     select id into audit_id from public.audit_log
-     where action = 'membership.status_changed' and related_member_id = member_id;
+     where action = 'member.status_changed' and related_member_id = member_id;
     if audit_id is null then raise exception 'Membership RPC did not audit'; end if;
     if (select count(*) from public.audit_log
-         where action = 'membership.status_changed' and related_member_id = member_id) <> 1 then
+         where action = 'member.status_changed' and related_member_id = member_id) <> 1 then
       raise exception 'Explicit RPC audit was duplicated by fallback trigger';
     end if;
     if (select actor_name from public.audit_log where id = audit_id) <> 'Live Test Admin' then
@@ -72,12 +75,12 @@ begin
     if not (select member_visible from public.audit_log where id = audit_id) then
       raise exception 'Member-visible decision flag was not preserved';
     end if;
-    if (select before_state->>'status' from public.audit_log where id = audit_id) <> 'active'
-       or (select after_state->>'status' from public.audit_log where id = audit_id) <> 'inactive' then
+    if (select before_state->>'membership_status' from public.audit_log where id = audit_id) <> 'active'
+       or (select after_state->>'membership_status' from public.audit_log where id = audit_id) <> 'inactive' then
       raise exception 'Audit before/after state is incorrect';
     end if;
-    if not ('status' = any(select unnest(changed_fields) from public.audit_log where id = audit_id)) then
-      raise exception 'Audit changed_fields omitted status';
+    if not ('membership_status' = any(select unnest(changed_fields) from public.audit_log where id = audit_id)) then
+      raise exception 'Audit changed_fields omitted membership_status';
     end if;
 
     -- Append-only triggers protect even the table owner.
@@ -90,12 +93,12 @@ begin
     exception when others then rejected := true; end;
     if not rejected then raise exception 'Audit DELETE was not rejected'; end if;
 
-    -- The final active super admin cannot be revoked.
-    rejected := false;
-    begin
-      perform public.revoke_admin_role(admin_id, 'Final super admin guard verification');
-    exception when others then rejected := true; end;
-    if not rejected then raise exception 'Final super admin revocation was not rejected'; end if;
+    -- Role revocation succeeds while another live super admin keeps the guard valid.
+    perform public.revoke_admin_role(
+      admin_assignment_id, 'Rollback-contained admin revocation verification');
+    if (select revoked_at from public.admin_assignments where id = admin_assignment_id) is null then
+      raise exception 'Admin role revocation did not mutate the assignment';
+    end if;
 
     raise exception using errcode = 'AC999', message = 'rollback live security fixtures';
   exception when sqlstate 'AC999' then

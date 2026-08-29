@@ -1310,6 +1310,15 @@ html[dir="rtl"] .person-profile-timeline li::after { right: 3px; left: auto; }
 .person-profile-record-list strong { color: var(--text-main); font-family: var(--font-display); font-size: 1rem; }
 .person-profile-record-list span { flex: 0 0 auto; color: var(--accent-blue); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
 .person-profile-record-list p { margin-top: 0.5rem; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.68rem; line-height: 1.5; }
+.person-profile-record-folder { grid-column: 1 / -1; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.01); }
+.person-profile-record-folder > summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.9rem 1.1rem; cursor: pointer; list-style: none; font-family: var(--font-display); color: var(--text-main); }
+.person-profile-record-folder > summary::-webkit-details-marker { display: none; }
+.person-profile-record-folder > summary::before { content: '▸'; color: var(--accent-blue); transition: transform 160ms ease; }
+.person-profile-record-folder[open] > summary::before { transform: rotate(90deg); }
+.person-profile-record-folder > summary span { flex: 1; color: inherit; font-family: inherit; font-size: 0.95rem; text-transform: none; }
+.person-profile-record-folder > summary small { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.62rem; font-weight: 400; text-transform: uppercase; }
+.person-profile-record-folder-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; padding: 0 0.75rem 0.75rem; }
+.person-profile-record-folder-items article { background: rgba(255, 255, 255, 0.02); }
 
 @media (max-width: 900px) {
     .person-dialog { overflow-y: auto; }
@@ -1324,6 +1333,7 @@ html[dir="rtl"] .person-profile-timeline li::after { right: 3px; left: auto; }
     .person-profile-bio { columns: 1; column-rule: none; }
     .person-profile-details { grid-column: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .person-profile-record-list { grid-template-columns: 1fr; }
+    .person-profile-record-folder-items { grid-template-columns: 1fr; }
     .person-profile-details div { border-bottom: 1px solid var(--border-color); }
     .person-profile-details div:nth-child(even) { border-right: none; }
     .person-profile-details div:nth-last-child(-n+2) { border-bottom: none; }

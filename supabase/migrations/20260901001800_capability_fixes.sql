@@ -77,7 +77,7 @@ declare
     target regprocedure :=
         'public.submit_inquiry(text,text,text,text,text,text,text)'::regprocedure;
     definition text;
-    anchor text := 'lpad(nextval(''public.inquiry_reference_seq''::regclass)::text, 4, ''0''::text)';
+    anchor text := '    insert into public.inquiries (';
 begin
     select pg_get_functiondef(target) into definition;
 
@@ -94,9 +94,9 @@ begin
 
     definition := replace(
         definition,
-        anchor || ';',
-        anchor || ';' || chr(10) || chr(10) ||
-        '    perform public.audit_context(null, null, ''created''::audit_decision, false, null);'
+        anchor,
+        '    perform public.audit_context(null, null, ''created''::audit_decision, false, null);' ||
+        chr(10) || chr(10) || anchor
     );
 
     execute definition;

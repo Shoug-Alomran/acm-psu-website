@@ -337,11 +337,29 @@
         var contributions = publicRecords('personContributions');
         var contributionsSection = profileDialog.querySelector('[data-profile-contributions-section]');
         contributionsSection.hidden = !contributions.length;
-        profileDialog.querySelector('[data-profile-contributions]').innerHTML = contributions.map(function (item) {
-            return '<article><div><strong>' + esc(item.title) + '</strong><span>' +
-                esc(item.type_label || item.type_slug || '') + '</span></div><p>' +
-                esc(item.project_title || 'ACM PSU') + (item.role_text ? ' · ' + esc(item.role_text) : '') +
-                '</p></article>';
+        var contributionGroups = contributions.reduce(function (groups, item) {
+            var key = item.project_id || item.project_slug || item.project_title || 'acm-psu';
+            if (!groups[key]) {
+                groups[key] = {
+                    title: item.project_title || 'ACM PSU',
+                    items: []
+                };
+            }
+            groups[key].items.push(item);
+            return groups;
+        }, {});
+        profileDialog.querySelector('[data-profile-contributions]').innerHTML = Object.keys(contributionGroups).map(function (key) {
+            var group = contributionGroups[key];
+            return '<details class="person-profile-record-folder" open><summary><span>' +
+                esc(group.title) + '</span><small>' + group.items.length +
+                (group.items.length === 1 ? ' contribution' : ' contributions') +
+                '</small></summary><div class="person-profile-record-folder-items">' +
+                group.items.map(function (item) {
+                    return '<article><div><strong>' + esc(item.title) + '</strong><span>' +
+                        esc(item.type_label || item.type_slug || '') + '</span></div><p>' +
+                        esc(item.role_text || item.occurred_on || 'Verified contribution') +
+                        '</p></article>';
+                }).join('') + '</div></details>';
         }).join('');
 
         var participation = publicRecords('personParticipation');

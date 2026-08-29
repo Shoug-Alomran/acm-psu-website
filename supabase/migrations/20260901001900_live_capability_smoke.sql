@@ -128,7 +128,7 @@ begin
         raise exception 'Event openings are exposed to anonymous visitors';
     end if;
 
-    execute 'reset role';
+    execute 'set local role postgres';
 
     ----------------------------------------------------------- applicant
     execute 'set local role authenticated';
@@ -154,7 +154,7 @@ begin
         raise exception 'An applicant can see internal event openings';
     end if;
 
-    execute 'reset role';
+    execute 'set local role postgres';
 
     -------------------------------------------------------------- member
     execute 'set local role authenticated';
@@ -259,11 +259,11 @@ begin
         raise exception 'A member can read internal inquiry notes';
     end if;
 
-    execute 'reset role';
+    execute 'set local role postgres';
 
     raise exception using errcode = 'AC999', message = 'rollback capability fixtures';
   exception when sqlstate 'AC999' then
-    execute 'reset role';
+    execute 'set local role postgres';
   end;
 
   if exists (select 1 from auth.users
