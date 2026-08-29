@@ -3,7 +3,7 @@
     'use strict';
 
     /* Paste the /exec URL from the Apps Script deployment here. */
-    var FORM_ENDPOINT = '';
+    var FORM_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyDWZwnInrMmVG6hXQS970_zsNUDVMoXpdL07lmsnZtEirL7qtQFgvKotNOyfxN0hCwNg/exec';
     var list = document.getElementById('position-list');
     var loadState = document.getElementById('positions-load-state');
     var refresh = document.getElementById('positions-refresh');

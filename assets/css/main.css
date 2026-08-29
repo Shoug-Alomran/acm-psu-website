@@ -1241,7 +1241,31 @@ html[dir="rtl"] select { text-align: right; }
 .person-profile-section[hidden] { display: none; }
 .person-profile-section[data-profile-bio-section] { grid-column: 1 / -1; }
 .person-profile-eyebrow { margin-bottom: 1.25rem; color: var(--accent-blue); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; }
-.person-profile-bio { max-width: 1400px; color: var(--text-main); font-family: var(--font-display); font-size: clamp(1.15rem, 1.55vw, 1.65rem); line-height: 1.55; letter-spacing: -0.015em; }
+.person-profile-bio {
+    max-width: 1500px;
+    columns: 2;
+    column-gap: clamp(2.5rem, 5vw, 6rem);
+    column-rule: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
+.person-profile-bio p {
+    margin: 0 0 1.35rem;
+    break-inside: avoid;
+}
+
+.person-profile-bio .bio-lead {
+    column-span: all;
+    max-width: 1300px;
+    margin-bottom: 2rem;
+    color: var(--text-main);
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 1.8vw, 2rem);
+    line-height: 1.45;
+    letter-spacing: -0.02em;
+}
 
 .person-profile-details { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border-color); }
 .person-profile-details div { min-height: 105px; padding: 1.4rem; border-bottom: none; }
@@ -1272,6 +1296,7 @@ html[dir="rtl"] select { text-align: right; }
     .person-profile-aside { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-right: none; border-bottom: 1px solid var(--border-color); padding: 2rem 0; }
     .person-profile-mark { width: 120px; grid-row: span 2; font-size: 3.5rem; }
     .person-profile-main { padding: 2rem 0 4rem; grid-template-columns: 1fr; overflow: visible; }
+    .person-profile-bio { columns: 1; column-rule: none; }
     .person-profile-details { grid-column: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .person-profile-details div { border-bottom: 1px solid var(--border-color); }
     .person-profile-details div:nth-child(even) { border-right: none; }
@@ -2264,6 +2289,13 @@ img, svg { max-width: 100%; }
     align-items: center;
     gap: 0.5rem;
 }
+.view-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.view-toggle [data-view="grid"] svg { fill: currentColor; stroke: none; }
+
+.file-path { display: flex; align-items: center; gap: 0.45rem; min-width: 0; flex-wrap: wrap; }
+.file-path button { border: 0; padding: 0; background: transparent; color: var(--text-muted); font: inherit; cursor: pointer; text-transform: uppercase; }
+.file-path button:last-child { color: var(--text-main); }
+.file-path button:hover { color: var(--accent-blue); }
 
 .icon-btn {
     background: transparent;
@@ -2384,6 +2416,7 @@ img, svg { max-width: 100%; }
 .pin-card .icon { color: var(--text-muted); transition: color 0.2s ease; }
 
 .pin-name {
+    display: block;
     font-size: 0.875rem;
     color: var(--text-main);
     font-weight: 500;
@@ -2394,6 +2427,7 @@ img, svg { max-width: 100%; }
 }
 
 .pin-sub {
+    display: block;
     font-family: var(--font-mono);
     font-size: 0.625rem;
     color: var(--text-dark);
@@ -2500,6 +2534,19 @@ img, svg { max-width: 100%; }
 .file-row.selected .fcell { color: var(--text-muted); }
 .file-row.selected .ftype { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); color: var(--accent-blue); }
 
+.file-row[data-type="folder"] .icon { color: var(--accent-blue); }
+.file-list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.75rem; padding: 1rem; }
+.file-list.is-grid .file-head { display: none; }
+.file-list.is-grid .file-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; min-height: 170px; padding: 1rem; border: 1px solid var(--border-color); }
+.file-list.is-grid .file-row .fname { flex-direction: column; align-items: flex-start; width: 100%; }
+.file-list.is-grid .file-row .fname .icon { font-size: 2rem; line-height: 1; }
+.file-list.is-grid .file-row .fname span:last-child { white-space: normal; line-height: 1.35; }
+.file-list.is-grid .file-row .fcell { white-space: normal; }
+.file-list.is-grid .file-row .col-section::before { content: 'SECTION: '; }
+.file-list.is-grid .file-row .col-updated, .file-list.is-grid .file-row .col-size { display: none; }
+.file-list.is-grid .file-act { position: absolute; right: 1rem; bottom: 1rem; opacity: 1; }
+.file-list.is-grid .file-empty { grid-column: 1 / -1; }
+
 .file-empty {
     padding: 3rem 1rem;
     text-align: center;
@@ -2560,6 +2607,13 @@ img, svg { max-width: 100%; }
     position: relative;
     border-bottom: 1px solid var(--border-color);
 }
+
+.preview-frame { display: block; width: 100%; height: 100%; min-height: 340px; border: 0; background: #fff; }
+.preview-media { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.preview-symbol { max-width: 300px; text-align: center; color: var(--text-muted); }
+.preview-symbol > span { display: block; margin-bottom: 1rem; color: var(--accent-blue); font-size: 4rem; line-height: 1; }
+.preview-symbol strong { display: block; color: var(--text-main); font-size: 1rem; margin-bottom: 0.5rem; }
+.preview-symbol p { font-size: 0.8rem; line-height: 1.6; }
 
 .zoom-bar {
     position: absolute;
@@ -2673,9 +2727,9 @@ img, svg { max-width: 100%; }
 .meta-rows dd, .meta-rows .v {
     color: var(--text-main);
     text-align: right;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    max-width: 68%;
 }
 
 .preview-actions {
@@ -2721,6 +2775,7 @@ img, svg { max-width: 100%; }
         border-left: none;
         border-top: 1px solid var(--border-color);
     }
+    .preview-stage { min-height: 420px; }
     .file-grid { grid-template-columns: minmax(0, 2fr) 70px 100px 40px; }
     .file-grid .col-updated, .file-grid .col-size { display: none; }
 }
@@ -2731,6 +2786,9 @@ img, svg { max-width: 100%; }
     .file-grid { grid-template-columns: minmax(0, 1fr) 60px 32px; }
     .file-grid .col-section { display: none; }
     .archive-title-row h1 { font-size: 1.75rem; }
+    .file-crumbs { align-items: flex-start; }
+    .file-list.is-grid { grid-template-columns: 1fr; }
+    .preview-stage { min-height: 360px; }
 }
 
 /* Honeypot field — hidden from people, visible to naive bots. */

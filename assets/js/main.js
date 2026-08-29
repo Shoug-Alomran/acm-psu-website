@@ -81,6 +81,7 @@
             { href: 'index.html#about', en: 'About ACM PSU', ar: 'عن نادي ACM', detailEn: 'Focus areas, workshops and competitions', detailAr: 'مجالات النادي والورش والمسابقات' },
             { href: 'team.html', en: 'Team', ar: 'الأعضاء', detailEn: 'Executive council and chapter roster', detailAr: 'المجلس التنفيذي وقائمة أعضاء النادي' },
             { href: 'projects.html', en: 'Projects', ar: 'المشاريع', detailEn: 'Competitions, workshops and technical work', detailAr: 'المسابقات والورش والأعمال التقنية' },
+            { href: 'positions.html', en: 'Open Positions', ar: 'المهام المتاحة', detailEn: 'Volunteer assignments on active projects', detailAr: 'مهام تطوعية في المشاريع النشطة' },
             { href: 'archive.html', en: 'JAM.26 Resource Archive', ar: 'أرشيف موارد JAM.26', detailEn: 'Lessons, handouts, planning records and templates', detailAr: 'الدروس والنشرات وسجلات التخطيط والقوالب' },
             { href: 'archive-project.html', en: 'Programming Jam 2026', ar: 'معسكر البرمجة 2026', detailEn: 'AI-assisted web engineering case study', detailAr: 'دراسة حالة لهندسة الويب بالذكاء الاصطناعي' },
             { href: 'ctf-archive.html', en: 'CTF 2.0 Results', ar: 'نتائج CTF 2.0', detailEn: 'Verified scoreboard and competition report', detailAr: 'لوحة النتائج وتقرير المسابقة الموثّق' },

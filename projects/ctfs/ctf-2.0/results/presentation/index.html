@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+    <title>PSU CTF 2.0 — Results Presentation</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Archived ACM/CyberTech CTF 2.0 results presentation. Participant names are preserved for historical event documentation and excluded from search indexing.">
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        :root {
+            --bg: #1a1a1a;
+            --bg2: #222222;
+            --bg3: #2a2a2a;
+            --red: #e63946;
+            --red-dim: rgba(230, 57, 70, 0.15);
+            --white: #f5f5f5;
+            --grey: #9a9a9a;
+            --grey-dim: rgba(255, 255, 255, 0.06);
+            --gold: #f0c040;
+            --silver: #c8c8c8;
+            --bronze: #c87941;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--white);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* ── SLIDE ENGINE ── */
+        .deck {
+            position: fixed;
+            inset: 0;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 56px 72px 80px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .45s ease, transform .45s ease;
+            will-change: transform, opacity;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(0) !important;
+        }
+
+        .slide.from-right {
+            transform: translateX(80px);
+        }
+
+        .slide.from-left {
+            transform: translateX(-80px);
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--red);
+            transition: width .4s ease;
+            z-index: 50;
+            box-shadow: 0 0 12px var(--red);
+        }
+
+        /* ── NAV ── */
+        .nav {
+            position: fixed;
+            bottom: 28px;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            z-index: 50;
+        }
+
+        .nav-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .12em;
+            padding: 9px 28px;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: var(--white);
+            cursor: pointer;
+            transition: border-color .2s, background .2s, color .2s;
+            border-radius: 3px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            border-color: var(--red);
+            background: var(--red);
+            color: #fff;
+        }
+
+        .nav-btn:disabled {
+            opacity: .25;
+            cursor: default;
+        }
+
+        .nav-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: background .3s, transform .3s;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: var(--red);
+            transform: scale(1.4);
+        }
+
+        /* ── SHARED COMPONENTS ── */
+        .slide-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .2em;
+            color: var(--red);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .slide-heading {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(38px, 5vw, 58px);
+            line-height: 1;
+            color: var(--white);
+            letter-spacing: .03em;
+        }
+
+        .slide-heading em {
+            color: var(--red);
+            font-style: normal;
+        }
+
+        .divider {
+            width: 48px;
+            height: 3px;
+            background: var(--red);
+            margin: 16px 0 32px;
+            border-radius: 2px;
+        }
+
+        /* ── SLIDE 1: TITLE ── */
+        .s-title {
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .s-title .bg-word {
+            position: absolute;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 38vw;
+            color: rgba(255, 255, 255, 0.025);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            letter-spacing: -.02em;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .title-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: .25em;
+            color: var(--red);
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeUp .6s .2s forwards;
+        }
+
+        .title-logos {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 22px;
+            opacity: 0;
+            animation: fadeUp .6s .15s forwards;
+        }
+
+        .title-logo-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 108px;
+            height: 68px;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .03);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+        }
+
+        .title-logo-chip img {
+            display: block;
+            max-width: 100%;
+            max-height: 46px;
+            object-fit: contain;
+        }
+
+        .title-main {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(80px, 14vw, 160px);
+            line-height: .9;
+            letter-spacing: .02em;
+            color: var(--white);
+            opacity: 0;
+            animation: fadeUp .6s .4s forwards;
+        }
+
+        .title-main span {
+            color: var(--red);
+        }
+
+        .title-year {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(24px, 4vw, 48px);
+            letter-spacing: .4em;
+            color: var(--grey);
+            margin-top: 8px;
+            opacity: 0;
+            animation: fadeUp .6s .6s forwards;
+        }
+
+        .title-rule {
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+            margin: 28px 0;
+            opacity: 0;
+            animation: fadeUp .6s .7s forwards;
+        }
+
+        .title-pills {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp .6s .85s forwards;
+        }
+
+        .title-credit {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 18px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .03);
+            color: rgba(255, 255, 255, .7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeUp .6s .98s forwards;
+        }
+
+        .title-credit::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 12px rgba(230, 57, 70, .35);
+        }
+
+        .pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 3px;
+            letter-spacing: .1em;
+        }
+
+        .pill-red {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(230, 57, 70, .3);
+        }
+
+        .pill-grey {
+            background: var(--grey-dim);
+            color: var(--grey);
+            border: 1px solid var(--border);
+        }
+
+        /* ── SLIDE 2: STATS ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 24px 20px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity .4s, transform .4s, border-color .25s;
+        }
+
+        .stat-box.in {
+            opacity: 1;
+            transform: none;
+        }
+
+        .stat-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--red);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .35s .1s;
+        }
+
+        .stat-box.in::after {
+            transform: scaleX(1);
+        }
+
+        .stat-box:hover {
+            border-color: rgba(230, 57, 70, .4);
+        }
+
+        .stat-n {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(36px, 4vw, 52px);
+            line-height: 1;
+            color: var(--white);
+            letter-spacing: .02em;
+        }
+
+        .stat-n span {
+            color: var(--red);
+        }
+
+        .stat-lbl {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .15em;
+            color: var(--grey);
+            margin-top: 6px;
+            text-transform: uppercase;
+        }
+
+        .stat-sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, .35);
+            margin-top: 4px;
+        }
+
+        .facts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .fact-block {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px 22px;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity .4s .25s, transform .4s .25s;
+        }
+
+        .fact-block.in {
+            opacity: 1;
+            transform: none;
+        }
+
+        .fact-block h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .18em;
+            color: var(--red);
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .fact-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            font-size: 14px;
+            color: rgba(255, 255, 255, .75);
+        }
+
+        .fact-row:last-child {
+            border-bottom: none;
+        }
+
+        .fact-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .val-green {
+            color: #4ade80;
+        }
+
+        .val-red {
+            color: var(--red);
+        }
+
+        .val-grey {
+            color: var(--grey);
+        }
+
+        /* Bar inside fact row */
+        .mini-bar-wrap {
+            flex: 1;
+            margin: 0 14px;
+            height: 3px;
+            background: rgba(255, 255, 255, .06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .mini-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1.4s ease;
+        }
+
+        .bar-red {
+            background: var(--red);
+        }
+
+        .bar-green {
+            background: #4ade80;
+        }
+
+        /* ── SLIDE 3: CHALLENGES ── */
+        .ch-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .ch-block {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 22px;
+        }
+
+        .ch-block h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .18em;
+            color: var(--red);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .diff-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .diff-row:last-child {
+            border-bottom: none;
+        }
+
+        .diff-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .diff-name {
+            flex: 1;
+            color: var(--white);
+        }
+
+        .diff-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 3px;
+            text-decoration: none;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .diff-badge a {
+            color: inherit;
+            text-decoration: none;
+            pointer-events: none;
+        }
+
+        .d-ve .diff-dot {
+            background: #4ade80;
+        }
+
+        .d-ve .diff-badge {
+            background: rgba(74, 222, 128, .12);
+            color: #4ade80;
+        }
+
+        .d-e .diff-dot {
+            background: #86efac;
+        }
+
+        .d-e .diff-badge {
+            background: rgba(134, 239, 172, .1);
+            color: #86efac;
+        }
+
+        .d-m .diff-dot {
+            background: var(--gold);
+        }
+
+        .d-m .diff-badge {
+            background: rgba(240, 192, 64, .12);
+            color: var(--gold);
+        }
+
+        .d-h .diff-dot {
+            background: #fb923c;
+        }
+
+        .d-h .diff-badge {
+            background: rgba(251, 146, 60, .12);
+            color: #fb923c;
+        }
+
+        .d-i .diff-dot {
+            background: var(--red);
+        }
+
+        .d-i .diff-badge {
+            background: var(--red-dim);
+            color: var(--red);
+        }
+
+        .solve-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            font-size: 14px;
+        }
+
+        .solve-row:last-child {
+            border-bottom: none;
+        }
+
+        .solve-name {
+            flex: 1;
+            color: rgba(255, 255, 255, .85);
+        }
+
+        .solve-track {
+            flex: 0 0 100px;
+            height: 5px;
+            background: rgba(255, 255, 255, .07);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .solve-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1.3s ease;
+        }
+
+        .f-full {
+            background: #4ade80;
+        }
+
+        .f-high {
+            background: var(--gold);
+        }
+
+        .f-zero {
+            background: rgba(230, 57, 70, .5);
+        }
+
+        .solve-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            width: 36px;
+            text-align: right;
+        }
+
+        .pct-green {
+            color: #4ade80;
+        }
+
+        .pct-gold {
+            color: var(--gold);
+        }
+
+        .pct-red {
+            color: var(--red);
+        }
+
+        .cat-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .cat-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 3px;
+            background: var(--grey-dim);
+            color: rgba(255, 255, 255, .6);
+            border: 1px solid var(--border);
+            letter-spacing: .08em;
+        }
+
+        /* ── SLIDE 4: LEADERBOARD ── */
+        .lb-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            max-width: 980px;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 16px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            cursor: default;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity .35s, transform .35s, background .2s, border-color .2s;
+        }
+
+        .lb-row.in {
+            opacity: 1;
+            transform: none;
+        }
+
+        .lb-row:hover {
+            background: var(--bg3);
+        }
+
+        .lb-row.r1 {
+            border-color: rgba(240, 192, 64, .35);
+            background: rgba(240, 192, 64, .05);
+        }
+
+        .lb-row.r2 {
+            border-color: rgba(200, 200, 200, .25);
+            background: rgba(200, 200, 200, .04);
+        }
+
+        .lb-row.r3 {
+            border-color: rgba(200, 121, 65, .3);
+            background: rgba(200, 121, 65, .04);
+        }
+
+        .lb-rank {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .lb-row.r1 .lb-rank {
+            color: var(--gold);
+        }
+
+        .lb-row.r2 .lb-rank {
+            color: var(--silver);
+        }
+
+        .lb-row.r3 .lb-rank {
+            color: var(--bronze);
+        }
+
+        .lb-rank.dim {
+            color: rgba(255, 255, 255, .25);
+            font-size: 14px;
+        }
+
+        .lb-name {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            letter-spacing: .02em;
+        }
+
+        .lb-bar-wrap {
+            width: 118px;
+            height: 4px;
+            background: rgba(255, 255, 255, .07);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .lb-bar {
+            height: 100%;
+            background: var(--red);
+            border-radius: 2px;
+            transition: width 1.4s ease;
+        }
+
+        .lb-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--white);
+            width: 92px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .lb-medal {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-slide {
+            padding-top: 40px;
+            padding-bottom: 56px;
+        }
+
+        .leaderboard-slide .divider {
+            margin: 12px 0 20px;
+        }
+
+        .lb-row.suspense {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lb-row.suspense::after {
+            content: 'REVEAL SOON';
+            position: absolute;
+            top: 50%;
+            right: 18px;
+            transform: translateY(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .22em;
+            color: rgba(255, 255, 255, .36);
+            pointer-events: none;
+        }
+
+        .lb-row.suspense .lb-name,
+        .lb-row.suspense .lb-score,
+        .lb-row.suspense .lb-bar-wrap,
+        .lb-row.suspense .lb-medal {
+            filter: blur(6px);
+            opacity: .85;
+        }
+
+        .lb-row.suspense .lb-rank {
+            opacity: .92;
+        }
+
+        /* ── SLIDE 5: WINNERS ── */
+        .winners-slide {
+            justify-content: flex-start;
+            padding-top: 42px;
+            padding-bottom: 108px;
+            overflow: hidden;
+        }
+
+        .winners-slide::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 96px;
+            width: min(72vw, 1080px);
+            height: 180px;
+            transform: translateX(-50%);
+            background:
+                radial-gradient(circle at center, rgba(230, 57, 70, .12), rgba(230, 57, 70, 0) 62%);
+            pointer-events: none;
+            filter: blur(18px);
+        }
+
+        .w-instruction {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: .2em;
+            color: var(--grey);
+            margin-bottom: 22px;
+            animation: pulse-txt 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-txt {
+
+            0%,
+            100% {
+                opacity: .45;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .podium {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 20px;
+            flex: 1;
+            width: min(100%, 1260px);
+            margin: 10px auto 0;
+            padding: 32px 12px 0;
+        }
+
+        .podium::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -14px;
+            width: min(94%, 1120px);
+            height: 18px;
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .08), rgba(255, 255, 255, .02));
+            opacity: .7;
+        }
+
+        .w-card {
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(40px) scale(.96);
+            transition: opacity .6s cubic-bezier(.34, 1.4, .64, 1), transform .6s cubic-bezier(.34, 1.4, .64, 1);
+            flex: 1;
+            max-width: 360px;
+        }
+
+        .w-card.show {
+            opacity: 1;
+            transform: none;
+        }
+
+        .w-card.p1 {
+            order: 2;
+            max-width: 390px;
+        }
+
+        .w-card.p2 {
+            order: 1;
+        }
+
+        .w-card.p3 {
+            order: 3;
+        }
+
+        .w-inner {
+            border-radius: 6px 6px 0 0;
+            padding: 32px 24px 28px;
+            text-align: center;
+            flex: 1;
+            border: 1.5px solid;
+            border-bottom: none;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
+        }
+
+        .w-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: .04;
+            background: currentColor;
+        }
+
+        .p1 .w-inner {
+            border-color: var(--gold);
+            color: var(--gold);
+            box-shadow: 0 28px 72px rgba(240, 192, 64, .12);
+        }
+
+        .p2 .w-inner {
+            border-color: var(--silver);
+            color: var(--silver);
+        }
+
+        .p3 .w-inner {
+            border-color: var(--bronze);
+            color: var(--bronze);
+        }
+
+        .w-place-lbl {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 12px;
+            opacity: .7;
+        }
+
+        .w-trophy {
+            font-size: 34px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .w-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            letter-spacing: .05em;
+            color: var(--white);
+            display: block;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .p1 .w-name {
+            font-size: 48px;
+        }
+
+        .w-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--grey);
+            display: block;
+            margin-bottom: 18px;
+        }
+
+        .w-hr {
+            border: none;
+            border-top: 1px solid currentColor;
+            opacity: .2;
+            margin-bottom: 12px;
+        }
+
+        .w-members {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, .6);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .w-step {
+            height: 16px;
+            border-radius: 0 0 4px 4px;
+            border: 1.5px solid;
+            border-top: none;
+            opacity: .92;
+        }
+
+        .p1 .w-step {
+            border-color: var(--gold);
+            background: linear-gradient(180deg, rgba(240, 192, 64, .32), rgba(240, 192, 64, .12));
+        }
+
+        .p2 .w-step {
+            border-color: var(--silver);
+            background: linear-gradient(180deg, rgba(200, 200, 200, .2), rgba(200, 200, 200, .08));
+        }
+
+        .p3 .w-step {
+            border-color: var(--bronze);
+            background: linear-gradient(180deg, rgba(200, 121, 65, .24), rgba(200, 121, 65, .08));
+        }
+
+        .w-card.show.p1 {
+            transform: translateY(-20px) scale(1.06);
+        }
+
+        .w-card.show.p2,
+        .w-card.show.p3 {
+            transform: translateY(0) scale(1.01);
+        }
+
+        /* podium heights for visual columns */
+        .w-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .w-col.h1 {
+            height: 340px;
+        }
+
+        .w-col.h2 {
+            height: 300px;
+        }
+
+        .w-col.h3 {
+            height: 280px;
+        }
+
+        /* ── SLIDE 6: CLOSING ── */
+        .s-close {
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .s-close>*:not(.bg-word) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .s-close .bg-word {
+            position: absolute;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(220px, 28vw, 620px);
+            color: rgba(230, 57, 70, .04);
+            bottom: clamp(-12px, -1vw, 0px);
+            right: clamp(12px, 4vw, 64px);
+            pointer-events: none;
+            letter-spacing: -.02em;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .close-heading {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(54px, 9vw, 110px);
+            line-height: .95;
+            letter-spacing: .02em;
+            color: var(--white);
+            opacity: 0;
+            animation: fadeUp .6s .3s forwards;
+        }
+
+        .close-heading em {
+            color: var(--red);
+            font-style: normal;
+        }
+
+        .close-sub {
+            font-size: 18px;
+            font-weight: 300;
+            color: var(--grey);
+            letter-spacing: .15em;
+            margin: 16px 0 36px;
+            opacity: 0;
+            animation: fadeUp .6s .5s forwards;
+        }
+
+        .close-nums {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp .6s .65s forwards;
+            margin-bottom: 40px;
+        }
+
+        .close-num {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .close-n {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 40px;
+            color: var(--red);
+            line-height: 1;
+        }
+
+        .close-l {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .15em;
+            color: var(--grey);
+            text-transform: uppercase;
+        }
+
+        .close-badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            letter-spacing: .12em;
+            padding: 12px 28px;
+            border: 1.5px solid rgba(230, 57, 70, .5);
+            border-radius: 4px;
+            color: var(--red);
+            background: var(--red-dim);
+            opacity: 0;
+            animation: fadeUp .6s .8s forwards;
+        }
+
+        .close-org {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .15em;
+            color: rgba(255, 255, 255, .25);
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeUp .6s .95s forwards;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Confetti */
+        .confetti-piece {
+            position: fixed;
+            width: 7px;
+            height: 7px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            animation: cfall 2.2s ease-in forwards;
+        }
+
+        @keyframes cfall {
+            0% {
+                opacity: 1;
+                transform: translateY(-10px) rotate(0deg) translateX(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(600deg) translateX(var(--dx));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .s-close .bg-word {
+                font-size: clamp(140px, 42vw, 320px);
+                right: clamp(8px, 3vw, 20px);
+                bottom: 18px;
+                opacity: .9;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .slide {
+                padding: 88px 20px 144px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .slide-tag {
+                font-size: 10px;
+                margin-bottom: 8px;
+            }
+
+            .slide-heading {
+                font-size: clamp(34px, 13vw, 52px);
+                line-height: .94;
+            }
+
+            .divider {
+                margin: 12px 0 20px;
+            }
+
+            .nav {
+                bottom: 16px;
+                gap: 14px;
+                padding: 0 14px;
+            }
+
+            .nav-btn {
+                font-size: 11px;
+                padding: 10px 16px;
+                letter-spacing: .1em;
+            }
+
+            .nav-dots {
+                gap: 6px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .stat-box {
+                padding: 16px 14px;
+            }
+
+            .stat-n {
+                font-size: clamp(34px, 14vw, 44px);
+            }
+
+            .stat-lbl {
+                font-size: 10px;
+                letter-spacing: .12em;
+            }
+
+            .stat-sub {
+                font-size: 12px;
+                line-height: 1.35;
+                overflow-wrap: anywhere;
+            }
+
+            .facts-row,
+            .ch-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .fact-block,
+            .ch-block {
+                padding: 18px 16px;
+            }
+
+            .fact-row,
+            .solve-row,
+            .diff-row {
+                font-size: 13px;
+            }
+
+            .fact-row {
+                gap: 10px;
+            }
+
+            .fact-val,
+            .solve-pct,
+            .cat-tag,
+            .diff-badge {
+                font-size: 12px;
+            }
+
+            .mini-bar-wrap {
+                margin: 0 8px;
+                min-width: 36px;
+            }
+
+            .leaderboard-slide {
+                padding-top: 88px;
+                padding-bottom: 144px;
+            }
+
+            .lb-list {
+                max-width: none;
+            }
+
+            .lb-row {
+                gap: 10px;
+                padding: 10px 12px;
+            }
+
+            .lb-bar-wrap {
+                display: none;
+            }
+
+            .lb-score {
+                width: auto;
+                min-width: 68px;
+                font-size: 11px;
+            }
+
+            .winners-slide {
+                padding: 88px 20px 144px;
+            }
+
+            .w-instruction {
+                margin-bottom: 16px;
+                font-size: 10px;
+                letter-spacing: .14em;
+            }
+
+            .podium {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+                padding: 0;
+                margin-top: 0;
+            }
+
+            .podium::before {
+                display: none;
+            }
+
+            .w-card,
+            .w-card.p1 {
+                max-width: none;
+            }
+
+            .w-card.p1,
+            .w-card.p2,
+            .w-card.p3 {
+                order: initial;
+            }
+
+            .w-card.show.p1,
+            .w-card.show.p2,
+            .w-card.show.p3 {
+                transform: none;
+            }
+
+            .w-inner {
+                padding: 24px 18px 20px;
+            }
+
+            .w-name {
+                font-size: 30px;
+            }
+
+            .p1 .w-name {
+                font-size: 38px;
+            }
+
+            .w-members {
+                font-size: 13px;
+                line-height: 1.55;
+                overflow-wrap: anywhere;
+            }
+
+            .s-close {
+                padding: 28px 24px 120px;
+                justify-content: flex-start;
+            }
+
+            .s-close .bg-word {
+                font-size: clamp(86px, 22vw, 112px);
+                right: 8px;
+                bottom: 44px;
+                opacity: .6;
+            }
+
+            .close-heading {
+                font-size: clamp(42px, 15vw, 62px);
+                line-height: .92;
+                max-width: 280px;
+            }
+
+            .close-sub {
+                font-size: 15px;
+                letter-spacing: .12em;
+                margin: 12px 0 26px;
+                max-width: 240px;
+            }
+
+            .close-nums {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 18px 20px;
+                margin-bottom: 28px;
+                width: min(100%, 272px);
+                max-width: 272px;
+            }
+
+            .close-n {
+                font-size: 32px;
+            }
+
+            .close-num {
+                gap: 2px;
+            }
+
+            .close-l,
+            .close-org {
+                font-size: 10px;
+                letter-spacing: .11em;
+            }
+
+            .close-badge {
+                display: block;
+                width: min(100%, 272px);
+                font-size: 11px;
+                line-height: 1.5;
+                letter-spacing: .08em;
+                text-align: center;
+                padding: 10px 16px;
+                max-width: 272px;
+            }
+
+            .close-org {
+                margin-top: 16px;
+                max-width: 272px;
+                line-height: 1.5;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="progress-bar" id="progressBar" style="width:16.67%"></div>
+
+    <div class="deck" id="deck">
+
+        <!-- ── SLIDE 1: TITLE ── -->
+
+        <div class="slide active from-right" data-index="0">
+            <div class="bg-word">CTF</div>
+            <div class="title-label">PRINCE SULTAN UNIVERSITY — CCIS</div>
+            <div class="title-logos">
+                <div class="title-logo-chip">
+                    <img src="/assets/img/acm.png" alt="ACM student chapter logo">
+                </div>
+                <div class="title-logo-chip">
+                    <img src="/assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University logo">
+                </div>
+                <div class="title-logo-chip">
+                    <img src="/assets/img/ccis-logo.png" alt="CCIS logo">
+                </div>
+            </div>
+            <div class="title-main">PSU <span>CTF</span></div>
+            <div class="title-year">2 0 2 6</div>
+            <div class="title-rule"></div>
+            <div class="title-pills">
+                <span class="pill pill-red">11 TEAMS</span>
+                <span class="pill pill-red">16+ CHALLENGES</span>
+                <span class="pill pill-red">852 SUBMISSIONS</span>
+                <span class="pill pill-grey">COMPETITION REPORT</span>
+            </div>
+            <div class="title-credit">Built by ACM Student Chapter + CyberTech Club</div>
+        </div>
+
+        <!-- ── SLIDE 2: STATS ── -->
+
+        <div class="slide from-right" data-index="1">
+            <div class="slide-tag">01 — Overview</div>
+            <div class="slide-heading">Competition <em>Stats</em></div>
+            <div class="divider"></div>
+
+            <div class="stats-row">
+                <div class="stat-box" data-delay="0">
+                    <div class="stat-n">11</div>
+                    <div class="stat-lbl">Teams</div>
+                    <div class="stat-sub">All enrolled students</div>
+                </div>
+                <div class="stat-box" data-delay="80">
+                    <div class="stat-n">16<span>+</span></div>
+                    <div class="stat-lbl">Challenges</div>
+                    <div class="stat-sub">Very Easy → Insane</div>
+                </div>
+                <div class="stat-box" data-delay="160">
+                    <div class="stat-n">852</div>
+                    <div class="stat-lbl">Submissions</div>
+                    <div class="stat-sub">Total flag attempts</div>
+                </div>
+                <div class="stat-box" data-delay="240">
+                    <div class="stat-n"><span>10.4</span>%</div>
+                    <div class="stat-lbl">Solve Rate</div>
+                    <div class="stat-sub">89 solves / 763 fails</div>
+                </div>
+            </div>
+
+            <div class="facts-row">
+                <div class="fact-block" data-delay="0">
+                    <h4>Submission Breakdown</h4>
+                    <div class="fact-row">
+                        <span>Successful solves</span>
+                        <div class="mini-bar-wrap">
+                            <div class="mini-bar bar-green" style="width:10.4%"></div>
+                        </div>
+                        <span class="fact-val val-green">89</span>
+                    </div>
+                    <div class="fact-row">
+                        <span>Failed attempts</span>
+                        <div class="mini-bar-wrap">
+                            <div class="mini-bar bar-red" style="width:89.6%"></div>
+                        </div>
+                        <span class="fact-val val-red">763</span>
+                    </div>
+                    <div class="fact-row">
+                        <span>Winning score</span>
+                        <span class="fact-val val-grey">3,800 pts</span>
+                    </div>
+                </div>
+                <div class="fact-block" data-delay="100">
+                    <h4>Notable Challenges</h4>
+                    <div class="fact-row"><span>Rusty Archive</span><span class="fact-val val-green">100% solved</span>
+                    </div>
+                    <div class="fact-row"><span>Job Portal</span><span class="fact-val val-green">100% solved</span>
+                    </div>
+                    <div class="fact-row"><span>News Letter</span><span class="fact-val val-red">0% solved</span></div>
+                    <div class="fact-row"><span>Is This The End</span><span class="fact-val val-red">0% solved</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── SLIDE 3: CHALLENGES ── -->
+
+        <div class="slide from-right" data-index="2">
+            <div class="slide-tag">02 — Challenges</div>
+            <div class="slide-heading">Categories & <em>Difficulty</em></div>
+            <div class="divider"></div>
+
+            <div class="ch-grid">
+                <div>
+                    <div class="ch-block" style="margin-bottom:16px">
+                        <h4>Difficulty Tiers</h4>
+                        <div class="diff-row d-ve">
+                            <div class="diff-dot"></div><span class="diff-name">Very Easy</span><span
+                                class="diff-badge">100–200 pts</span>
+                        </div>
+                        <div class="diff-row d-e">
+                            <div class="diff-dot"></div><span class="diff-name">Easy</span> <span
+                                class="diff-badge">300–400 pts</span>
+                        </div>
+                        <div class="diff-row d-m">
+                            <div class="diff-dot"></div><span class="diff-name">Medium</span> <span
+                                class="diff-badge">500–600 pts</span>
+                        </div>
+                        <div class="diff-row d-h">
+                            <div class="diff-dot"></div><span class="diff-name">Hard</span> <span
+                                class="diff-badge">700–800 pts</span>
+                        </div>
+                        <div class="diff-row d-i">
+                            <div class="diff-dot"></div><span class="diff-name">Insane</span> <span
+                                class="diff-badge">900–1000 pts</span>
+                        </div>
+                    </div>
+                    <div class="ch-block">
+                        <h4>Categories</h4>
+                        <div class="cat-tags">
+                            <span class="cat-tag">Web</span>
+                            <span class="cat-tag">Forensics</span>
+                            <span class="cat-tag">Crypto</span>
+                            <span class="cat-tag">OSINT</span>
+                            <span class="cat-tag">Reverse Eng.</span>
+                            <span class="cat-tag">Binary / Pwn</span>
+                            <span class="cat-tag">Misc</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ch-block">
+                    <h4>Solve Rates Per Challenge</h4>
+                    <div class="solve-row"><span class="solve-name">Rusty Archive</span>
+                        <div class="solve-track">
+                            <div class="solve-fill f-full" style="width:100%"></div>
+                        </div><span class="solve-pct pct-green">100%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">Job Portal</span>
+                        <div class="solve-track">
+                            <div class="solve-fill f-full" style="width:100%"></div>
+                        </div><span class="solve-pct pct-green">100%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">Easy Challenges</span>
+                        <div class="solve-track">
+                            <div class="solve-fill f-high" style="width:72%"></div>
+                        </div><span class="solve-pct pct-gold">~72%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">Medium Challenges</span>
+                        <div class="solve-track">
+                            <div class="solve-fill f-high" style="width:45%"></div>
+                        </div><span class="solve-pct pct-gold">~45%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">Hard Challenges</span>
+                        <div class="solve-track">
+                            <div class="solve-fill" style="width:18%; background:#fb923c"></div>
+                        </div><span class="solve-pct" style="color:#fb923c">~18%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">Insane Challenges</span>
+                        <div class="solve-track">
+                            <div class="solve-fill" style="width:8%; background:#fb923c"></div>
+                        </div><span class="solve-pct" style="color:#fb923c">~8%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">News Letter</span>
+                        <div class="solve-track">
+                            <div class="solve-fill f-zero" style="width:3%"></div>
+                        </div><span class="solve-pct pct-red">0%</span>
+                    </div>
+                    <div class="solve-row"><span class="solve-name">Is This The End</span>
+                        <div class="solve-track">
+                            <div class="solve-fill f-zero" style="width:3%"></div>
+                        </div><span class="solve-pct pct-red">0%</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── SLIDE 4: LEADERBOARD ── -->
+
+        <div class="slide from-right leaderboard-slide" data-index="3">
+            <div class="slide-tag">03 — Final Standings</div>
+            <div class="slide-heading">Full <em>Leaderboard</em></div>
+            <div class="divider"></div>
+
+            <div class="lb-list">
+                <div class="lb-row r1 suspense" data-d="0"> <span class="lb-rank">1</span><span class="lb-medal">🥇</span><span
+                        class="lb-name">HZ</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:100%"></div>
+                    </div><span class="lb-score">3,800 pts</span>
+                </div>
+                <div class="lb-row r2 suspense" data-d="60"> <span class="lb-rank">2</span><span class="lb-medal">🥈</span><span
+                        class="lb-name">TheVault</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:73.7%"></div>
+                    </div><span class="lb-score">2,800 pts</span>
+                </div>
+                <div class="lb-row r3 suspense" data-d="120"><span class="lb-rank">3</span><span class="lb-medal">🥉</span><span
+                        class="lb-name">ZERO DAY</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:55.3%"></div>
+                    </div><span class="lb-score">2,100 pts</span>
+                </div>
+                <div class="lb-row" data-d="180"><span class="lb-rank dim">4</span><span class="lb-medal"> </span><span
+                        class="lb-name">Gotcha_flag</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:52.6%"></div>
+                    </div><span class="lb-score">2,000 pts</span>
+                </div>
+                <div class="lb-row" data-d="240"><span class="lb-rank dim">5</span><span class="lb-medal"> </span><span
+                        class="lb-name">ASM</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:50%"></div>
+                    </div><span class="lb-score">1,900 pts</span>
+                </div>
+                <div class="lb-row" data-d="300"><span class="lb-rank dim">6</span><span class="lb-medal"> </span><span
+                        class="lb-name">checkmate</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:50%"></div>
+                    </div><span class="lb-score">1,900 pts</span>
+                </div>
+                <div class="lb-row" data-d="360"><span class="lb-rank dim">7</span><span class="lb-medal"> </span><span
+                        class="lb-name">Aha</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:34.2%"></div>
+                    </div><span class="lb-score">1,300 pts</span>
+                </div>
+                <div class="lb-row" data-d="420"><span class="lb-rank dim">8</span><span class="lb-medal"> </span><span
+                        class="lb-name">Cybercrackers</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:34.2%"></div>
+                    </div><span class="lb-score">1,300 pts</span>
+                </div>
+                <div class="lb-row" data-d="480"><span class="lb-rank dim">9</span><span class="lb-medal"> </span><span
+                        class="lb-name">404</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:26.3%"></div>
+                    </div><span class="lb-score">1,000 pts</span>
+                </div>
+                <div class="lb-row" data-d="540"><span class="lb-rank dim">10</span><span class="lb-medal"> </span><span
+                        class="lb-name">MAM</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:23.7%"></div>
+                    </div><span class="lb-score">900 pts</span>
+                </div>
+                <div class="lb-row" data-d="600"><span class="lb-rank dim">11</span><span class="lb-medal"> </span><span
+                        class="lb-name">Red Team</span>
+                    <div class="lb-bar-wrap">
+                        <div class="lb-bar" style="width:21.1%"></div>
+                    </div><span class="lb-score">800 pts</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── SLIDE 5: WINNERS ── -->
+
+        <div class="slide from-right winners-slide" data-index="4" id="winnersSlide">
+            <div class="slide-tag">04 — Podium</div>
+            <div class="slide-heading">The <em>Winners</em></div>
+            <div class="divider"></div>
+            <div class="w-instruction" id="wInstruct">Click anywhere to reveal — 3rd → 2nd → 1st</div>
+
+            <div class="podium">
+                <!-- 3rd -->
+                <div class="w-card p3" id="w3">
+                    <div class="w-inner">
+                        <span class="w-place-lbl">3rd Place</span>
+                        <span class="w-trophy">🥉</span>
+                        <span class="w-name">ZERO DAY</span>
+                        <span class="w-score">2,100 pts</span>
+                        <hr class="w-hr">
+                        <div class="w-members">Omar Fahad Alkhalifah, Abdullah Alanazi</div>
+                    </div>
+                    <div class="w-step"></div>
+                </div>
+
+                <!-- 1st -->
+                <div class="w-card p1" id="w1">
+                    <div class="w-inner">
+                        <span class="w-place-lbl">1st Place</span>
+                        <span class="w-trophy">🏆</span>
+                        <span class="w-name">HZ</span>
+                        <span class="w-score">3,800 pts</span>
+                        <hr class="w-hr">
+                        <div class="w-members">Hasan Belal Farhat, Hazim Khalid Alhatim</div>
+                    </div>
+                    <div class="w-step"></div>
+                </div>
+
+                <!-- 2nd -->
+                <div class="w-card p2" id="w2">
+                    <div class="w-inner">
+                        <span class="w-place-lbl">2nd Place</span>
+                        <span class="w-trophy">🥈</span>
+                        <span class="w-name">THE VAULT</span>
+                        <span class="w-score">2,800 pts</span>
+                        <hr class="w-hr">
+                        <div class="w-members">الجوهره الجبير، الشيماء بابعير، جودي وسيم آل حسان</div>
+                    </div>
+                    <div class="w-step"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── SLIDE 6: CLOSING ── -->
+
+        <div class="slide from-right s-close" data-index="5">
+            <div class="bg-word">GG</div>
+            <div class="slide-tag">PSU CTF 2026</div>
+            <div class="close-heading">Well Played,<br><em>Hackers.</em></div>
+            <div class="close-sub">See you next round</div>
+            <div class="close-nums">
+                <div class="close-num"><span class="close-n">11</span><span class="close-l">Teams</span></div>
+                <div class="close-num"><span class="close-n">852</span><span class="close-l">Submissions</span></div>
+                <div class="close-num"><span class="close-n">89</span><span class="close-l">Flags Captured</span></div>
+                <div class="close-num"><span class="close-n">1</span><span class="close-l">Champion</span></div>
+            </div>
+            <div class="close-badge">Congratulations to All Participants</div>
+            <div class="close-org">Organized by CCIS — Prince Sultan University</div>
+        </div>
+
+    </div>
+
+    <!-- Navigation -->
+
+    <div class="nav">
+        <button class="nav-btn" id="prevBtn" disabled onclick="go(-1)">← Prev</button>
+        <div class="nav-dots" id="navDots"></div>
+        <button class="nav-btn" id="nextBtn" onclick="go(1)">Next →</button>
+    </div>
+
+    <script>
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const total = slides.length;
+        let cur = 0;
+
+        // Build dots
+        const dotsWrap = document.getElementById('navDots');
+        slides.forEach((_, i) => {
+            const d = document.createElement('div');
+            d.className = 'dot' + (i === 0 ? ' active' : '');
+            d.onclick = () => goTo(i);
+            dotsWrap.appendChild(d);
+        });
+
+        function updateNav() {
+            document.getElementById('prevBtn').disabled = cur === 0;
+            document.getElementById('nextBtn').disabled = cur === total - 1;
+            document.getElementById('progressBar').style.width = ((cur + 1) / total * 100) + '%';
+            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+        }
+
+        function go(dir) { goTo(cur + dir); }
+
+        function goTo(next) {
+            if (next < 0 || next >= total || next === cur) return;
+            const dir = next > cur ? 1 : -1;
+
+            slides[cur].classList.remove('active');
+            slides[cur].classList.add(dir > 0 ? 'from-right' : 'from-left');
+            // force reflow
+            void slides[cur].offsetWidth;
+
+            cur = next;
+
+            slides[cur].classList.remove('from-right', 'from-left');
+            slides[cur].style.transform = dir > 0 ? 'translateX(80px)' : 'translateX(-80px)';
+            slides[cur].style.opacity = '0';
+            slides[cur].classList.add('active');
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    slides[cur].style.transition = 'opacity .45s ease, transform .45s ease';
+                    slides[cur].style.transform = 'translateX(0)';
+                    slides[cur].style.opacity = '1';
+                });
+            });
+
+            setTimeout(() => {
+                slides[cur].style.transition = '';
+                slides[cur].style.transform = '';
+                slides[cur].style.opacity = '';
+            }, 500);
+
+            updateNav();
+            onEnter(cur);
+        }
+
+        function onEnter(idx) {
+            if (idx === 1) animateStats();
+            if (idx === 3) animateLB();
+            if (idx === 4) resetWinners();
+        }
+
+        /* Stats slide */
+        function animateStats() {
+            document.querySelectorAll('.stat-box').forEach(el => {
+                const d = parseInt(el.dataset.delay || 0);
+                setTimeout(() => el.classList.add('in'), d);
+            });
+            document.querySelectorAll('.fact-block').forEach(el => {
+                const d = parseInt(el.dataset.delay || 0);
+                setTimeout(() => el.classList.add('in'), 200 + d);
+            });
+        }
+
+        /* Leaderboard */
+        function animateLB() {
+            document.querySelectorAll('.lb-row').forEach(el => {
+                el.classList.remove('in');
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(30px)';
+                const d = parseInt(el.dataset.d || 0);
+                setTimeout(() => {
+                    el.style.transition = 'opacity .35s ease, transform .35s ease, background .2s, border-color .2s';
+                    el.style.opacity = '1';
+                    el.style.transform = 'none';
+                }, d);
+            });
+        }
+
+        /* Winners */
+        let wStep = 0;
+        function resetWinners() {
+            wStep = 0;
+            ['w1', 'w2', 'w3'].forEach(id => document.getElementById(id).classList.remove('show'));
+            document.getElementById('wInstruct').textContent = 'Click anywhere to reveal — 3rd → 2nd → 1st';
+        }
+
+        document.getElementById('winnersSlide').addEventListener('click', () => {
+            wStep++;
+            if (wStep === 1) {
+                document.getElementById('w3').classList.add('show');
+                document.getElementById('wInstruct').textContent = 'Click for 2nd place →';
+            } else if (wStep === 2) {
+                document.getElementById('w2').classList.add('show');
+                document.getElementById('wInstruct').textContent = 'Click for 1st place →';
+            } else if (wStep === 3) {
+                document.getElementById('w1').classList.add('show');
+                document.getElementById('wInstruct').textContent = '🏆  Congratulations!';
+                confetti();
+            }
+        });
+
+        function confetti() {
+            const colors = ['#e63946', '#f0c040', '#f5f5f5', '#4ade80', '#fb923c'];
+            for (let i = 0; i < 70; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'confetti-piece';
+                    el.style.cssText = `
+        left:${15 + Math.random() * 70}vw;
+        top:0;
+        background:${colors[i % colors.length]};
+        border-radius:${Math.random() > .5 ? '50%' : '2px'};
+        --dx:${(Math.random() * 160 - 80)}px;
+        animation-duration:${1.8 + Math.random() * .8}s;
+        animation-delay:${i * 18}ms;
+      `;
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 2800);
+                }, i * 18);
+            }
+        }
+
+        /* Keyboard */
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+            if ((e.key === ' ' || e.key === 'Enter') && cur === 4) {
+                e.preventDefault();
+                document.getElementById('winnersSlide').click();
+            }
+        });
+
+        updateNav();
+    </script>
+
+</body>
+
+</html>

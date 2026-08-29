@@ -10,7 +10,8 @@
   <url><loc>https://acm-psu.shoug-tech.com/archive-project.html</loc><priority>0.7</priority></url>
   <url><loc>https://acm-psu.shoug-tech.com/archive.html</loc><priority>0.8</priority></url>
   <url><loc>https://acm-psu.shoug-tech.com/ctf-workshop-archive.html</loc><priority>0.6</priority></url>
-  <url><loc>https://acm-psu.shoug-tech.com/projects/ai-programming-jam-26/workshop-content/day-1-planning-development-workflow.html</loc><priority>0.7</priority></url>
-  <url><loc>https://acm-psu.shoug-tech.com/projects/ai-programming-jam-26/workshop-content/day-2-full-stack-development-debugging.html</loc><priority>0.7</priority></url>
-  <url><loc>https://acm-psu.shoug-tech.com/projects/ai-programming-jam-26/workshop-content/day-3-deployment-discovery-optimization.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acm-psu.shoug-tech.com/ctf-2-resources.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acm-psu.shoug-tech.com/projects/programming-jams/ai-programming-jam-26/workshop-content/day-1-planning-development-workflow.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acm-psu.shoug-tech.com/projects/programming-jams/ai-programming-jam-26/workshop-content/day-2-full-stack-development-debugging.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acm-psu.shoug-tech.com/projects/programming-jams/ai-programming-jam-26/workshop-content/day-3-deployment-discovery-optimization.html</loc><priority>0.7</priority></url>
 </urlset>

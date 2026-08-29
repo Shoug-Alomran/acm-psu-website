@@ -250,7 +250,12 @@
 
         var bioSection = profileDialog.querySelector('[data-profile-bio-section]');
         var bio = card.dataset.personBio || '';
-        setProfile('bio', bio);
+        var bioContainer = profileDialog.querySelector('[data-profile-bio]');
+        var bioParagraphs = bio.trim().split(/\n\s*\n/).filter(Boolean);
+        bioContainer.innerHTML = bioParagraphs.map(function (paragraph, index) {
+            return '<p' + (index === 0 ? ' class="bio-lead"' : '') + '>' +
+                esc(paragraph.trim()) + '</p>';
+        }).join('');
         bioSection.hidden = !bio;
 
         var majorRow = profileDialog.querySelector('[data-profile-major-row]');
