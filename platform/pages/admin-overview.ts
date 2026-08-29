@@ -6,6 +6,7 @@
  * from the audit log, so a new committee can see what has been happening
  * without having to ask the previous one.
  */
+
 import { h, render } from '../lib/dom.js';
 
 import {
@@ -40,6 +41,23 @@ import {
   enumLabel,
 } from '../lib/format.js';
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message?: unknown }).message === 'string'
+  ) {
+    return (error as { message: string }).message;
+  }
+
+  return 'An unknown error occurred.';
+}
+
 function queueRow(
   label: string,
   value: number,
@@ -51,44 +69,72 @@ function queueRow(
     {
       class: 'browser-row',
       href,
-      style: { textDecoration: 'none' },
+      style: {
+        textDecoration: 'none',
+      },
     },
 
     h(
       'div',
-      { class: 'fname' },
-      h('span', { class: 'icon' }, value > 0 ? '●' : '○'),
-      h('span', label),
+      {
+        class: 'fname',
+      },
+
+      h(
+        'span',
+        {
+          class: 'icon',
+        },
+        value > 0
+          ? '●'
+          : '○',
+      ),
+
+      h(
+        'span',
+        label,
+      ),
     ),
 
     h(
       'span',
-      { class: 'fcell' },
-      value > 0 ? `${value} WAITING` : 'CLEAR',
+      {
+        class: 'fcell',
+      },
+      value > 0
+        ? `${value} WAITING`
+        : 'CLEAR',
     ),
 
     h(
       'span',
-      { class: 'fcell col-hide' },
+      {
+        class: 'fcell col-hide',
+      },
       hint,
     ),
 
     h(
       'span',
-      { class: 'fcell col-hide' },
+      {
+        class: 'fcell col-hide',
+      },
       '',
     ),
 
     h(
       'span',
-      { class: 'file-act' },
+      {
+        class: 'file-act',
+      },
       '→',
     ),
   );
 }
 
 async function start(): Promise<void> {
-  const viewer = await requireAdmin('reviewer');
+  const viewer =
+    await requireAdmin('reviewer');
 
   const content = shell(
     viewer,
@@ -96,132 +142,174 @@ async function start(): Promise<void> {
     'Overview',
   );
 
-  render(
-    content,
-    loading(),
-  );
-
-  try {
-    const [
-      counts,
-      activity,
-      chapter,
-      projectList,
-    ] = await Promise.all([
-      overview(),
-      auditLog(15),
-      setting<string>(
-        'current_chapter_year',
-        String(new Date().getFullYear()),
-      ),
-      projects(),
-    ]);
-
-    const active = projectList.filter(
-      (project) =>
-        project.status === 'active' ||
-        project.status === 'planning',
-    );
-
+  async function draw(): Promise<void> {
     render(
       content,
+      loading(),
+    );
 
-      pageHeader(
-        `ADMIN / CHAPTER ${chapter}`,
-        `Welcome, ${displayName(viewer)}`,
-        h(
-          'a',
-          {
-            class: 'btn-ghost',
-            href: '/portal/index.html',
-          },
-          'Member portal',
+    try {
+      /*
+       * These two are required for the dashboard itself.
+       * If either fails, the page cannot meaningfully render.
+       */
+      const [
+        counts,
+        projectList,
+      ] = await Promise.all([
+        overview(),
+        projects(),
+      ]);
+
+      /*
+       * These are useful but not critical.
+       * A broken audit read or missing setting should not destroy the entire
+       * admin dashboard.
+       */
+      const [
+        activity,
+        chapter,
+      ] = await Promise.all([
+        auditLog(15).catch((error) => {
+          console.error(
+            'Could not load recent admin activity:',
+            error,
+          );
+
+          return [];
+        }),
+
+        setting<string>(
+          'current_chapter_year',
+          String(
+            new Date().getFullYear(),
+          ),
+        ).catch((error) => {
+          console.error(
+            'Could not load current chapter year:',
+            error,
+          );
+
+          return String(
+            new Date().getFullYear(),
+          );
+        }),
+      ]);
+
+      const active =
+        projectList.filter(
+          (project) =>
+            project.status === 'active' ||
+            project.status === 'planning',
+        );
+
+      render(
+        content,
+
+        pageHeader(
+          `ADMIN / CHAPTER ${chapter}`,
+
+          `Welcome, ${displayName(viewer)}`,
+
+          h(
+            'a',
+            {
+              class: 'btn-ghost',
+              href: '/portal/index.html',
+            },
+            'Member portal',
+          ),
         ),
-      ),
 
-      statRow([
-        [
-          counts.members,
-          'Active members',
-        ],
-        [
-          counts.applications,
-          'Pending applications',
-        ],
-        [
-          counts.contributions + counts.submissions,
-          'Awaiting review',
-        ],
-        [
-          counts.activeProjects,
-          'Live projects',
-        ],
-      ]),
+        statRow([
+          [
+            counts.members,
+            'Active members',
+          ],
 
-      panel(
-        'Waiting on an admin',
+          [
+            counts.applications,
+            'Pending applications',
+          ],
 
-        h(
-          'div',
-          { class: 'browser-list' },
+          [
+            counts.contributions +
+            counts.submissions,
+            'Awaiting review',
+          ],
 
-          isClubAdmin(viewer)
-            ? queueRow(
+          [
+            counts.activeProjects,
+            'Live projects',
+          ],
+        ]),
+
+        panel(
+          'Waiting on an admin',
+
+          h(
+            'div',
+            {
+              class: 'browser-list',
+            },
+
+            isClubAdmin(viewer)
+              ? queueRow(
                 'Membership applications',
                 counts.applications,
                 '/admin/applications.html',
                 'Read, interview, approve or decline',
               )
-            : null,
+              : null,
 
-          queueRow(
-            'Contribution reviews',
-            counts.contributions,
-            '/admin/contributions.html',
-            'Verify work members have submitted',
-          ),
+            queueRow(
+              'Contribution reviews',
+              counts.contributions,
+              '/admin/contributions.html',
+              'Verify work members have submitted',
+            ),
 
-          queueRow(
-            'Archive submissions',
-            counts.submissions,
-            '/admin/submissions.html',
-            'Review files before they are published',
-          ),
+            queueRow(
+              'Archive submissions',
+              counts.submissions,
+              '/admin/submissions.html',
+              'Review files before they are published',
+            ),
 
-          isClubAdmin(viewer)
-            ? queueRow(
+            isClubAdmin(viewer)
+              ? queueRow(
                 'Position change requests',
                 counts.positionRequests,
                 '/admin/requests.html',
                 'Members asking for a different role',
               )
-            : null,
+              : null,
 
-          isClubAdmin(viewer)
-            ? queueRow(
+            isClubAdmin(viewer)
+              ? queueRow(
                 'Event position requests',
                 counts.eventRequests,
                 '/admin/requests.html',
                 'Members volunteering for event roles',
               )
-            : null,
+              : null,
 
-          isClubAdmin(viewer)
-            ? queueRow(
+            isClubAdmin(viewer)
+              ? queueRow(
                 'Membership and privacy requests',
                 counts.memberRequests,
                 '/admin/requests.html',
                 'Withdrawals, profile removal, account deletion',
               )
-            : null,
+              : null,
+          ),
         ),
-      ),
 
-      panel(
-        'Live projects and events',
+        panel(
+          'Live projects and events',
 
-        active.length
-          ? dataTable(
+          active.length
+            ? dataTable(
               [
                 'Project',
                 'Kind',
@@ -229,9 +317,10 @@ async function start(): Promise<void> {
                 'Starts',
               ],
 
-              active.map((project) => [
-                isClubAdmin(viewer)
-                  ? h(
+              active.map(
+                (project) => [
+                  isClubAdmin(viewer)
+                    ? h(
                       'a',
                       {
                         href:
@@ -239,40 +328,53 @@ async function start(): Promise<void> {
                       },
                       project.title,
                     )
-                  : project.title,
+                    : project.title,
 
-                h(
-                  'span',
-                  { class: 'mono-meta' },
-                  enumLabel(project.kind),
-                ),
+                  h(
+                    'span',
+                    {
+                      class: 'mono-meta',
+                    },
+                    enumLabel(
+                      project.kind,
+                    ),
+                  ),
 
-                h(
-                  'span',
-                  { class: 'mono-meta' },
-                  enumLabel(project.status),
-                ),
+                  h(
+                    'span',
+                    {
+                      class: 'mono-meta',
+                    },
+                    enumLabel(
+                      project.status,
+                    ),
+                  ),
 
-                h(
-                  'span',
-                  { class: 'mono-meta' },
-                  project.starts_on ?? '—',
-                ),
-              ]),
+                  h(
+                    'span',
+                    {
+                      class: 'mono-meta',
+                    },
+                    project.starts_on ??
+                    '—',
+                  ),
+                ],
+              ),
             )
-          : emptyState(
+            : emptyState(
               'No live projects.',
+
               isClubAdmin(viewer)
                 ? 'Create one from Projects & Events.'
                 : undefined,
             ),
-      ),
+        ),
 
-      panel(
-        'Recent activity',
+        panel(
+          'Recent activity',
 
-        activity.length
-          ? dataTable(
+          activity.length
+            ? dataTable(
               [
                 'When',
                 'Who',
@@ -280,76 +382,104 @@ async function start(): Promise<void> {
                 'Detail',
               ],
 
-              activity.map((entry) => [
-                h(
-                  'span',
-                  { class: 'mono-meta' },
-                  relativeTime(entry.created_at),
-                ),
+              activity.map(
+                (entry) => [
+                  h(
+                    'span',
+                    {
+                      class: 'mono-meta',
+                    },
+                    relativeTime(
+                      entry.created_at,
+                    ),
+                  ),
 
-                entry.actor_email ?? '—',
+                  entry.actor_email ??
+                  '—',
 
-                h(
-                  'span',
-                  {
-                    class:
-                      'mono-meta accent-text',
-                  },
-                  entry.action,
-                ),
+                  h(
+                    'span',
+                    {
+                      class:
+                        'mono-meta accent-text',
+                    },
+                    entry.action,
+                  ),
 
-                entry.summary,
-              ]),
+                  entry.summary ??
+                  '—',
+                ],
+              ),
             )
-          : emptyState(
+            : emptyState(
               'No recorded activity yet.',
             ),
 
-        h(
-          'div',
-          { class: 'button-row' },
-
           h(
-            'a',
+            'div',
             {
-              class: 'btn-ghost',
-              href:
-                '/admin/administration.html#audit',
+              class: 'button-row',
             },
-            'Full audit history',
+
+            h(
+              'a',
+              {
+                class: 'btn-ghost',
+                href: '/admin/administration.html#audit',
+              },
+              'Full audit history',
+            ),
           ),
         ),
-      ),
 
-      notice(
-        'info',
-        'Roles are hierarchical: a reviewer works the review queues, a club admin runs ' +
+        notice(
+          'info',
+          'Roles are hierarchical: a reviewer works the review queues, a club admin runs ' +
           'everything operational, and a super admin can also manage admins. See ' +
           'docs/HANDOVER.md for transferring control to next year’s committee.',
-      ),
-    );
-  } catch (error) {
-    console.error(
-      'Admin overview failed to load:',
-      error,
-    );
+        ),
+      );
+    } catch (error) {
+      console.error(
+        'Admin overview failed to load:',
+        error,
+      );
 
-    render(
-      content,
+      render(
+        content,
 
-      pageHeader(
-        'ADMIN',
-        'Dashboard unavailable',
-      ),
+        pageHeader(
+          'ADMIN',
+          'Dashboard unavailable',
+        ),
 
-      notice(
-        'err',
-        error instanceof Error
-          ? `The admin dashboard could not load: ${error.message}`
-          : 'The admin dashboard could not load because of an unknown error.',
-      ),
-    );
+        notice(
+          'err',
+          `The admin dashboard could not load: ${errorMessage(error)}`,
+        ),
+
+        h(
+          'div',
+          {
+            class: 'button-row',
+          },
+
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'btn-ghost',
+              onclick: () =>
+                void draw(),
+            },
+            'TRY AGAIN',
+          ),
+        ),
+      );
+    }
   }
+
+  await draw();
 }
 
 void start();

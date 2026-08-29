@@ -121,30 +121,130 @@ export interface MemberRow {
   student_id: string | null;
   major: string | null;
   account_state: string;
-  membership: { status: MembershipStatus; started_on: string | null; ended_on: string | null;
-                member_no: string | null; chapter_year: string | null;
-                internal_note: string | null } | null;
+  membership: {
+    status: MembershipStatus; started_on: string | null; ended_on: string | null;
+    member_no: string | null; chapter_year: string | null;
+    internal_note: string | null
+  } | null;
   profile: { visibility: string; academic_year: string | null } | null;
 }
 
 export async function members(search = '', status = ''): Promise<MemberRow[]> {
-  let query = requireClient().from('app_users')
+  const client = requireClient();
+
+  let usersQuery = client
+    .from('app_users')
     .select(`
-      id, full_name, email, student_id, major, account_state,
-      membership:memberships!inner(status, started_on, ended_on, member_no, chapter_year, internal_note),
-      profile:member_profiles(visibility, academic_year)
+      id,
+      full_name,
+      email,
+      student_id,
+      major,
+      account_state
     `)
     .is('deleted_at', null)
     .order('full_name')
     .limit(500);
 
   if (search) {
-    const term = search.replaceAll('%', '').replaceAll(',', ' ');
-    query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,student_id.ilike.%${term}%`);
-  }
-  if (status) query = query.eq('memberships.status', status);
+    const term = search
+      .replaceAll('%', '')
+      .replaceAll(',', ' ');
 
-  return (unwrap(await query) ?? []) as unknown as MemberRow[];
+    usersQuery = usersQuery.or(
+      `full_name.ilike.%${term}%,email.ilike.%${term}%,student_id.ilike.%${term}%`
+    );
+  }
+
+  const [
+    usersResult,
+    membershipsResult,
+    profilesResult,
+  ] = await Promise.all([
+    usersQuery,
+
+    client
+      .from('memberships')
+      .select(`
+        user_id,
+        status,
+        started_on,
+        ended_on,
+        member_no,
+        chapter_year,
+        internal_note
+      `),
+
+    client
+      .from('member_profiles')
+      .select(`
+        user_id,
+        visibility,
+        academic_year
+      `),
+  ]);
+
+  const users = unwrap(usersResult) ?? [];
+  const membershipRows = unwrap(membershipsResult) ?? [];
+  const profileRows = unwrap(profilesResult) ?? [];
+
+  const membershipByUser = new Map(
+    membershipRows.map((membership) => [
+      membership.user_id,
+      membership,
+    ]),
+  );
+
+  const profileByUser = new Map(
+    profileRows.map((profile) => [
+      profile.user_id,
+      profile,
+    ]),
+  );
+
+  const rows = users.map((user) => {
+    const membership =
+      membershipByUser.get(user.id) ?? null;
+
+    const profile =
+      profileByUser.get(user.id) ?? null;
+
+    return {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      student_id: user.student_id,
+      major: user.major,
+      account_state: user.account_state,
+
+      membership: membership
+        ? {
+            status: membership.status as MembershipStatus,
+            started_on: membership.started_on,
+            ended_on: membership.ended_on,
+            member_no: membership.member_no,
+            chapter_year: membership.chapter_year,
+            internal_note: membership.internal_note,
+          }
+        : null,
+
+      profile: profile
+        ? {
+            visibility: profile.visibility,
+            academic_year: profile.academic_year,
+          }
+        : null,
+    } satisfies MemberRow;
+  });
+
+  if (!status) {
+    return rows;
+  }
+
+  return rows.filter(
+    (member) =>
+      member.membership?.status === status,
+  );
 }
 
 /**
