@@ -121,6 +121,7 @@ export interface MemberRow {
   student_id: string | null;
   major: string | null;
   account_state: string;
+  current_position: string | null;
   membership: {
     status: MembershipStatus; started_on: string | null; ended_on: string | null;
     member_no: string | null; chapter_year: string | null;
@@ -160,6 +161,7 @@ export async function members(search = '', status = ''): Promise<MemberRow[]> {
     usersResult,
     membershipsResult,
     profilesResult,
+    positionsResult,
   ] = await Promise.all([
     usersQuery,
 
@@ -182,11 +184,17 @@ export async function members(search = '', status = ''): Promise<MemberRow[]> {
         visibility,
         academic_year
       `),
+
+    client
+      .from('position_history')
+      .select('user_id, title_snapshot, ended_on')
+      .is('ended_on', null),
   ]);
 
   const users = unwrap(usersResult) ?? [];
   const membershipRows = unwrap(membershipsResult) ?? [];
   const profileRows = unwrap(profilesResult) ?? [];
+  const positionRows = unwrap(positionsResult) ?? [];
 
   const membershipByUser = new Map(
     membershipRows.map((membership) => [
@@ -200,6 +208,9 @@ export async function members(search = '', status = ''): Promise<MemberRow[]> {
       profile.user_id,
       profile,
     ]),
+  );
+  const positionByUser = new Map(
+    positionRows.map((position) => [position.user_id, position.title_snapshot]),
   );
 
   const rows = users.map((user) => {
@@ -216,6 +227,7 @@ export async function members(search = '', status = ''): Promise<MemberRow[]> {
       student_id: user.student_id,
       major: user.major,
       account_state: user.account_state,
+      current_position: positionByUser.get(user.id) ?? null,
 
       membership: membership
         ? {
@@ -577,6 +589,22 @@ export async function grantRole(
 export async function revokeRole(assignmentId: string, reason: string): Promise<void> {
   const { error } = await requireClient().rpc('revoke_admin_role', {
     assignment_id: assignmentId, reason,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export type AdminRevocationDisposition =
+  | 'admin_only' | 'archive_public' | 'archive_private' | 'erase_personal_data';
+
+export async function revokeAdminWithDisposition(
+  assignmentId: string,
+  disposition: AdminRevocationDisposition,
+  reason: string,
+): Promise<void> {
+  const { error } = await requireClient().rpc('revoke_admin_with_disposition', {
+    assignment_id: assignmentId,
+    disposition,
+    reason,
   });
   if (error) throw new Error(error.message);
 }

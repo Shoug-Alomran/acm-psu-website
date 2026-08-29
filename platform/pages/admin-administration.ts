@@ -33,7 +33,7 @@ import {
 import {
   adminTeam,
   grantRole,
-  revokeRole,
+  revokeAdminWithDisposition,
   auditLog,
   members,
   type AdminRow,
@@ -226,6 +226,28 @@ async function start(): Promise<void> {
           'reconstructs who was given authority, and by whom.',
       }),
 
+      field({
+        label: 'What should happen to the person’s membership and profile?',
+        name: 'disposition',
+        type: 'select',
+        required: true,
+        value: 'admin_only',
+        options: [
+          { value: 'admin_only', label: 'Revoke admin access only — keep membership unchanged' },
+          { value: 'archive_public', label: 'Mark as alumni — keep official record public' },
+          { value: 'archive_private', label: 'Mark as alumni — keep official record private' },
+          { value: 'erase_personal_data', label: 'Delete personal information — anonymize official history' },
+        ],
+        hint: 'Official position history and verified ACM work are preserved. The deletion option removes personal profile/account data and anonymizes the retained official history.',
+      }),
+
+      field({
+        label: 'Type DELETE to confirm personal-data deletion',
+        name: 'delete_confirmation',
+        maxlength: 6,
+        placeholder: 'Required only for deletion',
+      }),
+
       notice(
         'info',
         ROLES
@@ -336,9 +358,19 @@ async function start(): Promise<void> {
               return;
             }
 
+            const values = formValues(form);
+            const disposition = textOf(values, 'disposition') as
+              'admin_only' | 'archive_public' | 'archive_private' | 'erase_personal_data';
+            if (disposition === 'erase_personal_data' &&
+                textOf(values, 'delete_confirmation') !== 'DELETE') {
+              toast('Type DELETE to confirm personal-data deletion.', 'err');
+              return;
+            }
+
             try {
-              await revokeRole(
+              await revokeAdminWithDisposition(
                 row.id,
+                disposition,
                 reason,
               );
 

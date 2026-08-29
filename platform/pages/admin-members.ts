@@ -157,7 +157,11 @@ async function start(): Promise<void> {
   }
 
   let search = '';
-  let statusFilter = 'active';
+  let statusFilter = '';
+  let roleFilter = '';
+  let profileFilter = '';
+  let majorFilter = '';
+  let sinceFilter = '';
 
   async function openMember(
     member: MemberRow,
@@ -733,11 +737,18 @@ async function start(): Promise<void> {
     );
 
     try {
-      const rows =
+      const allRows =
         await members(
           search,
-          statusFilter,
+          '',
         );
+
+      const rows = allRows.filter((member) =>
+        (!statusFilter || member.membership?.status === statusFilter) &&
+        (!roleFilter || (member.current_position ?? 'No current role') === roleFilter) &&
+        (!profileFilter || (member.profile?.visibility ?? 'private') === profileFilter) &&
+        (!majorFilter || (member.major ?? 'Not recorded') === majorFilter) &&
+        (!sinceFilter || (member.membership?.started_on?.slice(0, 4) ?? 'Not recorded') === sinceFilter));
 
       const searchInput = h(
         'input',
@@ -817,6 +828,47 @@ async function start(): Promise<void> {
         },
       );
 
+      const filterSelect = (
+        label: string,
+        value: string,
+        options: string[],
+        changed: (value: string) => void,
+      ): HTMLSelectElement => {
+        const select = h('select', { 'aria-label': `Filter by ${label.toLowerCase()}` },
+          h('option', { value: '', selected: value === '' }, `All ${label.toLowerCase()}`),
+          options.map((option) => h('option', {
+            value: option,
+            selected: value === option,
+          }, option)),
+        ) as HTMLSelectElement;
+        select.addEventListener('change', () => {
+          changed(select.value);
+          void draw();
+        });
+        return select;
+      };
+
+      const unique = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
+      const roleSelect = filterSelect(
+        'roles', roleFilter,
+        unique(allRows.map((member) => member.current_position ?? 'No current role')),
+        (value) => { roleFilter = value; },
+      );
+      const profileSelect = filterSelect(
+        'profiles', profileFilter, ['public', 'private'],
+        (value) => { profileFilter = value; },
+      );
+      const majorSelect = filterSelect(
+        'majors', majorFilter,
+        unique(allRows.map((member) => member.major ?? 'Not recorded')),
+        (value) => { majorFilter = value; },
+      );
+      const sinceSelect = filterSelect(
+        'start years', sinceFilter,
+        unique(allRows.map((member) => member.membership?.started_on?.slice(0, 4) ?? 'Not recorded')),
+        (value) => { sinceFilter = value; },
+      );
+
       render(
         content,
 
@@ -847,6 +899,14 @@ async function start(): Promise<void> {
 
           statusSelect,
 
+          roleSelect,
+
+          profileSelect,
+
+          sinceSelect,
+
+          majorSelect,
+
           h(
             'span',
             {
@@ -865,6 +925,7 @@ async function start(): Promise<void> {
               [
                 'Member',
                 'Student ID',
+                'Role',
                 'Major',
                 'Status',
                 'Since',
@@ -901,6 +962,12 @@ async function start(): Promise<void> {
                     },
                     member.student_id ??
                     '—',
+                  ),
+
+                  h(
+                    'span',
+                    { class: 'mono-meta accent-text' },
+                    member.current_position ?? 'MEMBER',
                   ),
 
                   h(
