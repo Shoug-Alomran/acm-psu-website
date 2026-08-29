@@ -76,11 +76,12 @@ begin
         end if;
 
         insert into public.contributions
-            (user_id, project_id, type_slug, title, role_text, description, links,
+            (user_id, project_id, type_slug, title, role_text, description, occurred_on, links,
              status, reviewed_at, review_note, verified_at, internal_note)
         select
             shoug_id, current_project_id, item.type_slug, item.title, item.role_text,
-            item.description, item.links, 'approved', now(),
+            item.description, (select starts_on from public.projects where id = current_project_id),
+            item.links, 'approved', now(),
             'Verified against published event attribution.', now(),
             'System backfill from the event websites supplied by the member.'
         where not exists (
@@ -91,6 +92,28 @@ begin
               and c.deleted_at is null
         );
     end loop;
+
+    -- Complete previously verified event rows when their title identifies one
+    -- of these official projects but the project/date columns were left blank.
+    update public.contributions c
+       set project_id = p.id,
+           occurred_on = coalesce(c.occurred_on, p.starts_on)
+      from public.projects p
+     where c.user_id = shoug_id
+       and c.deleted_at is null
+       and c.project_id is null
+       and ((p.slug = 'ctf-2-0' and c.title ilike '%ctf 2%')
+         or (p.slug = 'ai-programming-jam-2026' and
+             (c.title ilike '%jam.26%' or c.title ilike '%programming jam%'))
+         or (p.slug = 'ctf-3-0' and c.title ilike '%ctf 3%'));
+
+    update public.contributions c
+       set occurred_on = p.starts_on
+      from public.projects p
+     where c.user_id = shoug_id
+       and c.project_id = p.id
+       and c.occurred_on is null
+       and p.slug in ('ctf-2-0', 'ai-programming-jam-2026', 'ctf-3-0');
 
     insert into public.participations
         (user_id, project_id, role_text, status, started_on, verified_at, note)
