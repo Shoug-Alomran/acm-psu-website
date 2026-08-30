@@ -10,15 +10,24 @@ import {
   applications, markForInterview, approveApplication, rejectApplication,
   type ApplicationRow,
 } from '../lib/admin.js';
-import { positions } from '../lib/api.js';
 import { requireClient } from '../lib/supabase.js';
 import { archiveDate } from '../lib/format.js';
-import type { Position } from '../lib/types.js';
 
 type ApplicationWithExperience = ApplicationRow & {
   experience_status?: 'none' | 'some' | 'not_provided' | null;
   experience_text?: string | null;
+  preferred_position_id?: string | null;
 };
+
+interface MemberPositionChoice {
+  id: string;
+  title: string;
+  category: string;
+  rank: number;
+  max_holders: number | null;
+  filled: number;
+  remaining: number | null;
+}
 
 interface AiApplicantSummary {
   summary: string;
@@ -110,15 +119,18 @@ async function start(): Promise<void> {
   const content = shell(viewer, 'admin', 'Applications');
   render(content, loading());
 
-  let positionList: Position[] = [];
+  let positionList: MemberPositionChoice[] = [];
   try {
-    positionList = await positions();
+    const { data, error } = await requireClient().rpc('member_position_choices');
+    if (error) throw new Error(error.message);
+    positionList = (data ?? []) as MemberPositionChoice[];
   } catch (error) {
     render(content,
       pageHeader('ADMIN / APPLICATIONS', 'Membership applications unavailable'),
-      notice('err', `Could not load club positions: ${errorMessage(error)}`));
+      notice('err', `Could not load available club roles: ${errorMessage(error)}`));
     return;
   }
+  const positionTitle = new Map(positionList.map((position) => [position.id, position.title]));
 
   let filter = 0;
 
@@ -189,6 +201,9 @@ async function start(): Promise<void> {
     const aiPanel = h('div', {});
     let aiComplete = false;
     let interviewButton: HTMLButtonElement | null = null;
+    const preferredRole = application.preferred_position_id
+      ? (positionTitle.get(application.preferred_position_id) ?? 'Previously selected role')
+      : 'General member';
 
     const identityItems: Array<[string, string | HTMLElement]> = [
       ['Status', statusPill(application.status)],
@@ -205,6 +220,15 @@ async function start(): Promise<void> {
 
     const body = h('div', { style: { display: 'grid', gap: '1rem' } },
       section('Applicant', keyValueGrid(identityItems)),
+      section('Membership preference',
+        keyValueGrid([
+          ['Preferred standing role', preferredRole],
+          ['Event roles', 'Chosen separately from Opportunities after membership approval'],
+        ]),
+        h('p', { class: 'mono-meta dim-text', style: { margin: '0' } },
+          application.preferred_position_id
+            ? 'This is the applicant’s preference, not an automatic assignment. The committee can approve them as a general member or choose another available role after the interview.'
+            : 'They applied as a general member. No standing club role is required; they can sign up for event-specific positions as opportunities open.')),
       section('Interests',
         h('p', { style: { margin: '0', lineHeight: '1.6' } }, application.interests.join(', ') || 'No interests provided.')),
       section('Previous experience',
@@ -240,15 +264,27 @@ async function start(): Promise<void> {
     }
 
     if (!decided && application.status === 'interview') {
+      const preferredStillAvailable = application.preferred_position_id
+        && positionList.some((position) => position.id === application.preferred_position_id)
+        ? application.preferred_position_id
+        : '';
       const passForm = h('form', { class: 'portal-form', novalidate: true },
         h('div', { class: 'field-pair' },
           field({
-            label: 'Club role after passing', name: 'position_id', type: 'select', required: true,
-            value: '',
+            label: 'Standing club role after passing', name: 'position_id', type: 'select',
+            value: preferredStillAvailable,
             options: [
-              { value: '', label: 'Select a role…' },
-              ...positionList.map((position) => ({ value: position.id, label: position.title })),
+              { value: '', label: 'General member — no standing club role' },
+              ...positionList.map((position) => ({
+                value: position.id,
+                label: position.max_holders === null
+                  ? `${position.title} — available`
+                  : `${position.title} — ${position.remaining ?? 0} seat${position.remaining === 1 ? '' : 's'} available`,
+              })),
             ],
+            hint: application.preferred_position_id
+              ? `Applicant preference: ${preferredRole}. You may keep that choice, choose another available role, or approve them as a general member.`
+              : 'They applied as a general member. A standing role is optional.',
           }),
           field({
             label: 'Membership start date', name: 'start_date', type: 'date', required: true,
@@ -267,22 +303,27 @@ async function start(): Promise<void> {
 
       body.append(
         section('Interview decision',
-          notice('info', 'Choose the outcome after the interview. Passing creates the active membership and assigns the selected club role. If they do not pass, the reason below is shown to them.'),
+          notice('info', 'Passing always creates the active membership. A standing club role is optional: general members can sign up for event-specific positions from Opportunities. If they do not pass, the reason below is shown to them.'),
           passForm,
           h('div', { class: 'button-row' },
             action('PASS INTERVIEW & ADD MEMBER', async () => {
               if (!passForm.reportValidity()) return;
               const values = formValues(passForm);
+              const selectedPosition = textOf(values, 'position_id') || null;
               try {
                 await approveApplication(
                   application.id,
-                  textOf(values, 'position_id'),
+                  selectedPosition,
                   textOf(values, 'start_date') || new Date().toISOString().slice(0, 10),
-                  'Interview completed successfully. Welcome to ACM PSU.',
+                  selectedPosition
+                    ? 'Interview completed successfully. Welcome to ACM PSU.'
+                    : 'Interview completed successfully. Added as a general ACM member.',
                   null,
                 );
                 modal.close();
-                toast(`${application.full_name} is now an active member.`);
+                toast(selectedPosition
+                  ? `${application.full_name} is now an active member with a standing club role.`
+                  : `${application.full_name} is now an active general member.`);
                 await draw();
               } catch (error) {
                 toast(`Could not approve application: ${errorMessage(error)}`);
@@ -365,12 +406,15 @@ async function start(): Promise<void> {
         panel(`${rows.length} application${rows.length === 1 ? '' : 's'}`,
           rows.length
             ? dataTable(
-                ['Applicant', 'Major / year', 'Interests', 'Experience', 'Submitted', 'Status', ''],
+                ['Applicant', 'Major / year', 'Interests', 'Experience', 'Preference', 'Submitted', 'Status', ''],
                 rows.map((row) => {
                   const application = row as ApplicationWithExperience;
                   const experience = application.experience_status === 'some'
                     ? 'YES'
                     : application.experience_status === 'none' ? 'NOT YET' : '—';
+                  const preference = application.preferred_position_id
+                    ? (positionTitle.get(application.preferred_position_id) ?? 'ROLE PREFERENCE')
+                    : 'GENERAL MEMBER';
                   return [
                     h('div', {},
                       h('strong', application.full_name),
@@ -382,6 +426,7 @@ async function start(): Promise<void> {
                       application.interests.slice(0, 3).join(', ') +
                       (application.interests.length > 3 ? ` +${application.interests.length - 3}` : '')),
                     h('span', { class: 'mono-meta' }, experience),
+                    h('span', { class: 'mono-meta' }, preference),
                     h('span', { class: 'mono-meta' }, archiveDate(application.created_at)),
                     statusPill(application.status),
                     action('Review', async () => openApplication(application)),
@@ -397,7 +442,7 @@ async function start(): Promise<void> {
                 },
               )
             : emptyState('Nothing in this queue.', 'Applications appear here as soon as students submit them.')),
-        notice('info', 'Workflow: review the submitted information → AI checks clarity/completeness → contact for interview → record the interview outcome.'),
+        notice('info', 'Workflow: review the submitted information → AI checks clarity/completeness → contact for interview → record the interview outcome. General membership and standing club roles are separate from event-specific positions.'),
       );
     } catch (error) {
       render(content,
