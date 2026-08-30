@@ -20,7 +20,11 @@ enabled = true
 site_url = "https://acm-psu.shoug-tech.com"
 additional_redirect_urls = [
   "https://acm-psu.shoug-tech.com/portal/auth-callback.html",
-  "http://localhost:8000/portal/auth-callback.html"
+  "https://acm-psu.shoug-tech.com/portal/reset.html",
+  "https://acm-psu.shoug-tech.com/portal/",
+  "http://localhost:8000/portal/auth-callback.html",
+  "http://localhost:8000/portal/reset.html",
+  "http://localhost:8000/portal/"
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
