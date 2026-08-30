@@ -391,11 +391,11 @@ async function start(): Promise<void> {
                     const row = rows[index];
                     if (!row) return '';
                     if (row.status === 'approved' || row.status === 'rejected') return attentionRow('ok');
-                    return attentionRow(ageAttention(row.created_at));
+                    return attentionRow(ageAttention(row.created_at).level);
                   },
                 },
               )
-            : emptyState('NO RECORDS', 'Nothing in this queue.', 'Applications appear here as soon as students submit them.')),
+            : emptyState('Nothing in this queue.', 'Applications appear here as soon as students submit them.')),
         notice('info', 'Workflow: review the submitted information → AI checks clarity/completeness → contact for interview → record the interview outcome.'),
       );
     } catch (error) {
