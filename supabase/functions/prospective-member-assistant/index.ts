@@ -10,6 +10,8 @@ const WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS = 15;
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
+type ChatMessage = { role: 'user' | 'assistant'; content: string };
+
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.has(origin)) return true;
@@ -110,19 +112,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!withinRateLimit(req)) return respond(allowedOrigin, { error: 'Too many questions. Please wait a few minutes and try again.' }, 429);
 
   let question = '';
-  let history: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+  let history: ChatMessage[] = [];
   try {
     const body = await req.json();
     question = String(body?.question ?? '').trim();
     if (Array.isArray(body?.history)) {
       history = body.history
-        .filter((item: unknown): item is { role: 'user' | 'assistant'; content: string } => {
+        .filter((item: unknown): item is ChatMessage => {
           if (!item || typeof item !== 'object') return false;
           const row = item as Record<string, unknown>;
           return (row.role === 'user' || row.role === 'assistant') && typeof row.content === 'string';
         })
         .slice(-6)
-        .map((item) => ({ role: item.role, content: item.content.slice(0, 800) }));
+        .map((item: ChatMessage) => ({ role: item.role, content: item.content.slice(0, 800) }));
     }
   } catch {
     return respond(allowedOrigin, { error: 'Expected a JSON question.' }, 400);
