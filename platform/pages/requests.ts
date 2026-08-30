@@ -19,19 +19,38 @@ import {
 import { requireMember, canSubmit } from '../lib/session.js';
 import {
   myRequests, createRequest, cancelRequest, myPositionRequest, requestPositionChange,
-  positions, saveProfile,
+  saveProfile,
 } from '../lib/api.js';
+import { requireClient } from '../lib/supabase.js';
 import { loadViewer } from '../lib/session.js';
 import { myInquiries, STATUS_LABELS } from '../lib/inquiries.js';
 import { archiveDate, enumLabel } from '../lib/format.js';
-import type { MemberRequestKind, Position } from '../lib/types.js';
+import type { MemberRequestKind } from '../lib/types.js';
+
+interface MemberPositionChoice {
+  id: string;
+  title: string;
+  category: string;
+  rank: number;
+  max_holders: number | null;
+  filled: number;
+  remaining: number | null;
+}
 
 async function start(): Promise<void> {
   const viewer = await requireMember();
   const content = shell(viewer, 'member', 'Requests');
   render(content, loading());
 
-  const positionList = await positions();
+  const { data: positionChoiceRows, error: positionChoiceError } =
+    await requireClient().rpc('member_position_choices');
+  if (positionChoiceError) {
+    render(content,
+      pageHeader('MEMBER / REQUESTS', 'Requests unavailable'),
+      notice('err', `Could not load available club roles: ${positionChoiceError.message}`));
+    return;
+  }
+  const positionList = (positionChoiceRows ?? []) as MemberPositionChoice[];
 
   function simpleRequest(
     kind: MemberRequestKind, title: string, explanation: string, prompt: string,
@@ -60,41 +79,59 @@ async function start(): Promise<void> {
         }, 'primary')));
   }
 
-  function positionRequestForm(): void {
+  function positionRequestForm(mode: 'promotion' | 'change'): void {
+    const title = mode === 'promotion' ? 'Apply for a promotion' : 'Request a different club role';
+    const explanation = mode === 'promotion'
+      ? 'You can apply for an available standing club role. The committee reviews the request and your current position stays unchanged unless the request is approved.'
+      : 'You can ask to move to another available standing club role. Your position history is never overwritten; an approved change closes the current term and records the new one.';
+
     const form = h('form', { class: 'portal-form', novalidate: true },
-      notice('info',
-        'Positions are official records, so an admin decides them. Your existing ' +
-        'position history is never overwritten — an approved change adds a new entry.'),
-      field({ label: 'Position you are asking for', name: 'requested_position_id',
-              type: 'select',
-              options: [{ value: '', label: 'Select…' },
-                ...positionList.map((p: Position) => ({ value: p.id, label: p.title })),
-                { value: 'other', label: 'Something else — I will describe it' }] }),
-      field({ label: 'If something else, describe it', name: 'requested_title', maxlength: 120 }),
-      field({ label: 'Why?', name: 'reason', type: 'textarea', rows: 4,
-              hint: 'Optional, but it helps the admins decide.' }),
+      notice('info', explanation),
+      field({
+        label: mode === 'promotion' ? 'Role you want to be considered for' : 'Role you want to move to',
+        name: 'requested_position_id',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '', label: 'Select an available role…' },
+          ...positionList.map((p) => ({
+            value: p.id,
+            label: p.max_holders === null
+              ? `${p.title} — available`
+              : `${p.title} — ${p.remaining ?? 0} seat${p.remaining === 1 ? '' : 's'} available`,
+          })),
+        ],
+        hint: 'President, Vice President, faculty-only roles, archived roles and positions that are already full are not offered here.',
+      }),
+      field({
+        label: 'Why are you interested in this role?',
+        name: 'reason',
+        type: 'textarea',
+        rows: 4,
+        maxlength: 1500,
+        hint: 'Optional, but it helps the committee understand why the role fits what you want to contribute or learn.',
+      }),
     ) as HTMLFormElement;
 
-    const modal = dialog('Request a position change', form,
+    const modal = dialog(title, form,
       h('div', { class: 'button-row' },
-        action('Send request', async () => {
+        action(mode === 'promotion' ? 'Submit promotion request' : 'Submit role change request', async () => {
+          if (!form.reportValidity()) return;
           const values = formValues(form);
           const selected = textOf(values, 'requested_position_id');
-          const described = textOf(values, 'requested_title');
-
-          if (!selected && !described) {
-            toast('Choose a position or describe the one you want.', 'err');
+          if (!selected) {
+            toast('Choose an available role.', 'err');
             return;
           }
 
           await requestPositionChange({
             user_id: viewer.userId,
-            requested_position_id: selected && selected !== 'other' ? selected : null,
-            requested_title: described || null,
+            requested_position_id: selected,
+            requested_title: null,
             reason: textOf(values, 'reason') || null,
           });
           modal.close();
-          toast('Request sent.');
+          toast(mode === 'promotion' ? 'Promotion request sent.' : 'Role change request sent.');
           await draw();
         }, 'primary')));
   }
@@ -111,6 +148,7 @@ async function start(): Promise<void> {
       requests.some((r) => r.kind === kind && r.status === 'pending');
 
     const isPublic = viewer.profile?.visibility === 'public';
+    const hasStandingRole = Boolean(viewer.currentPosition && viewer.currentPosition !== 'Member');
 
     render(content,
       pageHeader('MEMBER / REQUESTS', 'Requests'),
@@ -173,12 +211,14 @@ async function start(): Promise<void> {
                     `MEMBERSHIP: ${enumLabel(viewer.membership?.status)}`))),
       ),
 
-      panel('Position',
+      panel('Club role',
         metaList([
-          ['Current position', viewer.currentPosition ?? 'Member'],
+          ['Current standing role', viewer.currentPosition ?? 'General member'],
           ['Open request', positionRequest && positionRequest.status === 'pending'
             ? (positionRequest.requested_title ?? 'Pending') : '—'],
         ]),
+        h('p', { class: 'mono-meta dim-text' },
+          'Standing club roles are separate from event positions. General members can still sign up for event roles from Opportunities whenever those openings are published.'),
         positionRequest?.admin_note
           ? h('p', { class: 'mono-meta dim-text' }, `ADMIN: ${positionRequest.admin_note}`)
           : null,
@@ -186,8 +226,15 @@ async function start(): Promise<void> {
           positionRequest?.status === 'pending'
             ? statusPill('pending')
             : canSubmit(viewer)
-              ? h('button', { type: 'button', class: 'btn-ghost',
-                  onclick: () => positionRequestForm() }, 'Request a position change')
+              ? [
+                  h('button', { type: 'button', class: 'btn-ghost',
+                    onclick: () => positionRequestForm('promotion') },
+                    hasStandingRole ? 'Apply for promotion' : 'Apply for a club role'),
+                  hasStandingRole
+                    ? h('button', { type: 'button', class: 'btn-ghost',
+                        onclick: () => positionRequestForm('change') }, 'Request different role')
+                    : null,
+                ]
               : null)),
 
       panel('Account',
