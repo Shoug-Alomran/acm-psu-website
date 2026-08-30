@@ -162,9 +162,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== 'POST') return fail('POST only', 405, origin);
   const caller = clientForRequest(req); if (!caller) return fail('Sign in required.', 401, origin);
   const { data: auth } = await caller.auth.getUser(); if (!auth.user) return fail('Sign in required.', 401, origin);
+
+  // Workbook synchronization exposes and rewrites a private administrative
+  // record. Do not let ordinary members trigger it indirectly: every sync is
+  // restricted to operational admins or assigned faculty advisors.
+  const synchronizer = await requireRole(caller, ['super_admin', 'club_admin', 'advisory_instructor']);
+  if (!synchronizer) return fail('Club admin or advisory instructor access required.', 403, origin);
+
   let body: { mode?: string; sheets?: SheetKey[] } = {}; try { body = await req.json(); } catch { /* defaults */ }
   const full = body.mode === 'full';
-  if (full && !await requireRole(caller, ['super_admin'])) return fail('Super admin access required.', 403, origin);
   let requested = full ? ORDER : (body.sheets ?? []);
   requested = [...new Set(requested)].filter((key): key is SheetKey => ORDER.includes(key));
   if (!requested.length) return fail('No supported worksheets requested.', 400, origin);
@@ -205,13 +211,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
       workbookUrl = await pushToGoogleSheet(NAMES[key], matrix);
       results[NAMES[key]] = { rows: Math.max(matrix.length - 1, 0), status: 'updated' };
       if (full) {
-        await caller.rpc('record_university_export', {
+        // Export logging may remain unavailable to advisory instructors because
+        // that RPC is intentionally an admin-only audit write. A failed log
+        // entry must not make an otherwise successful workbook refresh fail.
+        const { error: logError } = await caller.rpc('record_university_export', {
           dataset: key,
           format: 'google_sheet',
           row_count: Math.max(matrix.length - 1, 0),
           destination: workbookUrl,
           reason: 'Manual full club records refresh',
         });
+        if (logError) console.warn(`Could not record ${key} workbook export: ${logError.message}`);
       }
     } catch (error) {
       results[NAMES[key]] = {
@@ -235,7 +245,5 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   }
   const success = Object.values(results).every((result) => result.status === 'updated');
-  // Targeted refreshes can be triggered by ordinary signed-in account writes.
-  // They need a status, but not the private administrative workbook URL.
-  return json({ success, workbook: WORKBOOK_NAME, url: full ? workbookUrl : '', sheets: results }, success ? 200 : 207, origin);
+  return json({ success, workbook: WORKBOOK_NAME, url: workbookUrl, sheets: results }, success ? 200 : 207, origin);
 });
