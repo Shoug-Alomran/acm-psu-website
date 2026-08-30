@@ -1,7 +1,9 @@
 /** Instructor-specific profile enhancement for the member portal. */
 import { h, formValues, textOf } from '../lib/dom.js';
-import { field, metaList, notice, panel, submitButton, toast } from '../lib/ui.js';
+import { field, metaList, notice, panel, statusPill, submitButton, toast } from '../lib/ui.js';
 import { requireMember } from '../lib/session.js';
+import { advisorActivities, positionHistory } from '../lib/api.js';
+import { archiveDate, enumLabel } from '../lib/format.js';
 import { requireClient } from '../lib/supabase.js';
 
 interface InstructorProfile {
@@ -166,12 +168,6 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
   const instructorPanel = panel('Academic & teaching profile', form);
   instructorPanel.dataset.instructorProfilePanel = 'true';
 
-  /*
-   * Faculty details are substantial enough to deserve the full content width.
-   * Keep the compact identity/photo/verified-record grid at the top, then place
-   * this editor underneath it so long course and research text is not squeezed
-   * into one narrow column while the opposite side of the page sits empty.
-   */
   const grid = about.closest<HTMLElement>('.panel-grid');
   if (grid) {
     grid.insertAdjacentElement('afterend', instructorPanel);
@@ -180,31 +176,68 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
   }
 }
 
+/**
+ * Faculty/staff do not have student memberships, so the generic dashboard must
+ * not interpret a missing memberships row as "inactive". Their official ACM
+ * record comes from current position history and project assignments instead.
+ * This keeps every page reading the same canonical records rather than storing
+ * instructor-only copies of status or activity counts in the browser.
+ */
 async function enhanceDashboard(current: InstructorProfile | null, viewer: Awaited<ReturnType<typeof requireMember>>): Promise<void> {
-  const target = await waitForPanel('Your profile');
-  if (!target) return;
-  const body = target.querySelector<HTMLElement>('.panel-body');
-  if (!body) return;
+  const [profilePanel, recordPanel, activities, history] = await Promise.all([
+    waitForPanel('Your profile'),
+    waitForPanel('ACM record'),
+    advisorActivities(viewer.userId).catch((error) => {
+      console.error('Could not load assigned activities for dashboard:', error);
+      return [];
+    }),
+    positionHistory(viewer.userId).catch((error) => {
+      console.error('Could not load position history for dashboard:', error);
+      return [];
+    }),
+  ]);
 
   const profile = viewer.profile;
-  body.replaceChildren(
-    metaList([
-      ['Visibility', profile?.visibility ?? 'private'],
-      ['Public listing', profile?.visibility === 'public' ? 'Shown on the ACM team page' : 'Not shown publicly'],
-      ['Academic title', current?.academic_title ?? '—'],
-      ['Department', current?.department ?? '—'],
-      ['Courses taught', listText(current?.courses_taught)],
-      ['Expertise', listText(current?.expertise)],
-      ['Research interests', listText(current?.research_interests)],
-      ['Office / room', current?.office_location ?? '—'],
-      ['Office hours', current?.office_hours ?? '—'],
-      ['Links', profileLinks(profile, current)],
-    ]),
-    h('div', { class: 'button-row' },
-      h('a', { class: 'btn-ghost', href: '/portal/profile.html' }, 'Edit faculty profile'),
-      h('a', { class: 'btn-ghost', href: '/portal/requests.html' }, 'Privacy & membership'),
-    ),
-  );
+  if (profilePanel) {
+    const body = profilePanel.querySelector<HTMLElement>('.panel-body');
+    if (body) {
+      body.replaceChildren(
+        metaList([
+          ['Visibility', statusPill(profile?.visibility ?? 'private')],
+          ['Public listing', profile?.visibility === 'public' ? 'Shown on the ACM team page' : 'Not shown publicly'],
+          ['Academic title', current?.academic_title ?? '—'],
+          ['Department', current?.department ?? '—'],
+          ['Courses taught', listText(current?.courses_taught)],
+          ['Expertise', listText(current?.expertise)],
+          ['Research interests', listText(current?.research_interests)],
+          ['Office / room', current?.office_location ?? '—'],
+          ['Office hours', current?.office_hours ?? '—'],
+          ['Links', profileLinks(profile, current)],
+        ]),
+        h('div', { class: 'button-row' },
+          h('a', { class: 'btn-ghost', href: '/portal/profile.html' }, 'Edit faculty profile'),
+          h('a', { class: 'btn-ghost', href: '/portal/requests.html' }, 'Privacy & membership'),
+        ),
+      );
+    }
+  }
+
+  if (recordPanel) {
+    const body = recordPanel.querySelector<HTMLElement>('.panel-body');
+    const currentRole = history.find((row) => !row.ended_on) ?? history[0] ?? null;
+    if (body) {
+      body.replaceChildren(
+        metaList([
+          ['Status', statusPill('active')],
+          ['Current position', viewer.currentPosition ?? currentRole?.title_snapshot ?? 'Faculty Advisor'],
+          ['ACM role since', archiveDate(currentRole?.started_on ?? null)],
+          ['Chapter', currentRole?.chapter_year ?? '—'],
+          ['University role', enumLabel(viewer.user.university_role)],
+          ['Assigned activities', String(activities.length)],
+        ]),
+      );
+    }
+  }
 }
 
 async function start(): Promise<void> {
