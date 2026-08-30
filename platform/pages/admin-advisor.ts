@@ -10,6 +10,7 @@ import type { ParticipationStatus, Project, ProjectStatus, ContentVisibility } f
 
 const PAGE_SIZE = 7;
 const EVENT_STATUSES = ['planning', 'active', 'completed', 'archived'] as const;
+const CLUB_RECORDS_WORKBOOK = 'https://docs.google.com/spreadsheets/d/1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s/edit';
 
 type PageKey = 'activities' | 'participants' | 'contributions';
 
@@ -198,12 +199,17 @@ async function start(): Promise<void> {
         pageHeader('ADVISORY INSTRUCTOR', `Welcome, ${displayName(viewer)}`,
           h('div', { class: 'button-row' },
             action('CREATE EVENT', async () => eventEditor(null), 'primary'),
+            h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE RECORDS'),
             h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Member portal'))),
-        notice('info', 'You can manage events and verify attendance/contributions for activities assigned to you. Event management does not grant access to member accounts, memberships, official club positions, settings, exports, or unrelated projects.'),
+        notice('info', 'You can manage events and verify attendance/contributions for activities assigned to you. The Google workbook is a read-only administrative snapshot; Supabase remains the source of truth.'),
         statRow([
           [activities.length, 'Assigned activities'], [participants.length, 'Participants'],
           [contributions.filter((row: any) => row.status === 'submitted').length, 'Awaiting verification'],
         ]),
+        panel('Faculty records access',
+          h('p', 'Open the shared ACM PSU — Club Records workbook for the current synchronized university record.'),
+          h('div', { class: 'button-row' },
+            h('a', { class: 'btn-primary', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE WORKBOOK'))),
         panel('Assigned events and workshops', activityRows.length
           ? paginatedTable(['Activity', 'Kind', 'Role', 'Status', 'Dates', 'Actions'], activityRows,
               pages.activities, (value) => redrawPage('activities', value))
