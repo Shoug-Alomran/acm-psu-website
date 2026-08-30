@@ -18,8 +18,11 @@ function walk(dir) {
   });
 }
 
-// 1. Supabase migration versions must be unique.
+const platformFiles = walk('platform').filter((file) => file.endsWith('.ts'));
 const migrationFiles = walk('supabase/migrations').filter((file) => file.endsWith('.sql'));
+const migrationText = migrationFiles.map(read).join('\n');
+
+// 1. Supabase migration versions must be unique.
 const versions = new Map();
 for (const file of migrationFiles) {
   const name = path.basename(file);
@@ -53,16 +56,31 @@ for (const name of functionDirs) {
   if (!deployed.includes(name)) warn(`Edge Function exists but is not included in functions:deploy: ${name}`);
 }
 
-// 3. Browser code must never contain the service-role secret name.
-for (const file of [...walk('platform'), ...walk('assets/js')].filter((f) => /\.(ts|js)$/.test(f))) {
+// Browser invocations must reference a real Edge Function directory.
+for (const file of platformFiles) {
+  const text = read(file);
+  const patterns = [
+    /functions\.invoke\(\s*['"]([\w-]+)['"]/g,
+    /callFunction\(\s*['"]([\w-]+)['"]/g,
+    /bestEffortFunctionSync\(\s*['"]([\w-]+)['"]/g,
+  ];
+  for (const pattern of patterns) {
+    for (const match of text.matchAll(pattern)) {
+      if (!functionDirs.includes(match[1])) fail(`${file} invokes missing Edge Function: ${match[1]}`);
+    }
+  }
+}
+
+// 3. Browser code must never contain the service-role secret name or TS escape hatches.
+for (const file of [...platformFiles, ...walk('assets/js').filter((f) => f.endsWith('.js'))]) {
   const text = read(file);
   if (text.includes('SUPABASE_SERVICE_ROLE_KEY')) fail(`Browser-side code references SUPABASE_SERVICE_ROLE_KEY: ${file}`);
   if (/@ts-ignore|@ts-expect-error/.test(text)) fail(`TypeScript suppression found: ${file}`);
-  if (/\bas\s+any\b/.test(text)) fail(`Unsafe 'as any' cast found: ${file}`);
+  if (file.endsWith('.ts') && /\bas\s+any\b/.test(text)) fail(`Unsafe 'as any' cast found: ${file}`);
 }
 
 // 4. Relative TypeScript imports written as .js must resolve to source .ts/.js files.
-for (const file of walk('platform').filter((f) => f.endsWith('.ts'))) {
+for (const file of platformFiles) {
   const text = read(file);
   for (const match of text.matchAll(/from\s+['"](\.\.?\/[^'"]+)['"]/g)) {
     const spec = match[1];
@@ -77,7 +95,21 @@ for (const file of walk('platform').filter((f) => f.endsWith('.ts'))) {
   }
 }
 
-// 5. HTML module entrypoints must reference generated bundles that exist after build.
+// 5. Every statically named browser RPC must exist in migration source.
+const rpcNames = new Set();
+for (const file of platformFiles) {
+  for (const match of read(file).matchAll(/\.rpc\(\s*['"]([a-zA-Z0-9_]+)['"]/g)) rpcNames.add(match[1]);
+}
+for (const file of walk('supabase/functions').filter((f) => f.endsWith('.ts'))) {
+  for (const match of read(file).matchAll(/\.rpc\(\s*['"]([a-zA-Z0-9_]+)['"]/g)) rpcNames.add(match[1]);
+}
+for (const rpc of rpcNames) {
+  const escaped = rpc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const declared = new RegExp(`(?:create\\s+or\\s+replace\\s+function|create\\s+function)\\s+public\\.${escaped}\\s*\\(`, 'i');
+  if (!declared.test(migrationText)) fail(`Code calls RPC '${rpc}', but no public.${rpc}() declaration exists in migrations.`);
+}
+
+// 6. HTML script references must resolve to files currently present in the repository.
 for (const file of [...walk('portal'), ...walk('admin')].filter((f) => f.endsWith('.html'))) {
   const text = read(file);
   for (const match of text.matchAll(/<script[^>]+src=['"]([^'"]+)['"]/gi)) {
@@ -89,11 +121,27 @@ for (const file of [...walk('portal'), ...walk('admin')].filter((f) => f.endsWit
   }
 }
 
-// 6. Prevent dangerous authorization shortcuts from silently entering migrations.
+// Every page source should have a generated bundle, preventing an unlinked/stale build entry.
+for (const file of platformFiles.filter((f) => f.startsWith('platform/pages/'))) {
+  const base = path.basename(file, '.ts');
+  if (!exists(`assets/js/app/${base}.js`)) fail(`Missing generated page bundle for ${file}: assets/js/app/${base}.js`);
+}
+
+// 7. Prevent dangerous authorization shortcuts from silently entering migrations.
 for (const file of migrationFiles) {
   const text = read(file);
   if (/disable\s+row\s+level\s+security/i.test(text)) fail(`Migration disables RLS: ${file}`);
   if (/grant\s+all\s+on\s+(table\s+)?public\./i.test(text)) fail(`Migration grants ALL on a public object: ${file}`);
+
+  // SECURITY DEFINER functions must pin search_path so callers cannot hijack object resolution.
+  const functionBlocks = text.split(/(?=create\s+(?:or\s+replace\s+)?function\s+)/gi);
+  for (const block of functionBlocks) {
+    if (!/^create\s+(?:or\s+replace\s+)?function\s+/i.test(block.trimStart())) continue;
+    if (/security\s+definer/i.test(block) && !/set\s+search_path\s*=/i.test(block)) {
+      const name = block.match(/function\s+([^\s(]+)/i)?.[1] ?? 'unknown';
+      fail(`SECURITY DEFINER function lacks SET search_path in ${file}: ${name}`);
+    }
+  }
 }
 
 for (const message of warnings) console.warn(`WARN: ${message}`);
@@ -102,4 +150,4 @@ if (errors.length) {
   console.error(`\nRepository audit failed with ${errors.length} error(s).`);
   process.exit(1);
 }
-console.log(`Repository audit passed: ${migrationFiles.length} migrations, ${functionDirs.length} Edge Functions, ${walk('platform').filter((f) => f.endsWith('.ts')).length} TypeScript source files checked.`);
+console.log(`Repository audit passed: ${migrationFiles.length} migrations, ${functionDirs.length} Edge Functions, ${platformFiles.length} TypeScript source files and ${rpcNames.size} RPC references checked.`);
