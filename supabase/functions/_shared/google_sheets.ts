@@ -177,25 +177,37 @@ export async function pushToGoogleSheet(
   // Canonical mirror tabs remain ordinary, readable worksheet tables. This
   // changes only structure/formatting; Apps Script never supplies the data.
   if (existing && matrix.length && matrix[0].length) {
+    const requests: Array<Record<string, unknown>> = [
+      { clearBasicFilter: { sheetId: existing.properties.sheetId } },
+      { repeatCell: {
+        range: { sheetId: existing.properties.sheetId, startRowIndex: 0, endRowIndex: 1,
+          startColumnIndex: 0, endColumnIndex: matrix[0].length },
+        cell: { userEnteredFormat: { backgroundColor: { red: 0.08, green: 0.13, blue: 0.20 },
+          textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
+        fields: 'userEnteredFormat(backgroundColor,textFormat)',
+      } },
+      { updateSheetProperties: { properties: { sheetId: existing.properties.sheetId,
+        gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
+      { autoResizeDimensions: { dimensions: { sheetId: existing.properties.sheetId,
+        dimension: 'COLUMNS', startIndex: 0, endIndex: matrix[0].length } } },
+    ];
+
+    // A header-only snapshot has no data rows to filter. Applying a basic
+    // filter to an artificially extended two-row range can partially intersect
+    // a pre-existing Google Sheets table and make an otherwise valid empty
+    // export fail. Keep the header styling/freeze/resize, but only add a filter
+    // when the snapshot actually contains data rows.
+    if (matrix.length > 1) {
+      requests.splice(3, 0, {
+        setBasicFilter: { filter: { range: { sheetId: existing.properties.sheetId,
+          startRowIndex: 0, endRowIndex: matrix.length, startColumnIndex: 0,
+          endColumnIndex: matrix[0].length } } },
+      });
+    }
+
     await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
       method: 'POST',
-      body: JSON.stringify({ requests: [
-        { clearBasicFilter: { sheetId: existing.properties.sheetId } },
-        { repeatCell: {
-          range: { sheetId: existing.properties.sheetId, startRowIndex: 0, endRowIndex: 1,
-            startColumnIndex: 0, endColumnIndex: matrix[0].length },
-          cell: { userEnteredFormat: { backgroundColor: { red: 0.08, green: 0.13, blue: 0.20 },
-            textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
-          fields: 'userEnteredFormat(backgroundColor,textFormat)',
-        } },
-        { updateSheetProperties: { properties: { sheetId: existing.properties.sheetId,
-          gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
-        { setBasicFilter: { filter: { range: { sheetId: existing.properties.sheetId,
-          startRowIndex: 0, endRowIndex: Math.max(matrix.length, 2), startColumnIndex: 0,
-          endColumnIndex: matrix[0].length } } } },
-        { autoResizeDimensions: { dimensions: { sheetId: existing.properties.sheetId,
-          dimension: 'COLUMNS', startIndex: 0, endIndex: matrix[0].length } } },
-      ] }),
+      body: JSON.stringify({ requests }),
     });
   }
 
