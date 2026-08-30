@@ -171,8 +171,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   await logExport(dataset, null, rows);
 
   if (format === 'xlsx') {
-    const bytes = await buildXlsx(spec.sheet, matrix);
-    return new Response(bytes, {
+    const bytes = buildXlsx(spec.sheet, matrix);
+    // Response expects an ArrayBuffer/BodyInit. Copying gives the typed array
+    // its own ArrayBuffer instead of the broader ArrayBufferLike generic that
+    // Deno correctly rejects here.
+    const body = Uint8Array.from(bytes).buffer;
+    return new Response(body, {
       headers: {
         ...corsHeaders(origin),
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
