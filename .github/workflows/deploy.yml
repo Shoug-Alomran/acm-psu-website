@@ -50,10 +50,11 @@ jobs:
 
       - name: Type-check Supabase Edge Functions
         run: |
-          deno check --node-modules-dir=auto supabase/functions/ai-review/index.ts
-          deno check --node-modules-dir=auto supabase/functions/records-export/index.ts
-          deno check --node-modules-dir=auto supabase/functions/member-sheet-sync/index.ts
-          deno check --node-modules-dir=auto supabase/functions/position-application-sheet-sync/index.ts
+          set -euo pipefail
+          for entry in supabase/functions/*/index.ts; do
+            echo "Checking $entry"
+            deno check --node-modules-dir=auto "$entry"
+          done
 
       - name: Validate public Supabase configuration
         shell: bash
