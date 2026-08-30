@@ -6,6 +6,8 @@ import { advisorActivities, positionHistory } from '../lib/api.js';
 import { archiveDate, enumLabel } from '../lib/format.js';
 import { requireClient } from '../lib/supabase.js';
 
+const CLUB_RECORDS_WORKBOOK = 'https://docs.google.com/spreadsheets/d/1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s/edit';
+
 interface InstructorProfile {
   user_id: string;
   academic_title: string | null;
@@ -176,13 +178,6 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
   }
 }
 
-/**
- * Faculty/staff do not have student memberships, so the generic dashboard must
- * not interpret a missing memberships row as "inactive". Their official ACM
- * record comes from current position history and project assignments instead.
- * This keeps every page reading the same canonical records rather than storing
- * instructor-only copies of status or activity counts in the browser.
- */
 async function enhanceDashboard(current: InstructorProfile | null, viewer: Awaited<ReturnType<typeof requireMember>>): Promise<void> {
   const [profilePanel, recordPanel, activities, history] = await Promise.all([
     waitForPanel('Your profile'),
@@ -216,6 +211,7 @@ async function enhanceDashboard(current: InstructorProfile | null, viewer: Await
         ]),
         h('div', { class: 'button-row' },
           h('a', { class: 'btn-ghost', href: '/portal/profile.html' }, 'Edit faculty profile'),
+          h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'Google club records'),
           h('a', { class: 'btn-ghost', href: '/portal/requests.html' }, 'Privacy & membership'),
         ),
       );
