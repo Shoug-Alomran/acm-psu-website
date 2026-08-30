@@ -27,6 +27,17 @@
     var toggle = document.querySelector('.nav-toggle');
     var links = document.getElementById('nav-links');
 
+    /*
+     * Club/event positions are an authenticated member workflow. Public
+     * visitors can discover events and join the club, but they should not see
+     * internal member opportunities in the public-site header.
+     */
+    if (links) {
+        links.querySelectorAll('a[href="positions.html"], a[href="/positions.html"]').forEach(function (link) {
+            link.remove();
+        });
+    }
+
     if (toggle && links) {
         toggle.addEventListener('click', function () {
             var open = links.classList.toggle('open');
@@ -81,7 +92,6 @@
             { href: 'index.html#about', en: 'About ACM PSU', ar: 'عن نادي ACM', detailEn: 'Focus areas, workshops and competitions', detailAr: 'مجالات النادي والورش والمسابقات' },
             { href: 'team.html', en: 'Team', ar: 'الأعضاء', detailEn: 'Executive council and chapter roster', detailAr: 'المجلس التنفيذي وقائمة أعضاء النادي' },
             { href: 'projects.html', en: 'Projects', ar: 'المشاريع', detailEn: 'Competitions, workshops and technical work', detailAr: 'المسابقات والورش والأعمال التقنية' },
-            { href: 'positions.html', en: 'Open Positions', ar: 'المهام المتاحة', detailEn: 'Volunteer assignments on active projects', detailAr: 'مهام تطوعية في المشاريع النشطة' },
             { href: 'projects/programming-jams/ai-programming-jam-26/archive.html', en: 'JAM.26 Resource Archive', ar: 'أرشيف موارد JAM.26', detailEn: 'Lessons, handouts, planning records and templates', detailAr: 'الدروس والنشرات وسجلات التخطيط والقوالب' },
             { href: 'projects/programming-jams/ai-programming-jam-26/', en: 'Programming Jam 2026', ar: 'معسكر البرمجة 2026', detailEn: 'AI-assisted web engineering case study', detailAr: 'دراسة حالة لهندسة الويب بالذكاء الاصطناعي' },
             { href: 'projects/ctfs/ctf-2.0/', en: 'CTF 2.0 Results', ar: 'نتائج CTF 2.0', detailEn: 'Verified scoreboard and competition report', detailAr: 'لوحة النتائج وتقرير المسابقة الموثّق' },
