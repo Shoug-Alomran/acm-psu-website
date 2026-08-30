@@ -3176,7 +3176,10 @@ img, svg { max-width: 100%; }
 .position-meta div:last-child { border-right: 0; }
 .position-meta dt { margin-bottom: 0.4rem; color: var(--text-dark); font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .position-meta dd { color: var(--text-muted); font-size: 0.88rem; }
-.position-apply { width: auto; min-width: 250px; padding-left: 2rem; padding-right: 2rem; }
+/* The registration call to action is now a link into the member portal rather
+ * than a submit button, so it needs the box behaviour a <button> got for free. */
+.position-apply { display: inline-block; width: auto; min-width: 250px; padding-left: 2rem; padding-right: 2rem; text-align: center; text-decoration: none; }
+a.position-apply:hover { color: var(--bg-base); }
 .position-apply:disabled { cursor: not-allowed; background: var(--bg-surface); color: var(--text-dark); border-color: var(--border-color); }
 .positions-empty { display: grid; gap: 0.5rem; padding: 5rem 2rem; text-align: center; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
 .positions-empty strong { color: var(--text-main); font-family: var(--font-mono); }

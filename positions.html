@@ -57,12 +57,12 @@
             <div class="mono-meta accent-text">DIR: /PROJECTS/OPEN_ASSIGNMENTS</div>
             <h1 class="page-title">Choose Your<br>Contribution.</h1>
             <div class="positions-intro">
-                <p>Every opening shows the same information to every member: the work, requirements, commitment,
-                    capacity, deadline, and selection method. Places are confirmed by the server in submission order.
-                </p>
-                <div class="fairness-note mono-meta"><span>FAIR_ACCESS_PROTOCOL</span> Members may apply to more than one
-                    role. Registration closes automatically at capacity, and organizers may enable a timestamped
-                    waitlist.</div>
+                <p>Every opening shows the same information to every member: the work, the event it belongs to,
+                    capacity and closing date. Registration happens in the member portal, where a request is recorded
+                    against your account and reviewed by an organizer.</p>
+                <div class="fairness-note mono-meta"><span>FAIR_ACCESS_PROTOCOL</span> Members may request more than one
+                    role. Registration closes automatically at capacity, and every request is timestamped on your
+                    verified record.</div>
             </div>
         </header>
 
@@ -81,43 +81,6 @@
         </section>
     </main>
 
-    <dialog class="position-dialog" id="position-dialog" aria-labelledby="position-dialog-title">
-        <div class="position-dialog-head">
-            <div>
-                <p class="mono-meta accent-text" id="position-dialog-project">PROJECT</p>
-                <h2 id="position-dialog-title">Claim position</h2>
-            </div>
-            <button class="position-dialog-close" type="button" aria-label="Close">×</button>
-        </div>
-        <form class="form-body position-form" id="position-form" novalidate>
-            <input id="position-id" name="positionId" type="hidden">
-            <div class="input-group">
-                <div class="label-wrap"><label for="position-name">Full name</label><span
-                        class="mono-meta field-hint">REQUIRED</span></div><input id="position-name" name="name"
-                    type="text" autocomplete="name" required>
-            </div>
-            <div class="form-row">
-                <div class="input-group"><label for="position-email">PSU email</label><input id="position-email"
-                        name="email" type="email" placeholder="you@psu.edu.sa" autocomplete="email" required></div>
-                <div class="input-group"><label for="position-student-id">Student ID</label><input
-                        id="position-student-id" name="studentId" type="text" inputmode="numeric" required></div>
-            </div>
-            <div class="input-group">
-                <div class="label-wrap"><label for="position-note">Why are you interested?</label><span
-                        class="mono-meta field-hint">MAX 600 CHARACTERS</span></div><textarea id="position-note"
-                    name="note" rows="4" maxlength="600"
-                    placeholder="Briefly explain your interest and any relevant experience." required></textarea>
-            </div>
-            <div class="input-group form-trap" aria-hidden="true"><label for="position-website">Leave
-                    empty</label><input id="position-website" name="website" type="text" tabindex="-1"
-                    autocomplete="off"></div>
-            <label class="position-confirm"><input name="commitment" type="checkbox" value="yes" required><span>I have
-                    read the responsibilities, availability, and time commitment, and I can complete this
-                    assignment.</span></label>
-            <p class="form-status" id="position-form-status" role="status" hidden></p>
-            <button class="btn-submit" type="submit">Submit assignment request</button>
-        </form>
-    </dialog>
 
     <footer class="container site-footer mono-meta">
         <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
@@ -130,7 +93,8 @@
 
     <script src="assets/js/i18n.js?v=20260829-6" defer></script>
     <script src="assets/js/main.js?v=20260829-2" defer></script>
-    <script src="assets/js/positions.js?v=20260829-1" defer></script>
+    <script src="/assets/js/app/env.js?v=20260901-1"></script>
+    <script type="module" src="/assets/js/app/public-positions.js?v=20260901-1"></script>
 </body>
 
 </html>

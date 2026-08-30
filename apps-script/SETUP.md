@@ -98,40 +98,29 @@ Two quick tests, cheapest first:
 - **The whole path:** submit the real form on `join.html`. You should see
   `HANDSHAKE COMPLETE` and a new row.
 
-## 6. Enable open project positions
+## 6. Open project positions — RETIRED
 
-The same web app also powers `positions.html`; no second deployment is needed.
+**This section no longer applies.** Event roles and registrations moved to
+Supabase. See `POSITION_SIGNUPS_RETIRED.md` next to this file.
 
-1. In the Apps Script editor, select `setupPositionSheets` from the function
-   dropdown and press **Run** once.
-2. Two tabs appear: `Positions` and `Position Signups`. Four example assignments
-   are included. Edit, replace, or delete them directly in the sheet.
-3. Paste the same `/exec` URL into `FORM_ENDPOINT` near the top of
-   `assets/js/positions.js`.
-4. Redeploy the script as a **New version** because the positions feature adds
-   new server functions. Keep the same deployment so its URL does not change.
+In short:
 
-The `Positions` columns work as follows:
+- `positions.html` reads open roles from the Supabase view
+  `public_event_openings` and links members to `/portal/opportunities.html`.
+  It no longer talks to Apps Script.
+- `registerForPosition()` in `Code.gs` refuses every request and writes
+  nothing. Re-deploy the web app as a **New version** so the live `/exec` URL
+  picks that up.
+- Admins now create roles in the member portal under a project
+  (project/event role, openings, closing date, description), not in the sheet.
+- The `Positions` and `Position Signups` tabs stay as historical reference.
+  Do not delete them and do not add rows to them.
+- `Position Applications` is unchanged and still live. Supabase refreshes it
+  through the `position-application-sheet-sync` Edge Function; it is an
+  administrative snapshot, never the source of truth.
 
-| Column | Meaning |
-|--------|---------|
-| `Position ID` | A unique stable code, such as `CTF3-MEDIA` |
-| `Project`, `Title`, `Summary` | Public assignment identity and overview |
-| `Responsibilities`, `Requirements` | Separate items with `|` or line breaks |
-| `Commitment` | Expected hours, meetings, and event attendance |
-| `Capacity` | Maximum number of automatically assigned members |
-| `Deadline` | Publicly displayed deadline |
-| `Selection Method` | The fairness rule shown to applicants |
-| `Status` | `Open`, `Closed`, or `Draft`; drafts are not published |
-| `Waitlist Enabled` | `TRUE` continues waitlist signups when full; `FALSE` closes registration |
-
-Do not rename the header cells. You may reorder columns, but the current server
-setup writes new signup rows in the provided `Position Signups` column order.
-To reopen a place after someone withdraws, change their signup `Status` from
-`Assigned` to `Withdrawn` or `Rejected`; the live remaining count updates on the
-next page refresh.
-
----
+The membership application flow from `join.html` is untouched and still uses
+this deployment.
 
 ## After you edit `Code.gs`
 

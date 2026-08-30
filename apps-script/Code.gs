@@ -206,60 +206,32 @@ function listPublishedPositions() {
     });
 }
 
+/* RETIRED — the Position Signups write path.
+ *
+ * Registration moved to Supabase. The public positions page now reads the
+ * public_event_openings view and sends members to /portal/opportunities.html,
+ * where a request is recorded against their account and reviewed by an
+ * organizer. Two independent registration records could not be kept honest:
+ * this sheet did not know what the portal had approved, and the portal could
+ * not see a place someone held here.
+ *
+ * This function is kept, and kept refusing, on purpose. A browser holding a
+ * cached copy of the old page would otherwise still POST here and create a
+ * signup nobody in the club would ever see. It writes nothing.
+ *
+ * The existing Position Signups worksheet is historical data. Leave it in
+ * place; do not add rows to it. See POSITION_SIGNUPS_RETIRED.md.
+ */
 function registerForPosition(data) {
-    ['positionId', 'name', 'email', 'studentId', 'note'].forEach(function (field) {
-        if (!String(data[field] || '').trim()) { throw new Error('Missing required field: ' + field); }
-    });
-    if (String(data.commitment || '') !== 'yes') { throw new Error('You must accept the commitment'); }
-
-    var email = String(data.email).trim().toLowerCase();
-    if (!/@psu\.edu\.sa$/i.test(email)) { throw new Error('Use your PSU email address'); }
-
-    var lock = LockService.getScriptLock();
-    lock.waitLock(20000);
-    try {
-        var book = getBook();
-        var positionsSheet = book.getSheetByName(POSITIONS_SHEET);
-        var signupsSheet = book.getSheetByName(POSITION_SIGNUPS_SHEET);
-        if (!positionsSheet || !signupsSheet) { throw new Error('Position registry is not configured'); }
-
-        var positionId = String(data.positionId).trim();
-        var position = rowsAsObjects(positionsSheet).filter(function (row) {
-            return String(row['Position ID'] || '').trim() === positionId;
-        })[0];
-        if (!position || String(position['Status'] || '').toLowerCase() !== 'open') {
-            throw new Error('This position is not open');
-        }
-
-        var signups = rowsAsObjects(signupsSheet);
-        var studentId = String(data.studentId).trim();
-        var prior = signups.filter(function (signup) {
-            var samePerson = String(signup['PSU Email'] || '').toLowerCase() === email || String(signup['Student ID'] || '').trim() === studentId;
-            var active = ['assigned', 'waitlisted'].indexOf(String(signup['Status'] || '').toLowerCase()) !== -1;
-            return samePerson && active;
-        });
-        if (prior.some(function (signup) { return String(signup['Position ID']) === positionId; })) {
-            throw new Error('You already requested this position');
-        }
-
-        var assignedCount = signups.filter(function (signup) {
-            return String(signup['Position ID']) === positionId && String(signup['Status']).toLowerCase() === 'assigned';
-        }).length;
-        var capacity = Math.max(0, Number(position['Capacity']) || 0);
-        var signupStatus = assignedCount < capacity ? 'Assigned' : 'Waitlisted';
-        if (signupStatus === 'Waitlisted' && !isTruthy(position['Waitlist Enabled'])) {
-            throw new Error('This position is full and registration is closed');
-        }
-
-        signupsSheet.appendRow([
-            new Date(), positionId, position['Project'], position['Title'],
-            String(data.name).trim(), email, studentId, String(data.note).trim(), signupStatus
-        ]);
-        return { status: 'ok', assignmentStatus: signupStatus.toLowerCase() };
-    } finally {
-        lock.releaseLock();
-    }
+    throw new Error(
+        'Position registration has moved to the ACM member portal. ' +
+        'Sign in at https://acm-psu.shoug-tech.com/portal/opportunities.html ' +
+        'to register for this role.'
+    );
 }
+
+/* Read-only. Left in place so anything still pointing at the sheet keeps
+ * working; the public website no longer uses it. */
 
 function rowsAsObjects(sheet) {
     var values = sheet.getDataRange().getValues();
