@@ -1,4 +1,4 @@
-/** Position catalogue and assignment controls. */
+/** Club organization position catalogue and assignment controls. */
 import { h, render, formValues, textOf } from '../lib/dom.js';
 import {
   shell, pageHeader, panel, dataTable, loading, dialog, field, notice, toast,
@@ -9,7 +9,7 @@ import { requireAdmin } from '../lib/session.js';
 import { positions } from '../lib/api.js';
 import { members, grantPosition, type MemberRow } from '../lib/admin.js';
 import { requireClient } from '../lib/supabase.js';
-import { term } from '../lib/format.js';
+import { enumLabel, term } from '../lib/format.js';
 import type { Position } from '../lib/types.js';
 
 interface Holder {
@@ -21,10 +21,12 @@ interface Holder {
   member: { full_name: string } | null;
 }
 
-const CATEGORIES = ['executive', 'lead', 'committee', 'general'].map((value) => ({
-  value,
-  label: value.charAt(0).toUpperCase() + value.slice(1),
-}));
+const CATEGORIES = [
+  { value: 'executive', label: 'Executive committee' },
+  { value: 'lead', label: 'Club leadership' },
+  { value: 'committee', label: 'Committee role' },
+  { value: 'general', label: 'General club role' },
+];
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -60,9 +62,17 @@ function vacancy(position: Position): Attention {
   return position.category === 'executive' || position.category === 'lead' ? 'now' : 'review';
 }
 
+function membershipLabel(member: MemberRow): string {
+  return enumLabel(member.membership?.status ?? 'applicant');
+}
+
+function mayHoldClubPosition(member: MemberRow): boolean {
+  return member.account_state === 'active' && member.membership?.status === 'active';
+}
+
 async function start(): Promise<void> {
   const viewer = await requireAdmin('club_admin');
-  const content = shell(viewer, 'admin', 'Positions');
+  const content = shell(viewer, 'admin', 'Club Organization');
 
   function editor(existing: Position | null): void {
     const form = h('form', { class: 'portal-form', novalidate: true },
@@ -72,7 +82,7 @@ async function start(): Promise<void> {
       ),
       h('div', { class: 'field-pair' },
         field({
-          label: 'Category', name: 'category', type: 'select',
+          label: 'Organization level', name: 'category', type: 'select',
           value: existing?.category ?? 'general', options: CATEGORIES,
         }),
         field({
@@ -88,7 +98,7 @@ async function start(): Promise<void> {
     ) as HTMLFormElement;
 
     const modal = dialog(
-      existing ? `Edit — ${existing.title}` : 'New position',
+      existing ? `Edit — ${existing.title}` : 'New club role',
       form,
       h('div', { class: 'button-row' },
         action(existing ? 'Save' : 'Create', async () => {
@@ -116,78 +126,201 @@ async function start(): Promise<void> {
               if (error) throw new Error(error.message);
             }
             modal.close();
-            toast(existing ? 'Position updated.' : 'Position created.');
+            toast(existing ? 'Club role updated.' : 'Club role created.');
             await draw();
           } catch (error) {
-            console.error('Could not save position:', error);
-            toast(`Could not save position: ${errorMessage(error)}`, 'err');
+            console.error('Could not save club role:', error);
+            toast(`Could not save club role: ${errorMessage(error)}`, 'err');
           }
         }, 'primary'),
       ),
     );
   }
 
-  function assignmentDialog(position: Position, candidates: MemberRow[]): void {
-    if (!candidates.length) {
-      toast('There are no active members available to assign.', 'err');
+  function assignmentDialog(position: Position, allUsers: MemberRow[]): void {
+    if (!allUsers.length) {
+      toast('There are no accounts to display.', 'err');
       return;
     }
 
+    const eligible = allUsers.filter(mayHoldClubPosition);
+    let selectedId = eligible[0]?.id ?? '';
     const today = new Date().toISOString().slice(0, 10);
-    const form = h('form', { class: 'portal-form' },
-      notice('info', `Choose an active member to assign as ${position.title}. The change is added to their official position history.`),
-      field({
-        label: 'Member',
-        name: 'member_id',
-        type: 'select',
-        required: true,
-        value: candidates[0]?.id ?? '',
-        options: candidates.map((member) => ({
-          value: member.id,
-          label: `${member.full_name} — ${member.email}${member.current_position ? ` · currently ${member.current_position}` : ''}`,
-        })),
-      }),
-      field({ label: 'Effective date', name: 'effective_on', type: 'date', required: true, value: today }),
-      field({
-        label: 'Reason / note', name: 'reason', type: 'textarea', rows: 3,
-        hint: 'Optional. Stored with the official position change.',
-      }),
-    ) as HTMLFormElement;
+
+    const searchInput = h('input', {
+      type: 'search',
+      placeholder: 'Search by name, email, student ID or current role…',
+      'aria-label': 'Search accounts',
+      style: {
+        width: '100%',
+        padding: '0.85rem 1rem',
+        background: '#0d0d12',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-main)',
+        font: 'inherit',
+      },
+    }) as HTMLInputElement;
+
+    const selectedSummary = h('div', {
+      class: 'mono-meta',
+      style: {
+        minHeight: '2.5rem',
+        padding: '0.75rem 1rem',
+        border: '1px solid var(--border-color)',
+        background: 'var(--bg-surface-hover)',
+      },
+    });
+
+    const list = h('div', {
+      role: 'listbox',
+      'aria-label': 'Club accounts',
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(18rem, 1fr))',
+        gap: '0.65rem',
+        maxHeight: '24rem',
+        overflowY: 'auto',
+        padding: '0.25rem',
+      },
+    });
+
+    function renderPeople(query = ''): void {
+      const normalized = query.trim().toLowerCase();
+      const visible = allUsers.filter((member) => {
+        const haystack = [
+          member.full_name,
+          member.email,
+          member.student_id ?? '',
+          member.current_position ?? '',
+          membershipLabel(member),
+        ].join(' ').toLowerCase();
+        return !normalized || haystack.includes(normalized);
+      });
+
+      list.replaceChildren(...visible.map((member) => {
+        const allowed = mayHoldClubPosition(member);
+        const selected = member.id === selectedId;
+        const status = membershipLabel(member);
+        const detail = [
+          member.email,
+          member.student_id ? `ID ${member.student_id}` : null,
+          member.current_position ? `Current: ${member.current_position}` : null,
+        ].filter(Boolean).join(' · ');
+
+        return h('button', {
+          type: 'button',
+          role: 'option',
+          'aria-selected': String(selected),
+          disabled: !allowed,
+          onclick: () => {
+            if (!allowed) return;
+            selectedId = member.id;
+            renderPeople(searchInput.value);
+            selectedSummary.replaceChildren(
+              h('strong', member.full_name),
+              h('span', { style: { marginLeft: '0.65rem', color: 'var(--text-muted)' } },
+                `selected for ${position.title}`),
+            );
+          },
+          style: {
+            textAlign: 'left',
+            padding: '0.9rem 1rem',
+            minHeight: '6.25rem',
+            border: selected ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
+            background: selected ? 'var(--accent-blue-dim)' : 'var(--bg-surface)',
+            color: allowed ? 'var(--text-main)' : 'var(--text-dark)',
+            cursor: allowed ? 'pointer' : 'not-allowed',
+            opacity: allowed ? '1' : '0.55',
+          },
+        },
+          h('strong', { style: { display: 'block', marginBottom: '0.35rem' } }, member.full_name),
+          h('span', { class: 'mono-meta', style: { display: 'block', marginBottom: '0.45rem' } }, detail || 'No account details'),
+          h('span', { class: 'mono-meta' },
+            allowed
+              ? `MEMBERSHIP: ${status.toUpperCase()}`
+              : `MEMBERSHIP: ${status.toUpperCase()} — activate in Members before assigning a club role`),
+        );
+      }));
+
+      if (!visible.length) {
+        list.replaceChildren(h('p', { class: 'mono-meta dim-text' }, 'No accounts match this search.'));
+      }
+    }
+
+    searchInput.addEventListener('input', () => renderPeople(searchInput.value));
+    renderPeople();
+
+    if (selectedId) {
+      const selected = allUsers.find((member) => member.id === selectedId);
+      if (selected) selectedSummary.replaceChildren(
+        h('strong', selected.full_name),
+        h('span', { style: { marginLeft: '0.65rem', color: 'var(--text-muted)' } },
+          `selected for ${position.title}`),
+      );
+    } else {
+      selectedSummary.replaceChildren('No active member is currently eligible. Activate an applicant from Members first.');
+    }
+
+    const dateField = field({
+      label: 'Effective date', name: 'effective_on', type: 'date', required: true, value: today,
+    });
+    const reason = field({
+      label: 'Reason / note', name: 'reason', type: 'textarea', rows: 3,
+      hint: 'Optional. Stored with the official club position change.',
+    });
+
+    const body = h('div', { class: 'portal-form' },
+      notice('info',
+        `This assigns an official ACM club organization role: ${position.title}. Event and competition work is separate and belongs under Projects & Events → event positions.`),
+      h('div', {},
+        h('div', { class: 'mono-meta', style: { marginBottom: '0.5rem' } },
+          `ALL ACCOUNTS (${allUsers.length}) · ELIGIBLE ACTIVE MEMBERS (${eligible.length})`),
+        searchInput,
+      ),
+      list,
+      selectedSummary,
+      h('div', { class: 'field-pair' }, dateField, reason),
+    );
 
     const modal = dialog(
-      `Assign — ${position.title}`,
-      form,
+      `Assign club role — ${position.title}`,
+      body,
       h('div', { class: 'button-row' },
         action('Assign member', async () => {
-          if (!form.reportValidity()) return;
-          const values = formValues(form);
-          const memberId = textOf(values, 'member_id');
-          const effectiveOn = textOf(values, 'effective_on');
-          if (!memberId || !effectiveOn) return;
+          if (!selectedId) {
+            toast('Choose an active member first.', 'err');
+            return;
+          }
+          const dateInput = dateField.querySelector('input') as HTMLInputElement | null;
+          const reasonInput = reason.querySelector('textarea') as HTMLTextAreaElement | null;
+          const effectiveOn = dateInput?.value || today;
           try {
-            await grantPosition(memberId, position.id, effectiveOn, textOf(values, 'reason').trim() || null);
+            await grantPosition(selectedId, position.id, effectiveOn, reasonInput?.value.trim() || null);
             modal.close();
             toast(`${position.title} assigned.`);
             await draw();
           } catch (error) {
-            console.error('Could not assign position:', error);
-            toast(`Could not assign position: ${errorMessage(error)}`, 'err');
+            console.error('Could not assign club role:', error);
+            toast(`Could not assign club role: ${errorMessage(error)}`, 'err');
           }
         }, 'primary'),
       ),
     );
+
+    modal.style.width = 'min(72rem, calc(100vw - 3rem))';
+    modal.style.maxWidth = '72rem';
+    modal.style.margin = 'auto';
   }
 
   async function draw(): Promise<void> {
     render(content, loading());
     try {
-      const [all, current, activeMembers] = await Promise.all([
+      const [all, current, allUsers] = await Promise.all([
         positions(true),
         holders(),
-        members('', 'active'),
+        members('', ''),
       ]);
 
-      const candidates = activeMembers.filter((member) => member.account_state === 'active');
       const byPosition = new Map<string, Holder[]>();
       for (const holder of current) {
         if (!holder.position_id) continue;
@@ -201,12 +334,14 @@ async function start(): Promise<void> {
       );
 
       render(content,
-        pageHeader('ADMIN / POSITIONS', 'ACM positions',
+        pageHeader('ADMIN / CLUB ORGANIZATION', 'Club organization roles',
           h('button', {
             type: 'button', class: 'btn-submit', style: { marginTop: '0' },
             onclick: () => editor(null),
-          }, 'New position'),
+          }, 'New club role'),
         ),
+        notice('info',
+          'This page is only for standing ACM organization roles such as President, Vice President, committee leads and club officers. Event jobs such as CTF organizer, Programming Jam volunteer, registration, judging or workshop support belong under Projects & Events as event positions that members can sign up for.'),
         h('div', { class: 'position-summary' },
           h('p', { class: 'queue-summary' },
             vacantLeadership.length
@@ -218,19 +353,19 @@ async function start(): Promise<void> {
             ['ok', 'Filled'], ['idle', 'Archived'],
           ),
         ),
-        notice('info',
-          'Vacant roles can be assigned directly from this page. Archiving hides a position from new grants but keeps every historical record.'),
-        panel('Catalogue',
+        panel('Club organization catalogue',
           all.length ? dataTable(
-            ['Position', 'Category', 'Rank', 'Currently held by', 'State', ''],
+            ['Club role', 'Organization level', 'Rank', 'Currently held by', 'State', ''],
             all.map((position) => {
               const held = byPosition.get(position.id) ?? [];
+              const categoryLabel = CATEGORIES.find((category) => category.value === position.category)?.label
+                ?? enumLabel(position.category);
               return [
                 h('div', {},
                   h('strong', position.title),
                   position.description ? h('p', { class: 'mono-meta dim-text' }, position.description) : null,
                 ),
-                h('span', { class: 'mono-meta' }, position.category.toUpperCase()),
+                h('span', { class: 'mono-meta' }, categoryLabel.toUpperCase()),
                 h('span', { class: 'mono-meta' }, String(position.rank)),
                 held.length
                   ? h('div', { class: 'holder-list' }, held.map((holder) =>
@@ -243,7 +378,7 @@ async function start(): Promise<void> {
                 stateTag(position.is_active ? 'Active' : 'Archived', !position.is_active),
                 h('div', { class: 'button-row' },
                   position.is_active && !held.length
-                    ? action('ASSIGN', async () => assignmentDialog(position, candidates), 'primary')
+                    ? action('ASSIGN', async () => assignmentDialog(position, allUsers), 'primary')
                     : null,
                   h('button', { type: 'button', class: 'link-button', onclick: () => editor(position) }, 'EDIT'),
                   action(position.is_active ? 'ARCHIVE' : 'RESTORE', async () => {
@@ -253,11 +388,11 @@ async function start(): Promise<void> {
                         archived_at: position.is_active ? new Date().toISOString() : null,
                       }).eq('id', position.id);
                       if (error) throw new Error(error.message);
-                      toast(position.is_active ? 'Position archived.' : 'Position restored.');
+                      toast(position.is_active ? 'Club role archived.' : 'Club role restored.');
                       await draw();
                     } catch (error) {
-                      console.error('Could not change position state:', error);
-                      toast(`Could not update position: ${errorMessage(error)}`, 'err');
+                      console.error('Could not change club role state:', error);
+                      toast(`Could not update club role: ${errorMessage(error)}`, 'err');
                     }
                   }),
                 ),
@@ -271,14 +406,14 @@ async function start(): Promise<void> {
                 return attentionRow(held.length ? 'ok' : vacancy(position));
               },
             },
-          ) : emptyState('No positions defined.'),
+          ) : emptyState('No club organization roles defined.'),
         ),
       );
     } catch (error) {
-      console.error('Positions page failed to load:', error);
+      console.error('Club organization page failed to load:', error);
       render(content,
-        pageHeader('ADMIN / POSITIONS', 'Positions unavailable'),
-        notice('err', `The position catalogue could not load: ${errorMessage(error)}`),
+        pageHeader('ADMIN / CLUB ORGANIZATION', 'Club organization unavailable'),
+        notice('err', `The club role catalogue could not load: ${errorMessage(error)}`),
         h('div', { class: 'button-row' },
           h('button', { type: 'button', class: 'btn-ghost', onclick: () => void draw() }, 'TRY AGAIN'),
         ),
