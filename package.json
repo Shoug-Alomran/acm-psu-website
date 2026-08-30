@@ -9,13 +9,13 @@
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "audit:repo": "node scripts/repo-audit.mjs",
-    "check": "npm run audit:repo && npm run typecheck && npm run build",
+    "check": "npm run build && npm run audit:repo && npm run typecheck",
     "serve": "python3 -m http.server 8000",
     "dev": "node build.mjs --watch & python3 -m http.server 8000",
     "types:pull": "supabase gen types typescript --linked > platform/lib/database.types.ts",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
-    "functions:deploy": "supabase functions deploy ai-review && supabase functions deploy records-export && supabase functions deploy club-records-sheet-sync"
+    "functions:deploy": "supabase functions deploy ai-review && supabase functions deploy application-summary && supabase functions deploy records-export && supabase functions deploy club-records-sheet-sync"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
