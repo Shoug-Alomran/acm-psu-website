@@ -29,7 +29,8 @@ Do not score, rank, approve, reject, recommend acceptance, or infer unstated fac
 Your only assessment is whether the submitted information is clear and complete enough for an administrator to understand the applicant before an interview.
 The confidence percentage means confidence in the clarity/completeness of the supplied application content, NOT confidence that the applicant should be accepted.
 
-Reply with JSON only in exactly this shape:
+Return one valid JSON object only. Do not use markdown fences, headings, commentary, or text before/after the JSON.
+The JSON must match exactly this shape:
 {
   "summary": "2-4 concise factual sentences",
   "content_check": {
@@ -50,6 +51,110 @@ Use "clear" when the submitted information is internally understandable and spec
 Use "needs_clarification" when one or more answers are vague or ambiguous but still usable.
 Use "insufficient" only when the application lacks enough substantive information to summarize reliably.
 Never penalize or lower quality merely because the applicant reports no previous experience.`;
+
+function parseJsonObject(raw: string): Record<string, unknown> | null {
+  const trimmed = raw.trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null;
+  } catch {
+    // Fall through to balanced-object extraction.
+  }
+
+  let start = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < trimmed.length; i += 1) {
+    const ch = trimmed[i];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      if (depth === 0) start = i;
+      depth += 1;
+      continue;
+    }
+
+    if (ch === '}' && depth > 0) {
+      depth -= 1;
+      if (depth === 0 && start >= 0) {
+        try {
+          const parsed = JSON.parse(trimmed.slice(start, i + 1));
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? parsed as Record<string, unknown>
+            : null;
+        } catch {
+          start = -1;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+async function runModel(
+  accountId: string,
+  token: string,
+  model: string,
+  userPrompt: string,
+  repairRaw?: string,
+): Promise<string> {
+  const messages = repairRaw === undefined
+    ? [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ]
+    : [
+        {
+          role: 'system',
+          content: `${SYSTEM_PROMPT}\n\nYour previous response was not valid JSON. Repair it now. Output only the JSON object.`,
+        },
+        {
+          role: 'user',
+          content: `${userPrompt}\n\nPrevious model response to repair:\n${repairRaw.slice(0, 6000)}`,
+        },
+      ];
+
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages,
+        max_tokens: 900,
+        temperature: 0,
+      }),
+      signal: AbortSignal.timeout(30_000),
+    },
+  );
+
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload?.errors?.[0]?.message ?? `HTTP ${response.status}`);
+  return String(payload?.result?.response ?? '');
+}
 
 Deno.serve(async (req: Request): Promise<Response> => {
   const origin = req.headers.get('Origin');
@@ -98,41 +203,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
   ].join('\n');
 
   try {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 700,
-          temperature: 0.1,
-        }),
-        signal: AbortSignal.timeout(30_000),
-      },
-    );
+    let raw = await runModel(accountId, token, model, userPrompt);
+    let parsed = parseJsonObject(raw);
 
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload?.errors?.[0]?.message ?? `HTTP ${response.status}`);
+    if (!parsed) {
+      raw = await runModel(accountId, token, model, userPrompt, raw);
+      parsed = parseJsonObject(raw);
+    }
 
-    const raw = String(payload?.result?.response ?? '');
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('The model did not return usable JSON.');
+    if (!parsed) throw new Error('The model returned an unreadable response twice. Please retry.');
 
-    const parsed = JSON.parse(match[0]);
-    const experienceStatus = ['reported', 'none', 'not_provided'].includes(parsed?.previous_experience?.status)
-      ? parsed.previous_experience.status
+    const previousExperience = parsed.previous_experience as Record<string, unknown> | undefined;
+    const contentCheck = parsed.content_check as Record<string, unknown> | undefined;
+    const experienceStatus = ['reported', 'none', 'not_provided'].includes(String(previousExperience?.status))
+      ? String(previousExperience?.status) as 'reported' | 'none' | 'not_provided'
       : 'not_provided';
-    const quality = ['clear', 'needs_clarification', 'insufficient'].includes(parsed?.content_check?.quality)
-      ? parsed.content_check.quality
+    const quality = ['clear', 'needs_clarification', 'insufficient'].includes(String(contentCheck?.quality))
+      ? String(contentCheck?.quality) as 'clear' | 'needs_clarification' | 'insufficient'
       : 'needs_clarification';
-    const rawConfidence = Number(parsed?.content_check?.confidence);
+    const rawConfidence = Number(contentCheck?.confidence);
     const confidence = Number.isFinite(rawConfidence)
       ? Math.max(0, Math.min(100, Math.round(rawConfidence)))
       : 50;
@@ -142,22 +231,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
       content_check: {
         quality,
         confidence,
-        rationale: typeof parsed?.content_check?.rationale === 'string'
-          ? parsed.content_check.rationale
+        rationale: typeof contentCheck?.rationale === 'string'
+          ? contentCheck.rationale
           : 'The model did not provide a rationale.',
       },
       previous_experience: {
         status: experienceStatus,
-        details: typeof parsed?.previous_experience?.details === 'string'
-          ? parsed.previous_experience.details
+        details: typeof previousExperience?.details === 'string'
+          ? previousExperience.details
           : null,
       },
       interests: Array.isArray(parsed.interests)
-        ? parsed.interests.filter((item: unknown) => typeof item === 'string').slice(0, 8)
+        ? parsed.interests.filter((item: unknown) => typeof item === 'string').slice(0, 8) as string[]
         : [],
       goals: typeof parsed.goals === 'string' ? parsed.goals : null,
       useful_follow_up: Array.isArray(parsed.useful_follow_up)
-        ? parsed.useful_follow_up.filter((item: unknown) => typeof item === 'string').slice(0, 3)
+        ? parsed.useful_follow_up.filter((item: unknown) => typeof item === 'string').slice(0, 3) as string[]
         : [],
     };
 
