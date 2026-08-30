@@ -46,11 +46,11 @@ interface AiApplicantSummary {
 }
 
 const FILTERS: Array<[string, string[]]> = [
+  ['All', ['submitted', 'interview', 'approved', 'rejected', 'withdrawn']],
   ['Open', ['submitted']],
   ['Interviews', ['interview']],
   ['Approved', ['approved']],
   ['Not accepted', ['rejected']],
-  ['All', ['submitted', 'interview', 'approved', 'rejected', 'withdrawn']],
 ];
 
 function errorMessage(error: unknown): string {
@@ -413,7 +413,7 @@ async function start(): Promise<void> {
                     ? 'YES'
                     : application.experience_status === 'none' ? 'NOT YET' : '—';
                   const preference = application.preferred_position_id
-                    ? (positionTitle.get(application.preferred_position_id) ?? 'ROLE PREFERENCE')
+                    ? (positionTitle.get(application.preferred_position_id) ?? 'ROLE REQUESTED')
                     : 'GENERAL MEMBER';
                   return [
                     h('div', {},
@@ -426,7 +426,7 @@ async function start(): Promise<void> {
                       application.interests.slice(0, 3).join(', ') +
                       (application.interests.length > 3 ? ` +${application.interests.length - 3}` : '')),
                     h('span', { class: 'mono-meta' }, experience),
-                    h('span', { class: 'mono-meta' }, preference),
+                    h('span', { class: 'mono-meta dim-text' }, preference),
                     h('span', { class: 'mono-meta' }, archiveDate(application.created_at)),
                     statusPill(application.status),
                     action('Review', async () => openApplication(application)),
