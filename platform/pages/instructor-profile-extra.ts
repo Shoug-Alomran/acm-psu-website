@@ -97,17 +97,19 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
         placeholder: 'e.g. Computer Science',
       }),
     ),
-    field({
-      label: 'Courses taught', name: 'courses_taught', type: 'textarea', rows: 4, maxlength: 2000,
-      value: current?.courses_taught?.join('\n') ?? '',
-      hint: 'One course per line, or separate courses with commas. Course codes are useful when available.',
-      placeholder: 'CS 210 — Data Structures\nCYS 401 — Cybersecurity',
-    }),
-    field({
-      label: 'Areas of expertise', name: 'expertise', type: 'textarea', rows: 4, maxlength: 2000,
-      value: current?.expertise?.join('\n') ?? '',
-      hint: 'Examples: cybersecurity, machine learning, software engineering, databases.',
-    }),
+    h('div', { class: 'field-pair' },
+      field({
+        label: 'Courses taught', name: 'courses_taught', type: 'textarea', rows: 5, maxlength: 2000,
+        value: current?.courses_taught?.join('\n') ?? '',
+        hint: 'One course per line, or separate courses with commas. Course codes are useful when available.',
+        placeholder: 'CS 210 — Data Structures\nCYS 401 — Cybersecurity',
+      }),
+      field({
+        label: 'Areas of expertise', name: 'expertise', type: 'textarea', rows: 5, maxlength: 2000,
+        value: current?.expertise?.join('\n') ?? '',
+        hint: 'Examples: cybersecurity, machine learning, software engineering, databases.',
+      }),
+    ),
     field({
       label: 'Research interests', name: 'research_interests', type: 'textarea', rows: 4, maxlength: 2000,
       value: current?.research_interests?.join('\n') ?? '',
@@ -165,24 +167,14 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
   instructorPanel.dataset.instructorProfilePanel = 'true';
 
   /*
-   * Keep the page as a two-column layout. Previously this panel was inserted as
-   * a third sibling in .panel-grid, which squeezed all three panels into narrow
-   * columns. Faculty-editable panels now stack together in the primary column;
-   * photo and ACM-verified information stay in the secondary column.
+   * Faculty details are substantial enough to deserve the full content width.
+   * Keep the compact identity/photo/verified-record grid at the top, then place
+   * this editor underneath it so long course and research text is not squeezed
+   * into one narrow column while the opposite side of the page sits empty.
    */
-  const grid = about.parentElement;
-  if (grid?.classList.contains('panel-grid')) {
-    const primary = h('div', {
-      dataset: { instructorProfileColumn: 'true' },
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.5rem',
-        minWidth: '0',
-      },
-    });
-    about.replaceWith(primary);
-    primary.append(about, instructorPanel);
+  const grid = about.closest<HTMLElement>('.panel-grid');
+  if (grid) {
+    grid.insertAdjacentElement('afterend', instructorPanel);
   } else {
     about.insertAdjacentElement('afterend', instructorPanel);
   }
