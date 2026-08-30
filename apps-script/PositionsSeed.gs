@@ -1,6 +1,14 @@
-/* Starter positions derived from the ACM Notion templates for Programming Jam,
- * CTF and Hackathon events. Each row deliberately describes one kind of work:
- * presenters deliver approved material; they do not own slides or curriculum. */
+/* RETAINED AS REFERENCE DATA ONLY — not called by anything.
+ *
+ * setupPositionSheets(), the only caller, was removed with the rest of the
+ * retired public registration flow. These rows are the ORIGINAL role
+ * definitions and the live Positions spreadsheet has since drifted from them
+ * (capacities and descriptions differ), so treat the sheet as authoritative.
+ *
+ * This file is kept only until the current sheet rows are seeded into Supabase
+ * event_positions, as a cross-check that no role is missed in that migration.
+ * Delete it once that is done.
+ */
 function defaultPositionRows() {
     return [
         ['JAM26-PRESENTER', 'ACM Programming Jam 2026', 'Workshop Presenter', 'Deliver one approved preparation session using material created by the content team.', 'Attend briefing|Rehearse the approved deck and demo|Present the session|Answer questions|Send delivery feedback', 'Confident speaker|Working knowledge of the assigned topic|Available for rehearsal and session', '2-hour rehearsal + 90-minute session', 3, '7 Sep 2026', 'Requirements check; short audition if needed', 'Open', true],

@@ -1,26 +1,26 @@
-/* ACM Member Registration — receives applications from join.html and appends
- * them to the registration sheet.
+/* ACM Member Registration — appends membership applications to the
+ * registration sheet.
  *
- * Setup
- *   1. Extensions > Apps Script from the registration spreadsheet, so the
- *      script is container-bound and SpreadsheetApp.getActive() resolves.
- *      (If you created it standalone instead, set SPREADSHEET_ID below.)
- *   2. Paste this file over Code.gs and save.
- *   3. Deploy > New deployment > type "Web app",
- *        Execute as:   Me
- *        Who has access: Anyone
- *      Authorize when prompted, then copy the /exec URL.
- *   4. Put that URL in FORM_ENDPOINT in assets/js/join.js.
+ * NO PAGE ON THE WEBSITE CALLS THIS ANY MORE.
  *
- * Re-deploy ("Manage deployments" > edit > New version) after any edit here,
- * otherwise the live URL keeps serving the old code.
+ *   - join.html moved to the portal at /portal/apply.html, where an applicant
+ *     gets an account, a status page and a dashboard on acceptance.
+ *   - positions.html moved to Supabase. Event roles now live in
+ *     event_positions and registration goes through the member portal.
+ *     See POSITION_SIGNUPS_RETIRED.md.
  *
- * Stuck, or new to Apps Script? SETUP.md next to this file walks through the
- * same steps click by click and lists what each failure mode looks like.
+ * The web app deployment should therefore be ARCHIVED
+ * (Deploy > Manage deployments > Archive), on every deployment rather than
+ * only the newest — each /exec URL keeps serving the code version it was
+ * published with until it is archived.
+ *
+ * This file is kept as the record of the retired workflow and because the
+ * script is container-bound to the spreadsheet. doPost still works if you
+ * re-deploy it deliberately; nothing points at it by default.
  *
  * Columns are matched by header text, so reordering columns or adding new ones
- * (e.g. an "Email" column) needs no change here — only FIELD_HEADERS if the
- * new column's header does not already appear below.
+ * needs no change here — only FIELD_HEADERS if the new column's header does
+ * not already appear below.
  */
 
 var SPREADSHEET_ID = '';        // leave empty when the script is bound to the sheet
@@ -55,8 +55,16 @@ function doPost(e) {
             return json({ status: 'ok' });
         }
 
+        /* RETIRED. Event-position registration moved to Supabase and the
+         * member portal. This refusal stays because a browser holding a
+         * cached copy of the old positions page would otherwise fall through
+         * to the membership validation below and produce a confusing error.
+         * Nothing is written either way. See POSITION_SIGNUPS_RETIRED.md. */
         if (data.action === 'positionSignup') {
-            return json(registerForPosition(data));
+            throw new Error(
+                'Position registration has moved to the ACM member portal: ' +
+                'https://acm-psu.shoug-tech.com/portal/opportunities.html'
+            );
         }
 
         REQUIRED_FIELDS.forEach(function (field) {
@@ -73,14 +81,17 @@ function doPost(e) {
 }
 
 function doGet(e) {
+    /* The public positions registry used to be served from here. It now comes
+     * from the Supabase view public_event_openings, read directly by
+     * positions.html. Answer explicitly rather than silently returning the
+     * generic message, so anything still polling the old URL says why. */
     if (e && e.parameter && e.parameter.action === 'positions') {
-        try {
-            return json({ status: 'ok', positions: listPublishedPositions() });
-        } catch (err) {
-            return json({ status: 'error', message: String(err && err.message || err) });
-        }
+        return json({
+            status: 'error',
+            message: 'The position registry moved to the ACM member portal.'
+        });
     }
-    return json({ status: 'ok', message: 'ACM registration and position endpoint is live.' });
+    return json({ status: 'ok', message: 'ACM registration endpoint is live.' });
 }
 
 function parseBody(e) {
@@ -141,141 +152,6 @@ function getBook() {
     return SPREADSHEET_ID
         ? SpreadsheetApp.openById(SPREADSHEET_ID)
         : SpreadsheetApp.getActive();
-}
-
-/* -------------------------------------------------------------------------
- * Project position registry
- * ------------------------------------------------------------------------- */
-
-var POSITIONS_SHEET = 'Positions';
-var POSITION_SIGNUPS_SHEET = 'Position Signups';
-
-var POSITION_HEADERS = [
-    'Position ID', 'Project', 'Title', 'Summary', 'Responsibilities',
-    'Requirements', 'Commitment', 'Capacity', 'Deadline', 'Selection Method',
-    'Status', 'Waitlist Enabled'
-];
-
-var POSITION_SIGNUP_HEADERS = [
-    'Timestamp', 'Position ID', 'Project', 'Position', 'Full Name', 'PSU Email',
-    'Student ID', 'Interest Note', 'Status'
-];
-
-function listPublishedPositions() {
-    var book = getBook();
-    if (!book) { throw new Error('No spreadsheet configured'); }
-    var positionsSheet = book.getSheetByName(POSITIONS_SHEET);
-    var signupsSheet = book.getSheetByName(POSITION_SIGNUPS_SHEET);
-    if (!positionsSheet || !signupsSheet) {
-        throw new Error('Position sheets are missing. Run setupPositionSheets once.');
-    }
-
-    var positions = rowsAsObjects(positionsSheet);
-    var signups = rowsAsObjects(signupsSheet);
-    var counts = {};
-    signups.forEach(function (signup) {
-        if (String(signup['Status'] || '').toLowerCase() === 'assigned') {
-            var id = String(signup['Position ID'] || '').trim();
-            counts[id] = (counts[id] || 0) + 1;
-        }
-    });
-
-    return positions.filter(function (position) {
-        return ['open', 'closed'].indexOf(String(position['Status'] || '').toLowerCase()) !== -1;
-    }).map(function (position) {
-        var id = String(position['Position ID'] || '').trim();
-        var capacity = Math.max(0, Number(position['Capacity']) || 0);
-        var filled = counts[id] || 0;
-        var manuallyClosed = String(position['Status'] || '').toLowerCase() === 'closed';
-        return {
-            id: id,
-            project: String(position['Project'] || ''),
-            title: String(position['Title'] || ''),
-            summary: String(position['Summary'] || ''),
-            responsibilities: String(position['Responsibilities'] || ''),
-            requirements: String(position['Requirements'] || ''),
-            commitment: String(position['Commitment'] || ''),
-            capacity: capacity,
-            filled: filled,
-            remaining: Math.max(0, capacity - filled),
-            deadline: displaySheetValue(position['Deadline']),
-            selection: String(position['Selection Method'] || 'First come, first served'),
-            status: manuallyClosed || filled >= capacity ? 'closed' : 'open',
-            waitlist: isTruthy(position['Waitlist Enabled'])
-        };
-    });
-}
-
-/* RETIRED — the Position Signups write path.
- *
- * Registration moved to Supabase. The public positions page now reads the
- * public_event_openings view and sends members to /portal/opportunities.html,
- * where a request is recorded against their account and reviewed by an
- * organizer. Two independent registration records could not be kept honest:
- * this sheet did not know what the portal had approved, and the portal could
- * not see a place someone held here.
- *
- * This function is kept, and kept refusing, on purpose. A browser holding a
- * cached copy of the old page would otherwise still POST here and create a
- * signup nobody in the club would ever see. It writes nothing.
- *
- * The existing Position Signups worksheet is historical data. Leave it in
- * place; do not add rows to it. See POSITION_SIGNUPS_RETIRED.md.
- */
-function registerForPosition(data) {
-    throw new Error(
-        'Position registration has moved to the ACM member portal. ' +
-        'Sign in at https://acm-psu.shoug-tech.com/portal/opportunities.html ' +
-        'to register for this role.'
-    );
-}
-
-/* Read-only. Left in place so anything still pointing at the sheet keeps
- * working; the public website no longer uses it. */
-
-function rowsAsObjects(sheet) {
-    var values = sheet.getDataRange().getValues();
-    if (!values.length) { return []; }
-    var headers = values[0].map(function (header) { return String(header).trim(); });
-    return values.slice(1).filter(function (row) {
-        return row.some(function (cell) { return String(cell).trim() !== ''; });
-    }).map(function (row) {
-        var record = {};
-        headers.forEach(function (header, index) { record[header] = row[index]; });
-        return record;
-    });
-}
-
-function displaySheetValue(value) {
-    if (Object.prototype.toString.call(value) === '[object Date]') {
-        return Utilities.formatDate(value, Session.getScriptTimeZone(), 'd MMM yyyy');
-    }
-    return String(value || 'Open until filled');
-}
-
-function isTruthy(value) {
-    return ['true', 'yes', '1'].indexOf(String(value || '').toLowerCase()) !== -1;
-}
-
-/* Run once from the Apps Script editor. It creates both tabs and example
- * assignments. Edit or delete the examples directly in the Positions tab. */
-function setupPositionSheets() {
-    var book = getBook();
-    if (!book) { throw new Error('No spreadsheet configured'); }
-    var positions = book.getSheetByName(POSITIONS_SHEET) || book.insertSheet(POSITIONS_SHEET);
-    var signups = book.getSheetByName(POSITION_SIGNUPS_SHEET) || book.insertSheet(POSITION_SIGNUPS_SHEET);
-
-    if (positions.getLastRow() === 0) {
-        positions.appendRow(POSITION_HEADERS);
-        var defaults = defaultPositionRows();
-        positions.getRange(2, 1, defaults.length, POSITION_HEADERS.length).setValues(defaults);
-    }
-    if (signups.getLastRow() === 0) { signups.appendRow(POSITION_SIGNUP_HEADERS); }
-    [positions, signups].forEach(function (sheet) {
-        sheet.setFrozenRows(1);
-        sheet.getRange(1, 1, 1, sheet.getLastColumn()).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
-        sheet.autoResizeColumns(1, sheet.getLastColumn());
-    });
 }
 
 function indexOfHeader(headers, candidates) {
