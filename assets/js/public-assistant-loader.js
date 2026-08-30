@@ -8,7 +8,7 @@
 
     var style = document.createElement('link');
     style.rel = 'stylesheet';
-    style.href = '/assets/css/public-assistant.css?v=20260901-1';
+    style.href = '/assets/css/public-assistant.css?v=20260901-2';
     document.head.appendChild(style);
 
     var guide = document.createElement('section');
