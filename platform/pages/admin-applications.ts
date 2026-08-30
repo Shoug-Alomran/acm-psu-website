@@ -3,17 +3,16 @@ import { h, render, formValues, textOf } from '../lib/dom.js';
 import {
   shell, pageHeader, panel, statusPill, attentionRow, attentionLegend, ageAttention,
   dataTable, loading, dialog, field, notice, toast, action, emptyState,
-  reasonField, internalNoteField, checkReason,
 } from '../lib/ui.js';
 import { historyPanel } from '../lib/history.js';
 import { requireAdmin } from '../lib/session.js';
 import {
-  applications, applicationNotes, addApplicationNote, markForInterview,
-  approveApplication, rejectApplication, type ApplicationRow,
+  applications, markForInterview, approveApplication, rejectApplication,
+  type ApplicationRow,
 } from '../lib/admin.js';
 import { positions } from '../lib/api.js';
 import { requireClient } from '../lib/supabase.js';
-import { archiveDate, archiveDateTime } from '../lib/format.js';
+import { archiveDate } from '../lib/format.js';
 import type { Position } from '../lib/types.js';
 
 type ApplicationWithExperience = ApplicationRow & {
@@ -23,6 +22,11 @@ type ApplicationWithExperience = ApplicationRow & {
 
 interface AiApplicantSummary {
   summary: string;
+  content_check: {
+    quality: 'clear' | 'needs_clarification' | 'insufficient';
+    confidence: number;
+    rationale: string;
+  };
   previous_experience: {
     status: 'reported' | 'none' | 'not_provided';
     details: string | null;
@@ -66,21 +70,38 @@ function keyValueGrid(items: Array<[string, string | HTMLElement]>): HTMLElement
   return h('div', {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(14rem, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(13rem, 1fr))',
       gap: '1rem 1.5rem',
     },
   }, items.map(([label, value]) =>
     h('div', {},
       h('p', { class: 'mono-meta dim-text', style: { margin: '0 0 0.3rem' } }, label.toUpperCase()),
-      typeof value === 'string' ? h('p', { style: { margin: '0' } }, value) : value,
+      typeof value === 'string' ? h('p', { style: { margin: '0', lineHeight: '1.55' } }, value) : value,
     ),
   ));
 }
 
 function experienceLabel(application: ApplicationWithExperience): string {
-  if (application.experience_status === 'some') return application.experience_text || 'Experience reported.';
+  if (application.experience_status === 'some') return application.experience_text || 'Previous experience reported.';
   if (application.experience_status === 'none') return 'No previous experience yet.';
-  return 'Not provided on this application.';
+  return 'Not provided.';
+}
+
+function confidenceBadge(value: number): HTMLElement {
+  const safe = Math.max(0, Math.min(100, Math.round(value)));
+  return h('div', {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'baseline',
+      gap: '0.45rem',
+      border: '1px solid var(--accent-blue)',
+      padding: '0.55rem 0.75rem',
+      width: 'fit-content',
+    },
+  },
+    h('strong', { style: { fontSize: '1.45rem' } }, `${safe}%`),
+    h('span', { class: 'mono-meta dim-text' }, 'CONTENT CONFIDENCE'),
+  );
 }
 
 async function start(): Promise<void> {
@@ -100,86 +121,73 @@ async function start(): Promise<void> {
 
   let filter = 0;
 
-  async function generateAiSummary(application: ApplicationWithExperience, target: HTMLElement): Promise<void> {
-    target.replaceChildren(notice('info', 'GENERATING AI SUMMARY…'));
-    try {
-      const { data, error } = await requireClient().functions.invoke('application-summary', {
-        body: { application_id: application.id },
-      });
-      if (error) throw new Error(error.message);
-      const result = data?.summary as AiApplicantSummary | undefined;
-      if (!result) throw new Error('The AI worker returned no summary.');
+  async function generateAiSummary(
+    application: ApplicationWithExperience,
+    target: HTMLElement,
+  ): Promise<AiApplicantSummary> {
+    target.replaceChildren(notice('info', 'CHECKING APPLICATION CONTENT WITH AI…'));
 
-      const experienceStatus = result.previous_experience.status === 'reported'
-        ? 'Previous experience reported'
-        : result.previous_experience.status === 'none'
-          ? 'No previous experience yet'
-          : 'Previous experience not provided';
+    const { data, error } = await requireClient().functions.invoke('application-summary', {
+      body: { application_id: application.id },
+    });
+    if (error) throw new Error(error.message);
 
-      target.replaceChildren(
-        h('div', { style: { display: 'grid', gap: '1rem' } },
-          notice('info', 'AI assistance is advisory only. It does not score, rank, approve, reject, or recommend a membership decision.'),
-          h('p', { style: { margin: '0', lineHeight: '1.65' } }, result.summary),
-          keyValueGrid([
-            ['Experience', experienceStatus],
-            ['Experience details', result.previous_experience.details ?? '—'],
-            ['Interests', result.interests.join(', ') || '—'],
-            ['Goals', result.goals ?? '—'],
-          ]),
-          result.useful_follow_up.length
-            ? h('div', {},
-                h('p', { class: 'mono-meta dim-text' }, 'USEFUL FOLLOW-UP'),
-                h('ul', { style: { margin: '0', paddingLeft: '1.25rem', lineHeight: '1.7' } },
-                  result.useful_follow_up.map((question) => h('li', question))))
-            : null,
+    const result = data?.summary as AiApplicantSummary | undefined;
+    if (!result) throw new Error('The AI worker returned no summary.');
+
+    const experienceStatus = result.previous_experience.status === 'reported'
+      ? 'Previous experience reported'
+      : result.previous_experience.status === 'none'
+        ? 'No previous experience yet'
+        : 'Previous experience not provided';
+
+    const quality = result.content_check.quality === 'clear'
+      ? 'CLEAR'
+      : result.content_check.quality === 'needs_clarification'
+        ? 'NEEDS CLARIFICATION'
+        : 'INSUFFICIENT';
+
+    target.replaceChildren(
+      h('div', { style: { display: 'grid', gap: '1rem' } },
+        h('div', {
+          style: {
+            display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center',
+            justifyContent: 'space-between',
+          },
+        },
+          h('div', {},
+            h('p', { class: 'mono-meta dim-text', style: { margin: '0 0 0.25rem' } }, 'CONTENT CHECK'),
+            h('strong', quality),
+          ),
+          confidenceBadge(result.content_check.confidence),
         ),
-      );
-    } catch (error) {
-      target.replaceChildren(notice('err', `Could not generate AI summary: ${errorMessage(error)}`));
-    }
+        h('p', { style: { margin: '0', lineHeight: '1.65' } }, result.content_check.rationale),
+        notice('info', 'The percentage is confidence that the submitted information is clear enough to summarize for an interview. It is not an acceptance score.'),
+        h('p', { style: { margin: '0', lineHeight: '1.65' } }, result.summary),
+        keyValueGrid([
+          ['Experience', experienceStatus],
+          ['Experience details', result.previous_experience.details ?? '—'],
+          ['Interests', result.interests.join(', ') || '—'],
+          ['Goals', result.goals ?? '—'],
+        ]),
+        result.useful_follow_up.length
+          ? h('div', {},
+              h('p', { class: 'mono-meta dim-text' }, 'INTERVIEW FOLLOW-UP'),
+              h('ul', { style: { margin: '0', paddingLeft: '1.25rem', lineHeight: '1.7' } },
+                result.useful_follow_up.map((question) => h('li', question))))
+          : null,
+      ),
+    );
+
+    return result;
   }
 
   async function openApplication(rawApplication: ApplicationRow): Promise<void> {
     const application = rawApplication as ApplicationWithExperience;
-    let notes;
-    try {
-      notes = await applicationNotes(application.id);
-    } catch (error) {
-      toast(`Could not open application: ${errorMessage(error)}`);
-      return;
-    }
-
     const decided = application.status === 'approved' || application.status === 'rejected';
-    const aiPanel = h('div', {},
-      h('p', { class: 'mono-meta dim-text' }, 'No AI summary generated yet.'),
-    );
-
-    const noteField = field({
-      label: 'Add an interview note', name: 'note', type: 'textarea', rows: 3,
-      hint: 'Internal only. Applicants can never read these.',
-    });
-
-    const decisionForm = h('form', { class: 'portal-form', novalidate: true },
-      h('div', { class: 'field-pair' },
-        field({
-          label: 'Position on approval', name: 'position_id', type: 'select',
-          value: positionList.find((position) => position.slug === 'member')?.id ?? '',
-          options: [
-            { value: '', label: '— no position yet —' },
-            ...positionList.map((position) => ({ value: position.id, label: position.title })),
-          ],
-        }),
-        field({
-          label: 'Membership start date', name: 'start_date', type: 'date',
-          value: new Date().toISOString().slice(0, 10),
-        }),
-      ),
-      reasonField({
-        label: 'Reason for this decision',
-        hint: 'Required when declining. Recorded permanently and shown to the applicant.',
-      }),
-      internalNoteField(),
-    ) as HTMLFormElement;
+    const aiPanel = h('div', {});
+    let aiComplete = false;
+    let interviewButton: HTMLButtonElement | null = null;
 
     const identityItems: Array<[string, string | HTMLElement]> = [
       ['Status', statusPill(application.status)],
@@ -188,6 +196,7 @@ async function start(): Promise<void> {
       ['PSU email', application.psu_email],
       ['Major', application.major],
       ['Academic year', application.academic_year],
+      ['Chapter', application.chapter_year],
     ];
     if (application.applicant?.email && application.applicant.email !== application.psu_email) {
       identityItems.push(['Account email', application.applicant.email]);
@@ -201,93 +210,134 @@ async function start(): Promise<void> {
         h('p', { style: { margin: '0', lineHeight: '1.65' } }, experienceLabel(application))),
       section('What they want from ACM',
         h('p', { style: { margin: '0', lineHeight: '1.65' } }, application.goal_text || 'No response provided.')),
-      section('AI applicant summary',
-        h('div', { class: 'button-row' },
-          action('GENERATE AI SUMMARY', async () => generateAiSummary(application, aiPanel))),
-        aiPanel),
+      section('AI application check', aiPanel),
       section('Activity', historyPanel('application', application.id, application.user_id)),
-      section('Interview notes',
-        notes.length
-          ? h('div', { class: 'history-list' }, notes.map((note) =>
-              h('div', { class: 'history-row' },
-                h('span', { class: 'mono-meta' }, archiveDateTime(note.created_at)),
-                h('span', note.body))))
-          : h('p', { class: 'mono-meta dim-text' }, 'None yet.'),
-        h('form', { class: 'portal-form' },
-          noteField,
+    );
+
+    const footer = h('div', { class: 'button-row' });
+
+    if (!decided && application.status === 'submitted') {
+      interviewButton = action('CONTACT FOR INTERVIEW', async () => {
+        if (!aiComplete) {
+          toast('Wait for the AI application check to finish first.');
+          return;
+        }
+        try {
+          await markForInterview(
+            application.id,
+            'Your application has moved to the interview stage. ACM will contact you with interview details.',
+          );
+          modal.close();
+          toast('Applicant moved to interview. Their status page now shows the interview stage.');
+          await draw();
+        } catch (error) {
+          toast(`Could not move application to interview: ${errorMessage(error)}`);
+        }
+      }, 'primary') as HTMLButtonElement;
+      interviewButton.disabled = true;
+      footer.append(interviewButton);
+    }
+
+    if (!decided && application.status === 'interview') {
+      const passForm = h('form', { class: 'portal-form', novalidate: true },
+        h('div', { class: 'field-pair' },
+          field({
+            label: 'Club role after passing', name: 'position_id', type: 'select', required: true,
+            value: '',
+            options: [
+              { value: '', label: 'Select a role…' },
+              ...positionList.map((position) => ({ value: position.id, label: position.title })),
+            ],
+          }),
+          field({
+            label: 'Membership start date', name: 'start_date', type: 'date', required: true,
+            value: new Date().toISOString().slice(0, 10),
+          }),
+        ),
+      ) as HTMLFormElement;
+
+      const rejectForm = h('form', { class: 'portal-form', novalidate: true },
+        field({
+          label: 'Reason they did not pass the interview', name: 'reason', type: 'textarea', rows: 4,
+          required: true, maxlength: 1500,
+          hint: 'Required. This is shown to the applicant on their status page.',
+        }),
+      ) as HTMLFormElement;
+
+      body.append(
+        section('Interview decision',
+          notice('info', 'Choose the outcome after the interview. Passing creates the active membership and assigns the selected club role. If they do not pass, the reason below is shown to them.'),
+          passForm,
           h('div', { class: 'button-row' },
-            action('Add note', async () => {
-              const textarea = noteField.querySelector('textarea') as HTMLTextAreaElement | null;
-              const note = textarea?.value.trim() ?? '';
-              if (!note) { toast('Write a note first.'); return; }
+            action('PASS INTERVIEW & ADD MEMBER', async () => {
+              if (!passForm.reportValidity()) return;
+              const values = formValues(passForm);
               try {
-                await addApplicationNote(application.id, note);
+                await approveApplication(
+                  application.id,
+                  textOf(values, 'position_id'),
+                  textOf(values, 'start_date') || new Date().toISOString().slice(0, 10),
+                  'Interview completed successfully. Welcome to ACM PSU.',
+                  null,
+                );
                 modal.close();
-                toast('Note saved.');
+                toast(`${application.full_name} is now an active member.`);
                 await draw();
               } catch (error) {
-                toast(`Could not save note: ${errorMessage(error)}`);
+                toast(`Could not approve application: ${errorMessage(error)}`);
               }
-            }),
+            }, 'primary'),
           ),
-        )),
-      decided ? notice('info', 'This application has already been decided.') : section('Decision', decisionForm),
-    );
-
-    const modal = dialog(
-      application.full_name,
-      body,
-      decided ? null : h('div', { class: 'button-row' },
-        action('Approve', async () => {
-          if (!decisionForm.reportValidity()) return;
-          const values = formValues(decisionForm);
-          try {
-            await approveApplication(
-              application.id,
-              textOf(values, 'position_id') || null,
-              textOf(values, 'start_date') || new Date().toISOString().slice(0, 10),
-              textOf(values, 'reason') || null,
-              textOf(values, 'internal') || null,
-            );
-            modal.close();
-            toast(`${application.full_name} is now an active member.`);
-            await draw();
-          } catch (error) {
-            toast(`Could not approve application: ${errorMessage(error)}`);
-          }
-        }, 'primary'),
-        application.status === 'submitted'
-          ? action('Mark for interview', async () => {
-              const values = formValues(decisionForm);
+          rejectForm,
+          h('div', { class: 'button-row' },
+            action('DID NOT PASS INTERVIEW', async () => {
+              if (!rejectForm.reportValidity()) return;
+              const values = formValues(rejectForm);
+              const reason = textOf(values, 'reason').trim();
+              if (!reason) return;
               try {
-                await markForInterview(application.id, textOf(values, 'reason') || null);
+                await rejectApplication(application.id, reason, null);
                 modal.close();
-                toast('Marked for interview.');
+                toast('Interview outcome recorded and visible to the applicant.');
                 await draw();
               } catch (error) {
-                toast(`Could not update application: ${errorMessage(error)}`);
+                toast(`Could not record interview outcome: ${errorMessage(error)}`);
               }
-            })
-          : null,
-        action('Not accepted', async () => {
-          const values = formValues(decisionForm);
-          const reason = checkReason(textOf(values, 'reason'), 'decline this application');
-          if (!reason) return;
-          try {
-            await rejectApplication(application.id, reason, textOf(values, 'internal') || null);
-            modal.close();
-            toast('Application declined.');
-            await draw();
-          } catch (error) {
-            toast(`Could not decline application: ${errorMessage(error)}`);
-          }
-        }, 'danger'),
-      ),
-    );
+            }, 'danger'),
+          ),
+        ),
+      );
+    }
 
-    modal.style.width = 'min(70rem, calc(100vw - 3rem))';
-    modal.style.maxWidth = '70rem';
+    if (decided) {
+      body.append(notice('info', 'This application has already been decided.'));
+    }
+
+    const modal = dialog(application.full_name, body, footer.childNodes.length ? footer : null);
+    modal.style.width = 'min(72rem, calc(100vw - 3rem))';
+    modal.style.maxWidth = '72rem';
     modal.style.margin = 'auto';
+
+    try {
+      await generateAiSummary(application, aiPanel);
+      aiComplete = true;
+      if (interviewButton) interviewButton.disabled = false;
+    } catch (error) {
+      aiPanel.replaceChildren(
+        notice('err', `Could not generate AI application check: ${errorMessage(error)}`),
+        h('div', { class: 'button-row' },
+          action('RETRY AI CHECK', async () => {
+            try {
+              await generateAiSummary(application, aiPanel);
+              aiComplete = true;
+              if (interviewButton) interviewButton.disabled = false;
+            } catch (retryError) {
+              aiPanel.replaceChildren(notice('err', `Could not generate AI application check: ${errorMessage(retryError)}`));
+            }
+          }),
+        ),
+      );
+    }
   }
 
   async function draw(): Promise<void> {
@@ -346,7 +396,7 @@ async function start(): Promise<void> {
                 },
               )
             : emptyState('NO RECORDS', 'Nothing in this queue.', 'Applications appear here as soon as students submit them.')),
-        notice('info', 'Membership is not a technical screening. Prior experience can help you understand an applicant, but it is never a requirement or a score.'),
+        notice('info', 'Workflow: review the submitted information → AI checks clarity/completeness → contact for interview → record the interview outcome.'),
       );
     } catch (error) {
       render(content,
