@@ -68,7 +68,7 @@ export function clientForRequest(req: Request): SupabaseClient | null {
  */
 export async function requireRole(
   supabase: SupabaseClient,
-  roles: Array<'super_admin' | 'club_admin' | 'reviewer'>,
+  roles: Array<'super_admin' | 'club_admin' | 'reviewer' | 'advisory_instructor'>,
 ): Promise<{ userId: string } | null> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
