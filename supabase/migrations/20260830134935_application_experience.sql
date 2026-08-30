@@ -1,0 +1,8 @@
+-- Migration-history marker.
+--
+-- The application experience schema change was first applied to the linked
+-- production project through the Supabase management API, which recorded it as
+-- version 20260830134935. The canonical, fresh-database-safe implementation
+-- remains in 20260901004200_application_experience.sql, after the applications
+-- table exists. This no-op file keeps local CLI history aligned with production
+-- without moving the real DDL before its dependencies.
