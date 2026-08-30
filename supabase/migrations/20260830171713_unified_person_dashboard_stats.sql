@@ -1,0 +1,4 @@
+-- Migration-history marker.
+-- The unified dashboard statistics view was first applied directly to the live
+-- project under this Supabase-generated timestamp. The canonical idempotent
+-- definition lives in 20260901004800_unified_person_dashboard_stats.sql.
