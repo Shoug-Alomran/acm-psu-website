@@ -1,6 +1,6 @@
 /** Instructor-specific profile enhancement for the member portal. */
 import { h, formValues, textOf } from '../lib/dom.js';
-import { action, field, metaList, notice, panel, submitButton, toast } from '../lib/ui.js';
+import { field, metaList, notice, panel, submitButton, toast } from '../lib/ui.js';
 import { requireMember } from '../lib/session.js';
 import { requireClient } from '../lib/supabase.js';
 
@@ -66,14 +66,25 @@ function profileLinks(profile: { linkedin_url?: string | null; github_url?: stri
   ].filter(Boolean).join(', ') || '—';
 }
 
+/** Remove fields that only make sense for student members. */
+function removeStudentOnlyFields(about: HTMLElement): void {
+  for (const label of about.querySelectorAll<HTMLElement>('.form-field > .mono-meta, .form-field label')) {
+    if (label.textContent?.trim().toUpperCase() === 'ACADEMIC YEAR') {
+      label.closest<HTMLElement>('.form-field')?.remove();
+    }
+  }
+}
+
 async function enhanceProfilePage(userId: string, current: InstructorProfile | null): Promise<void> {
   const about = await waitForPanel('About you');
   if (!about || document.querySelector('[data-instructor-profile-panel]')) return;
 
+  removeStudentOnlyFields(about);
+
   const status = h('div');
   const form = h('form', { class: 'portal-form', novalidate: true },
     notice('info',
-      'This section is for faculty information. Use it for the academic details that are relevant to students and ACM activities.'),
+      'Add the faculty information that is useful to students and relevant to your ACM activities.'),
     h('div', { class: 'field-pair' },
       field({
         label: 'Academic title', name: 'academic_title', maxlength: 120,
@@ -152,7 +163,29 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
 
   const instructorPanel = panel('Academic & teaching profile', form);
   instructorPanel.dataset.instructorProfilePanel = 'true';
-  about.insertAdjacentElement('afterend', instructorPanel);
+
+  /*
+   * Keep the page as a two-column layout. Previously this panel was inserted as
+   * a third sibling in .panel-grid, which squeezed all three panels into narrow
+   * columns. Faculty-editable panels now stack together in the primary column;
+   * photo and ACM-verified information stay in the secondary column.
+   */
+  const grid = about.parentElement;
+  if (grid?.classList.contains('panel-grid')) {
+    const primary = h('div', {
+      dataset: { instructorProfileColumn: 'true' },
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        minWidth: '0',
+      },
+    });
+    about.replaceWith(primary);
+    primary.append(about, instructorPanel);
+  } else {
+    about.insertAdjacentElement('afterend', instructorPanel);
+  }
 }
 
 async function enhanceDashboard(current: InstructorProfile | null, viewer: Awaited<ReturnType<typeof requireMember>>): Promise<void> {
