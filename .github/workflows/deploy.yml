@@ -34,11 +34,26 @@ jobs:
           node-version: "24"
           cache: npm
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: Install build dependencies
         run: npm ci
 
+      - name: Audit repository integrity
+        run: npm run audit:repo
+
       - name: Type-check the portal
         run: npm run typecheck
+
+      - name: Type-check Supabase Edge Functions
+        run: |
+          deno check supabase/functions/ai-review/index.ts
+          deno check supabase/functions/records-export/index.ts
+          deno check supabase/functions/member-sheet-sync/index.ts
+          deno check supabase/functions/position-application-sheet-sync/index.ts
 
       - name: Validate public Supabase configuration
         shell: bash
@@ -76,6 +91,7 @@ jobs:
             --exclude 'supabase' \
             --exclude 'docs' \
             --exclude 'tmp' \
+            --exclude 'scripts' \
             --exclude 'assets/reports/psu-ctf-competition-report.pdf' \
             --exclude 'assets/reports/psu-ctf-2-competition-report.pdf' \
             --exclude 'projects/ctf-2.0/psu-ctf-2.0-report.pdf' \
