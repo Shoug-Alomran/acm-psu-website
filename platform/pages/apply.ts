@@ -6,6 +6,16 @@ import { isConfigured, requireClient } from '../lib/supabase.js';
 import { myApplication, setting } from '../lib/api.js';
 import { INTERESTS, ACADEMIC_YEARS, knownInterests } from '../lib/membership.js';
 
+interface MemberPositionChoice {
+  id: string;
+  title: string;
+  category: string;
+  rank: number;
+  max_holders: number | null;
+  filled: number;
+  remaining: number | null;
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null && 'message' in error &&
@@ -44,14 +54,19 @@ async function start(): Promise<void> {
     return;
   }
 
-  const [openResult, domainsResult] = await Promise.allSettled([
+  const [openResult, domainsResult, positionChoicesResult] = await Promise.allSettled([
     setting<boolean>('applications_open', true),
     setting<string[]>('psu_email_domains', ['psu.edu.sa']),
+    requireClient().rpc('member_position_choices'),
   ]);
   const applicationsOpen = openResult.status === 'fulfilled' ? openResult.value : true;
   const domains = domainsResult.status === 'fulfilled' && domainsResult.value.length
     ? domainsResult.value.map((domain) => String(domain).trim().replace(/^@/, '').toLowerCase()).filter(Boolean)
     : ['psu.edu.sa'];
+  const preferredPositions: MemberPositionChoice[] = positionChoicesResult.status === 'fulfilled'
+    && !positionChoicesResult.value.error
+    ? (positionChoicesResult.value.data ?? []) as MemberPositionChoice[]
+    : [];
 
   if (!applicationsOpen) {
     render(card,
@@ -119,6 +134,26 @@ async function start(): Promise<void> {
     ),
 
     h('div', {},
+      h('p', { class: 'mono-meta dim-text' }, 'HOW YOU WOULD LIKE TO JOIN'),
+      field({
+        label: 'Preferred standing club role',
+        name: 'preferred_position_id',
+        type: 'select',
+        value: '',
+        options: [
+          { value: '', label: 'General member — I will sign up for event roles as opportunities open' },
+          ...preferredPositions.map((position) => ({
+            value: position.id,
+            label: position.max_holders === null
+              ? `${position.title} — available`
+              : `${position.title} — ${position.remaining ?? 0} seat${position.remaining === 1 ? '' : 's'} available`,
+          })),
+        ],
+        hint: 'Optional. This tells the committee what standing role you favor; it is not a guarantee. President, Vice President, faculty-only roles, and currently full positions are not offered here. General members can still apply for event-specific roles later.',
+      }),
+    ),
+
+    h('div', {},
       h('p', { class: 'mono-meta dim-text' }, 'INTERESTS'),
       h('div', { class: 'form-field' },
         h('span', { class: 'mono-meta' }, 'AREAS YOU WANT TO EXPLORE', h('span', { class: 'accent-text' }, ' *')),
@@ -156,6 +191,7 @@ async function start(): Promise<void> {
     const psuEmail = textOf(values, 'psu_email').trim().toLowerCase();
     const major = textOf(values, 'major').trim();
     const academicYear = textOf(values, 'academic_year');
+    const preferredPositionId = textOf(values, 'preferred_position_id') || null;
     const interests = asArray(values.interests);
     const experienceStatus = textOf(values, 'experience_status');
     const experienceText = textOf(values, 'experience_text').trim();
@@ -195,6 +231,7 @@ async function start(): Promise<void> {
         psu_email: psuEmail,
         major,
         academic_year: academicYear,
+        preferred_position_id: preferredPositionId,
         interests,
         experience_status: experienceStatus,
         experience_text: experienceStatus === 'some' ? experienceText : null,
