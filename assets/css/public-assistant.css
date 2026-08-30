@@ -1,16 +1,22 @@
 .ai-guide {
+    /* main.css gives every <section> 8rem of vertical padding. This widget is
+       a contained panel, not a full page section, so explicitly neutralise it. */
+    padding: 0 !important;
     margin-top: 2rem;
     border: 1px solid var(--border-strong);
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05), rgba(10, 10, 13, 0.96));
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.055), rgba(10, 10, 13, 0.98));
+    overflow: hidden;
 }
 
 .ai-guide-header {
+    min-height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.25rem;
+    padding: 0.9rem 1.25rem;
     border-bottom: 1px solid var(--border-color);
+    background: rgba(5, 5, 7, 0.38);
 }
 
 .ai-guide-title {
@@ -18,6 +24,7 @@
     align-items: center;
     gap: 0.7rem;
     font-family: var(--font-display);
+    font-size: 1rem;
     font-weight: 700;
 }
 
@@ -25,7 +32,11 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid rgba(59, 130, 246, 0.24);
+    background: rgba(59, 130, 246, 0.06);
     color: var(--accent-blue);
+    white-space: nowrap;
 }
 
 .ai-guide-status::before {
@@ -36,28 +47,37 @@
     box-shadow: 0 0 14px rgba(59, 130, 246, 0.9);
 }
 
-.ai-guide-body { padding: 1.25rem; }
+.ai-guide-body {
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+}
 
 .ai-guide-copy {
-    margin: 0 0 1rem;
+    margin: 0;
+    max-width: 78ch;
     color: var(--text-muted);
-    max-width: 70ch;
+    font-size: 0.95rem;
+    line-height: 1.65;
 }
 
 .ai-guide-chips {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.55rem;
-    margin-bottom: 1rem;
+    margin: 0;
 }
 
 .ai-guide-chip {
+    min-height: 42px;
     border: 1px solid rgba(59, 130, 246, 0.35);
     background: rgba(59, 130, 246, 0.07);
     color: var(--text-muted);
-    padding: 0.55rem 0.7rem;
+    padding: 0.6rem 0.75rem;
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+    line-height: 1.35;
+    text-align: left;
     cursor: pointer;
 }
 
@@ -69,69 +89,103 @@
 }
 
 .ai-guide-log {
-    min-height: 170px;
-    max-height: 340px;
+    min-height: 150px;
+    max-height: 320px;
     overflow-y: auto;
     border: 1px solid var(--border-color);
     background: rgba(5, 5, 7, 0.72);
 }
 
 .ai-guide-message {
-    padding: 0.9rem 1rem;
+    padding: 0.85rem 1rem;
     border-bottom: 1px solid var(--border-color);
 }
 
 .ai-guide-message:last-child { border-bottom: 0; }
-.ai-guide-message--user { background: rgba(59, 130, 246, 0.07); }
-.ai-guide-message-label { display: block; margin-bottom: 0.35rem; color: var(--accent-blue); }
+.ai-guide-message--user {
+    margin-left: clamp(1rem, 8vw, 7rem);
+    border-left: 1px solid rgba(59, 130, 246, 0.32);
+    background: rgba(59, 130, 246, 0.07);
+}
+.ai-guide-message-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--accent-blue);
+}
 .ai-guide-message--user .ai-guide-message-label { color: var(--text-muted); }
 
 .ai-guide-message p {
     margin: 0;
     color: var(--text-main);
+    font-size: 0.92rem;
+    line-height: 1.55;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 
 .ai-guide-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.7rem;
-    margin-top: 0.8rem;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 0.65rem;
+    margin: 0;
 }
 
 .ai-guide-form input {
+    width: 100%;
     min-width: 0;
+    height: 48px;
     border: 1px solid var(--border-strong);
     background: var(--bg-base);
     color: var(--text-main);
-    padding: 0.9rem 1rem;
+    padding: 0 1rem;
     font: 0.9rem var(--font-body);
+}
+
+.ai-guide-form input:focus {
+    border-color: rgba(59, 130, 246, 0.72);
+    outline: none;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
 }
 
 .ai-guide-form input::placeholder { color: var(--text-dark); }
 
 .ai-guide-form button {
-    min-width: 88px;
+    height: 48px;
     border: 1px solid var(--accent-blue);
     background: var(--accent-blue);
     color: #fff;
     padding: 0 1rem;
     font-family: var(--font-mono);
+    font-size: 0.75rem;
     cursor: pointer;
 }
+
+.ai-guide-form button:hover:not(:disabled) { filter: brightness(1.08); }
 
 .ai-guide-form button:disabled,
 .ai-guide-form input:disabled { opacity: 0.55; cursor: wait; }
 
 .ai-guide-note {
-    margin-top: 0.7rem;
+    margin: -0.15rem 0 0;
     color: var(--text-dark);
-    line-height: 1.6;
+    font-size: 0.66rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+    .ai-guide-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
+    .ai-guide-header {
+        min-height: 0;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 0.9rem 1rem;
+    }
+    .ai-guide-body { padding: 1rem; }
+    .ai-guide-chips { grid-template-columns: 1fr; }
+    .ai-guide-message--user { margin-left: 0; }
     .ai-guide-form { grid-template-columns: 1fr; }
-    .ai-guide-form button { min-height: 44px; }
-    .ai-guide-header { align-items: flex-start; flex-direction: column; }
+    .ai-guide-form button { width: 100%; }
 }
