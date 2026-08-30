@@ -22,6 +22,7 @@ export const CATEGORY_LABELS: Record<AuditCategory, string> = {
   requests: 'Requests',
   administration: 'Administration',
   exports: 'Exports',
+  inquiries: 'Inquiries',
 };
 
 export const DECISION_LABELS: Record<AuditDecision, string> = {
