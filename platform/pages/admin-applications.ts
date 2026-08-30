@@ -37,7 +37,8 @@ interface AiApplicantSummary {
 }
 
 const FILTERS: Array<[string, string[]]> = [
-  ['Open', ['submitted', 'interview']],
+  ['Open', ['submitted']],
+  ['Interviews', ['interview']],
   ['Approved', ['approved']],
   ['Not accepted', ['rejected']],
   ['All', ['submitted', 'interview', 'approved', 'rejected', 'withdrawn']],
