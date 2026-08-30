@@ -22,7 +22,8 @@ select
     case when u.university_role = 'student' then u.major else null end as major,
     cp.title as current_position,
     cp.rank as position_rank,
-    cp.category as position_category
+    cp.category as position_category,
+    trim(both '-' from regexp_replace(lower(u.full_name), '[^a-z0-9]+', '-', 'g')) as person_slug
 from public.app_users u
 join public.member_profiles p on p.user_id = u.id
 left join public.memberships m on m.user_id = u.id
