@@ -42,6 +42,13 @@ jobs:
       - name: Install build dependencies
         run: npm ci
 
+      # The integrity audit verifies that every HTML script reference and every
+      # platform/pages entry point has a generated bundle. Build first so a new
+      # TypeScript page cannot fail simply because its generated JS was not
+      # committed yet.
+      - name: Build the portal bundles
+        run: npm run build
+
       - name: Audit repository integrity
         run: npm run audit:repo
 
@@ -73,9 +80,6 @@ jobs:
           echo "PUBLIC_SUPABASE_ANON_KEY is configured."
           echo "Supabase URL length: ${#PUBLIC_SUPABASE_URL}"
           echo "Supabase key length: ${#PUBLIC_SUPABASE_ANON_KEY}"
-
-      - name: Build the portal bundles
-        run: npm run build
 
       - name: Stage site files
         shell: bash
