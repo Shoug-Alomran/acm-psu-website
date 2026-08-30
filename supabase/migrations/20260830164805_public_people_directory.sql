@@ -1,0 +1,4 @@
+-- Migration history marker.
+-- The public people directory change was first applied directly to production
+-- under this Supabase-generated version. The canonical, idempotent schema
+-- definition is kept in 20260901004600_public_people_directory.sql.
