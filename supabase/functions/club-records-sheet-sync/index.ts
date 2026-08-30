@@ -169,22 +169,70 @@ Deno.serve(async (req: Request): Promise<Response> => {
   requested = [...new Set(requested)].filter((key): key is SheetKey => ORDER.includes(key));
   if (!requested.length) return fail('No supported worksheets requested.', 400, origin);
   if (!full && requested.length > 2) return fail('Targeted refreshes may update at most two worksheets.', 400, origin);
-  const service = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-  const { data: enabled } = await service.from('app_settings').select('value').eq('key', 'google_sheets_enabled').maybeSingle();
-  if (enabled?.value !== true) return fail('Google Sheets export is disabled in settings.', 409, origin);
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl) return fail('Edge Function configuration error: SUPABASE_URL is unavailable.', 500, origin);
+  if (!serviceRoleKey) return fail('Edge Function configuration error: SUPABASE_SERVICE_ROLE_KEY is unavailable.', 500, origin);
+
+  const service = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: sheetsEnabled, error: sheetsEnabledError } = await caller.rpc('setting_bool', {
+    setting_key: 'google_sheets_enabled',
+    fallback: false,
+  });
+  if (sheetsEnabledError) {
+    return fail(`Could not read Google Sheets setting: ${sheetsEnabledError.message}`, 500, origin);
+  }
+  if (sheetsEnabled !== true) return fail('Google Sheets export is disabled in settings.', 409, origin);
+
+  const { error: serviceCheckError } = await service
+    .from('app_settings')
+    .select('key')
+    .eq('key', 'google_sheets_enabled')
+    .maybeSingle();
+  if (serviceCheckError) {
+    return fail(`Supabase service connection failed: ${serviceCheckError.message}`, 500, origin);
+  }
+
   const results: Record<string, { rows: number; status: 'updated' | 'failed'; error?: string }> = {};
   let workbookUrl = '';
   for (const key of requested.filter((key) => key !== 'university_export_log')) {
-    try { const matrix = await COLLECT[key](service); workbookUrl = await pushToGoogleSheet(NAMES[key], matrix);
+    try {
+      const matrix = await COLLECT[key](service);
+      workbookUrl = await pushToGoogleSheet(NAMES[key], matrix);
       results[NAMES[key]] = { rows: Math.max(matrix.length - 1, 0), status: 'updated' };
-      if (full) await caller.rpc('record_university_export', { dataset: key, format: 'google_sheet',
-        row_count: Math.max(matrix.length - 1, 0), destination: workbookUrl, reason: 'Manual full club records refresh' });
-    } catch (error) { results[NAMES[key]] = { rows: 0, status: 'failed', error: error instanceof Error ? error.message : String(error) }; }
+      if (full) {
+        await caller.rpc('record_university_export', {
+          dataset: key,
+          format: 'google_sheet',
+          row_count: Math.max(matrix.length - 1, 0),
+          destination: workbookUrl,
+          reason: 'Manual full club records refresh',
+        });
+      }
+    } catch (error) {
+      results[NAMES[key]] = {
+        rows: 0,
+        status: 'failed',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
   if (requested.includes('university_export_log')) {
-    try { const matrix = await exportLog(service); workbookUrl = await pushToGoogleSheet(NAMES.university_export_log, matrix);
+    try {
+      const matrix = await exportLog(service);
+      workbookUrl = await pushToGoogleSheet(NAMES.university_export_log, matrix);
       results[NAMES.university_export_log] = { rows: Math.max(matrix.length - 1, 0), status: 'updated' };
-    } catch (error) { results[NAMES.university_export_log] = { rows: 0, status: 'failed', error: error instanceof Error ? error.message : String(error) }; }
+    } catch (error) {
+      results[NAMES.university_export_log] = {
+        rows: 0,
+        status: 'failed',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
   const success = Object.values(results).every((result) => result.status === 'updated');
   // Targeted refreshes can be triggered by ordinary signed-in account writes.
