@@ -18,6 +18,7 @@ alter table public.instructor_profiles enable row level security;
 
 grant select, insert, update on public.instructor_profiles to authenticated;
 
+drop policy if exists instructor_profiles_select_own on public.instructor_profiles;
 create policy instructor_profiles_select_own
 on public.instructor_profiles
 for select
@@ -27,6 +28,7 @@ using (
     or public.is_staff()
 );
 
+drop policy if exists instructor_profiles_insert_own on public.instructor_profiles;
 create policy instructor_profiles_insert_own
 on public.instructor_profiles
 for insert
@@ -41,6 +43,7 @@ with check (
     )
 );
 
+drop policy if exists instructor_profiles_update_own on public.instructor_profiles;
 create policy instructor_profiles_update_own
 on public.instructor_profiles
 for update
