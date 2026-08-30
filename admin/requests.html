@@ -29,5 +29,17 @@
 
     <script src="/assets/js/app/env.js?v=20260901-1"></script>
     <script type="module" src="/assets/js/app/admin-requests.js?v=20260901-1"></script>
+    <script>
+      // Keep the admin queue fresh while it is open. Avoid reloading while an
+      // admin is reviewing a request in a dialog.
+      window.setInterval(() => {
+        if (
+          document.visibilityState === 'visible' &&
+          !document.querySelector('dialog[open]')
+        ) {
+          window.location.reload();
+        }
+      }, 10000);
+    </script>
 </body>
 </html>
