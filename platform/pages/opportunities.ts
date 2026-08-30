@@ -4,6 +4,13 @@
  * Supabase is the source of truth. Registering and unregistering go through
  * transactional RPCs; Google Sheets is refreshed only after the database
  * operation succeeds.
+ *
+ * The two things this page shows — what is open, and what the member has
+ * already asked for — are loaded and rendered independently. They are separate
+ * questions with separate answers, and a member's own record must not vanish
+ * because the opportunities query returned nothing or failed. Previously both
+ * came from one Promise.all and "Your requests" was only rendered when it was
+ * non-empty, so an empty board and a lost record looked identical.
  */
 
 import { h, render, formValues, textOf } from '../lib/dom.js';
@@ -26,18 +33,15 @@ import {
   registerEventApplication,
   unregisterEventApplication,
 } from '../lib/event-applications.js';
-import { archiveDate, enumLabel } from '../lib/format.js';
+import type { MyEventApplication } from '../lib/types.js';
+import { archiveDate } from '../lib/format.js';
 
-interface MyApplicationRow {
-  id: string;
-  event_position_id: string;
-  status: string;
-  admin_note: string | null;
-  created_at: string;
-  position: {
-    title: string;
-    project_id: string;
-  } | null;
+type Opportunity = Awaited<ReturnType<typeof openOpportunities>>[number];
+
+/** A data source that is allowed to fail on its own. */
+interface Section<T> {
+  rows: T;
+  error: string | null;
 }
 
 function errorMessage(error: unknown): string {
@@ -53,6 +57,19 @@ function errorMessage(error: unknown): string {
   return 'An unknown error occurred.';
 }
 
+async function section<T>(
+  load: () => Promise<T>,
+  fallback: T,
+  label: string,
+): Promise<Section<T>> {
+  try {
+    return { rows: await load(), error: null };
+  } catch (error) {
+    console.error(`${label} could not load:`, error);
+    return { rows: fallback, error: errorMessage(error) };
+  }
+}
+
 async function start(): Promise<void> {
   const viewer = await requireMember();
   const content = shell(viewer, 'member', 'Opportunities');
@@ -60,370 +77,434 @@ async function start(): Promise<void> {
   async function draw(): Promise<void> {
     render(content, loading('LOADING OPEN POSITIONS'));
 
-    try {
-      const [opportunities, mineRaw] = await Promise.all([
-        openOpportunities(),
-        myEventApplications(viewer.userId),
-      ]);
+    const [board, requests] = await Promise.all([
+      section(openOpportunities, [] as Opportunity[], 'Open positions'),
+      section(myEventApplications, [] as MyEventApplication[], 'Your requests'),
+    ]);
 
-      const mine = mineRaw as unknown as MyApplicationRow[];
-      const applied = new Map(
-        mine.map((row) => [row.event_position_id, row]),
+    const opportunities = board.rows;
+    const mine = requests.rows;
+
+    /*
+     * State, not error text. A member who already has a request for a position
+     * should see that request's status on the row rather than be allowed to
+     * click through to a duplicate-key failure.
+     */
+    const applied = new Map(mine.map((row) => [row.event_position_id, row]));
+
+    const byProject = new Map<string, Opportunity[]>();
+    for (const opportunity of opportunities) {
+      const key = opportunity.project?.id ?? 'other';
+      const list = byProject.get(key) ?? [];
+      list.push(opportunity);
+      byProject.set(key, list);
+    }
+
+    function openRegistration(opportunity: Opportunity): void {
+      const status = h('div');
+      const body = h(
+        'div',
+        { class: 'portal-form' },
+        h(
+          'p',
+          { class: 'mono-meta dim-text' },
+          `${opportunity.title.toUpperCase()} — ${opportunity.remaining} OF ${opportunity.openings} REMAINING`,
+        ),
+        field({
+          label: 'When are you available?',
+          name: 'availability',
+          required: true,
+          maxlength: 500,
+          placeholder: 'e.g. Weekday afternoons, and the full event weekend',
+        }),
+        field({
+          label: 'Anything the organisers should know?',
+          name: 'note',
+          type: 'textarea',
+          rows: 3,
+          maxlength: 800,
+          hint: 'Optional.',
+        }),
+        status,
       );
 
-      const byProject = new Map<string, typeof opportunities>();
-      for (const opportunity of opportunities) {
-        const key = opportunity.project?.id ?? 'other';
-        const list = byProject.get(key) ?? [];
-        list.push(opportunity);
-        byProject.set(key, list);
-      }
-
-      function openRegistration(
-        opportunity: typeof opportunities[number],
-      ): void {
-        const status = h('div');
-        const body = h(
-          'div',
-          { class: 'portal-form' },
-          h(
-            'p',
-            { class: 'mono-meta dim-text' },
-            `${opportunity.title.toUpperCase()} — ${opportunity.remaining} OF ${opportunity.openings} REMAINING`,
-          ),
-          field({
-            label: 'When are you available?',
-            name: 'availability',
-            required: true,
-            maxlength: 500,
-            placeholder: 'e.g. Weekday afternoons, and the full event weekend',
-          }),
-          field({
-            label: 'Anything the organisers should know?',
-            name: 'note',
-            type: 'textarea',
-            rows: 3,
-            maxlength: 800,
-            hint: 'Optional.',
-          }),
-          status,
-        );
-
-        let modal: HTMLDialogElement;
-        modal = dialog(
-          `Register interest — ${opportunity.title}`,
-          body,
-          h(
-            'div',
-            { class: 'button-row' },
-            action(
-              'Send request',
-              async () => {
-                const form = modal.querySelector('form') as HTMLFormElement | null;
-                if (!form) {
-                  status.replaceChildren(
-                    notice('err', 'The registration form could not be loaded.'),
-                  );
-                  return;
-                }
-
-                if (!form.reportValidity()) return;
-
-                const values = formValues(form);
-                const availability = textOf(values, 'availability').trim();
-                const note = textOf(values, 'note').trim();
-
-                if (!availability) {
-                  status.replaceChildren(
-                    notice('err', 'Tell the organisers when you are available.'),
-                  );
-                  return;
-                }
-
-                const existing = applied.get(opportunity.event_position_id);
-                if (existing && existing.status !== 'cancelled') {
-                  status.replaceChildren(
-                    notice('warn', 'You already have a request for this position.'),
-                  );
-                  return;
-                }
-
-                if (opportunity.remaining <= 0) {
-                  status.replaceChildren(
-                    notice('warn', 'This position is now full.'),
-                  );
-                  return;
-                }
-
-                status.replaceChildren(notice('info', 'SAVING REQUEST…'));
-
-                try {
-                  await registerEventApplication({
-                    eventPositionId: opportunity.event_position_id,
-                    availability,
-                    note: note || null,
-                  });
-
-                  modal.close();
-                  toast('Request saved. An organiser will review it.');
-                  await draw();
-                } catch (error) {
-                  console.error('Could not register for event position:', error);
-                  status.replaceChildren(
-                    notice(
-                      'err',
-                      `Could not save your request: ${errorMessage(error)}`,
-                    ),
-                  );
-                }
-              },
-              'primary',
-            ),
-          ),
-        );
-      }
-
-      function registerButton(
-        opportunity: typeof opportunities[number],
-      ): HTMLElement {
-        const existing = applied.get(opportunity.event_position_id);
-
-        if (existing && existing.status !== 'cancelled') {
-          return statusPill(existing.status);
-        }
-
-        if (!canSubmit(viewer)) {
-          return h(
-            'span',
-            { class: 'mono-meta dim-text' },
-            'ACTIVE MEMBERS ONLY',
-          );
-        }
-
-        if (opportunity.remaining <= 0) {
-          return h('span', { class: 'mono-meta dim-text' }, 'FULL');
-        }
-
-        return h(
-          'button',
-          {
-            type: 'button',
-            class: 'btn-ghost',
-            onclick: () => openRegistration(opportunity),
-          },
-          existing?.status === 'cancelled'
-            ? 'Register again'
-            : 'Register interest',
-        );
-      }
-
-      function openUnregister(row: MyApplicationRow): void {
-        const status = h('div');
-        const positionTitle = row.position?.title ?? 'this position';
-
-        let modal: HTMLDialogElement;
-        modal = dialog(
-          `Unregister — ${positionTitle}`,
-          h(
-            'div',
-            {},
-            notice(
-              'warn',
-              'You can unregister online until 72 hours before the event starts. ' +
-                'Your request will remain in the club record as cancelled rather than being deleted.',
-            ),
-            status,
-          ),
-          h(
-            'div',
-            { class: 'button-row' },
-            action(
-              'Unregister',
-              async () => {
-                status.replaceChildren(notice('info', 'UNREGISTERING…'));
-
-                try {
-                  await unregisterEventApplication(row.id);
-                  modal.close();
-                  toast('You have been unregistered from that position.');
-                  await draw();
-                } catch (error) {
-                  console.error('Could not unregister event application:', error);
-                  status.replaceChildren(
-                    notice(
-                      'err',
-                      `Could not unregister: ${errorMessage(error)}`,
-                    ),
-                  );
-                }
-              },
-              'danger',
-            ),
-          ),
-        );
-      }
-
-      render(
-        content,
-        pageHeader(
-          'MEMBER / OPPORTUNITIES',
-          'Open positions',
-          h(
-            'a',
-            { class: 'btn-ghost', href: '/portal/index.html' },
-            'Dashboard',
-          ),
-        ),
-        notice(
-          'info',
-          'These are roles on upcoming ACM events. No prior experience is expected — ' +
-            'that is what taking one is for. Approved involvement becomes part of your verified record.',
-        ),
-        opportunities.length
-          ? [...byProject.entries()].map(([, list]) => {
-              const project = list[0]?.project;
-              return panel(
-                project?.title ?? 'Other',
-                project?.summary ? h('p', project.summary) : null,
-                project?.starts_on
-                  ? h(
-                      'p',
-                      { class: 'mono-meta dim-text' },
-                      `STARTS ${archiveDate(project.starts_on)}`,
-                    )
-                  : null,
-                h(
-                  'div',
-                  { class: 'browser-list' },
-                  list.map((opportunity) =>
-                    h(
-                      'div',
-                      {
-                        class: 'browser-row',
-                        style: { cursor: 'default' },
-                      },
-                      h(
-                        'div',
-                        { class: 'fname' },
-                        h('span', { class: 'icon' }, '◆'),
-                        h('span', opportunity.title),
-                      ),
-                      h(
-                        'span',
-                        { class: 'fcell' },
-                        `${opportunity.remaining}/${opportunity.openings} OPEN`,
-                      ),
-                      h(
-                        'span',
-                        { class: 'fcell col-hide' },
-                        opportunity.description ?? '',
-                      ),
-                      h(
-                        'span',
-                        { class: 'fcell col-hide' },
-                        opportunity.closes_on
-                          ? `CLOSES ${archiveDate(opportunity.closes_on)}`
-                          : '',
-                      ),
-                      registerButton(opportunity),
-                    ),
-                  ),
-                ),
-              );
-            })
-          : panel(
-              'Nothing open right now',
-              emptyState(
-                'There are no open positions at the moment.',
-                'New roles are posted here whenever an event is being organised.',
-              ),
-            ),
-        mine.length
-          ? panel(
-              'Your requests',
-              h(
-                'p',
-                { class: 'mono-meta dim-text' },
-                'Pending and approved registrations can be withdrawn online until 72 hours before the event starts.',
-              ),
-              h(
-                'div',
-                { class: 'history-list' },
-                mine.map((row) =>
-                  h(
-                    'div',
-                    { class: 'history-row' },
-                    h(
-                      'span',
-                      { class: 'mono-meta' },
-                      archiveDate(row.created_at),
-                    ),
-                    h(
-                      'div',
-                      {},
-                      h(
-                        'strong',
-                        row.position?.title ?? enumLabel('event position'),
-                      ),
-                      ' ',
-                      statusPill(row.status),
-                      row.admin_note
-                        ? h(
-                            'p',
-                            { class: 'mono-meta dim-text' },
-                            row.admin_note,
-                          )
-                        : null,
-                    ),
-                    row.status === 'pending' || row.status === 'approved'
-                      ? h(
-                          'button',
-                          {
-                            type: 'button',
-                            class: 'btn-ghost',
-                            onclick: () => openUnregister(row),
-                          },
-                          'Unregister',
-                        )
-                      : null,
-                  ),
-                ),
-              ),
-            )
-          : null,
-      );
-    } catch (error) {
-      console.error('Opportunities page failed to load:', error);
-      render(
-        content,
-        pageHeader(
-          'MEMBER / OPPORTUNITIES',
-          'Opportunities unavailable',
-          h(
-            'a',
-            { class: 'btn-ghost', href: '/portal/index.html' },
-            'Dashboard',
-          ),
-        ),
-        notice(
-          'err',
-          `Open positions could not load: ${errorMessage(error)}`,
-        ),
+      const modal: HTMLDialogElement = dialog(
+        `Register interest — ${opportunity.title}`,
+        body,
         h(
           'div',
           { class: 'button-row' },
-          h(
-            'button',
-            {
-              type: 'button',
-              class: 'btn-ghost',
-              onclick: () => void draw(),
+          action(
+            'Send request',
+            async () => {
+              // dialog() supplies the <form method="dialog"> wrapper; the
+              // fields live inside it, so there is no nested form here.
+              const form = modal.querySelector('form') as HTMLFormElement | null;
+              if (!form) {
+                status.replaceChildren(
+                  notice('err', 'The registration form could not be loaded.'),
+                );
+                return;
+              }
+
+              if (!form.reportValidity()) return;
+
+              const values = formValues(form);
+              const availability = textOf(values, 'availability').trim();
+              const note = textOf(values, 'note').trim();
+
+              if (!availability) {
+                status.replaceChildren(
+                  notice('err', 'Tell the organisers when you are available.'),
+                );
+                return;
+              }
+
+              status.replaceChildren(notice('info', 'SAVING REQUEST…'));
+
+              try {
+                const result = await registerEventApplication({
+                  eventPositionId: opportunity.event_position_id,
+                  availability,
+                  note: note || null,
+                });
+
+                switch (result.outcome) {
+                  case 'closed':
+                    status.replaceChildren(
+                      notice(
+                        'warn',
+                        'This position has closed since the page loaded. ' +
+                          'Nothing was saved.',
+                      ),
+                    );
+                    await draw();
+                    return;
+
+                  case 'full':
+                    status.replaceChildren(
+                      notice(
+                        'warn',
+                        'Every opening on this position is now taken. ' +
+                          'Nothing was saved.',
+                      ),
+                    );
+                    await draw();
+                    return;
+
+                  case 'pending':
+                    modal.close();
+                    toast('You already have a request for this position.');
+                    break;
+
+                  case 'approved':
+                    modal.close();
+                    toast('You already hold this position — shown below as approved.');
+                    break;
+
+                  default:
+                    modal.close();
+                    toast('Request saved. An organiser will review it.');
+                    break;
+                }
+
+                await draw();
+              } catch (error) {
+                console.error('Could not register for event position:', error);
+                status.replaceChildren(
+                  notice(
+                    'err',
+                    `Could not save your request: ${errorMessage(error)}`,
+                  ),
+                );
+              }
             },
-            'TRY AGAIN',
+            'primary',
           ),
         ),
       );
     }
+
+    function registerButton(opportunity: Opportunity): HTMLElement {
+      const existing = applied.get(opportunity.event_position_id);
+
+      if (existing && existing.status !== 'cancelled') {
+        return statusPill(existing.status);
+      }
+
+      if (!canSubmit(viewer)) {
+        return h('span', { class: 'mono-meta dim-text' }, 'ACTIVE MEMBERS ONLY');
+      }
+
+      if (!opportunity.is_open) {
+        return h('span', { class: 'mono-meta dim-text' }, 'CLOSED');
+      }
+
+      if (opportunity.remaining <= 0) {
+        return h('span', { class: 'mono-meta dim-text' }, 'FULL');
+      }
+
+      return h(
+        'button',
+        {
+          type: 'button',
+          class: 'btn-ghost',
+          onclick: () => openRegistration(opportunity),
+        },
+        existing?.status === 'cancelled' ? 'Register again' : 'Register interest',
+      );
+    }
+
+    function openUnregister(row: MyEventApplication): void {
+      const status = h('div');
+
+      const modal: HTMLDialogElement = dialog(
+        `Unregister — ${row.position_title}`,
+        h(
+          'div',
+          {},
+          notice(
+            'warn',
+            'You can unregister online until 72 hours before the event starts. ' +
+              'Your request will remain in the club record as cancelled rather ' +
+              'than being deleted.',
+          ),
+          status,
+        ),
+        h(
+          'div',
+          { class: 'button-row' },
+          action(
+            'Unregister',
+            async () => {
+              status.replaceChildren(notice('info', 'UNREGISTERING…'));
+
+              try {
+                const result = await unregisterEventApplication(row.id);
+
+                if (result.outcome === 'window_closed') {
+                  status.replaceChildren(
+                    notice(
+                      'warn',
+                      'This event starts within 72 hours, so it can no longer ' +
+                        'be withdrawn online. Contact the event organiser or a ' +
+                        'club admin and they will release the role for you.',
+                    ),
+                  );
+                  return;
+                }
+
+                if (result.outcome === 'already_closed') {
+                  modal.close();
+                  toast('That request was already closed.');
+                  await draw();
+                  return;
+                }
+
+                modal.close();
+                toast('You have been unregistered from that position.');
+                await draw();
+              } catch (error) {
+                console.error('Could not unregister event application:', error);
+                status.replaceChildren(
+                  notice('err', `Could not unregister: ${errorMessage(error)}`),
+                );
+              }
+            },
+            'danger',
+          ),
+        ),
+      );
+    }
+
+    /* --------------------------------------------------- open positions panel */
+
+    function boardPanels(): HTMLElement | HTMLElement[] {
+      if (board.error) {
+        return panel(
+          'Open positions unavailable',
+          notice('err', `Open positions could not load: ${board.error}`),
+          h(
+            'div',
+            { class: 'button-row' },
+            h(
+              'button',
+              { type: 'button', class: 'btn-ghost', onclick: () => void draw() },
+              'TRY AGAIN',
+            ),
+          ),
+        );
+      }
+
+      if (!opportunities.length) {
+        return panel(
+          'Nothing open right now',
+          emptyState(
+            'There are no open positions at the moment.',
+            'New roles are posted here whenever an event is being organised.',
+          ),
+        );
+      }
+
+      return [...byProject.entries()].map(([, list]) => {
+        const project = list[0]?.project;
+        return panel(
+          project?.title ?? 'Other',
+          project?.summary ? h('p', project.summary) : null,
+          project?.starts_on
+            ? h(
+                'p',
+                { class: 'mono-meta dim-text' },
+                `STARTS ${archiveDate(project.starts_on)}`,
+              )
+            : null,
+          h(
+            'div',
+            { class: 'browser-list' },
+            list.map((opportunity) =>
+              h(
+                'div',
+                { class: 'browser-row', style: { cursor: 'default' } },
+                h(
+                  'div',
+                  { class: 'fname' },
+                  h('span', { class: 'icon' }, '◆'),
+                  h('span', opportunity.title),
+                ),
+                h(
+                  'span',
+                  { class: 'fcell' },
+                  `${opportunity.remaining}/${opportunity.openings} OPEN`,
+                ),
+                h(
+                  'span',
+                  { class: 'fcell col-hide' },
+                  opportunity.description ?? '',
+                ),
+                h(
+                  'span',
+                  { class: 'fcell col-hide' },
+                  opportunity.closes_on
+                    ? `CLOSES ${archiveDate(opportunity.closes_on)}`
+                    : '',
+                ),
+                registerButton(opportunity),
+              ),
+            ),
+          ),
+        );
+      });
+    }
+
+    /* ---------------------------------------------------- your requests panel */
+
+    function requestRow(row: MyEventApplication): HTMLElement {
+      const closedNote = row.unregister_block === 'window_closed'
+        ? h(
+            'p',
+            { class: 'mono-meta dim-text' },
+            'WITHIN 72 HOURS OF THE EVENT — CONTACT AN ORGANISER TO WITHDRAW',
+          )
+        : null;
+
+      return h(
+        'div',
+        { class: 'history-row' },
+        h('span', { class: 'mono-meta' }, archiveDate(row.created_at)),
+        h(
+          'div',
+          {},
+          h('p', { class: 'mono-meta accent-text' }, row.project_title),
+          h('strong', row.position_title),
+          ' ',
+          statusPill(row.status),
+          !row.position_is_open
+            ? h('span', { class: 'mono-meta dim-text' }, ' · POSITION CLOSED')
+            : null,
+          row.project_starts_on
+            ? h(
+                'p',
+                { class: 'mono-meta dim-text' },
+                `EVENT STARTS ${archiveDate(row.project_starts_on)}`,
+              )
+            : null,
+          row.admin_note
+            ? h('p', { class: 'mono-meta dim-text' }, row.admin_note)
+            : null,
+          closedNote,
+        ),
+        row.can_unregister
+          ? h(
+              'button',
+              {
+                type: 'button',
+                class: 'btn-ghost',
+                onclick: () => openUnregister(row),
+              },
+              'Unregister',
+            )
+          : null,
+      );
+    }
+
+    function requestsPanel(): HTMLElement {
+      if (requests.error) {
+        return panel(
+          'Your requests',
+          notice(
+            'err',
+            `Your own requests could not load: ${requests.error}. ` +
+              'Nothing has been lost — this is a display problem only.',
+          ),
+          h(
+            'div',
+            { class: 'button-row' },
+            h(
+              'button',
+              { type: 'button', class: 'btn-ghost', onclick: () => void draw() },
+              'TRY AGAIN',
+            ),
+          ),
+        );
+      }
+
+      if (!mine.length) {
+        return panel(
+          'Your requests',
+          emptyState(
+            'You have not registered for an event position yet.',
+            'Requests you send stay listed here, including approved and ' +
+              'cancelled ones.',
+          ),
+        );
+      }
+
+      return panel(
+        'Your requests',
+        h(
+          'p',
+          { class: 'mono-meta dim-text' },
+          'Pending and approved registrations can be withdrawn online until 72 hours before the event starts.',
+        ),
+        h('div', { class: 'history-list' }, mine.map(requestRow)),
+      );
+    }
+
+    render(
+      content,
+      pageHeader(
+        'MEMBER / OPPORTUNITIES',
+        'Open positions',
+        h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Dashboard'),
+      ),
+      notice(
+        'info',
+        'These are roles on upcoming ACM events. No prior experience is expected — ' +
+          'that is what taking one is for. Approved involvement becomes part of your verified record.',
+      ),
+      boardPanels(),
+      requestsPanel(),
+    );
   }
 
   await draw();

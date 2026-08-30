@@ -190,6 +190,32 @@ export interface EventPositionApplication {
   updated_at: string;
 }
 
+/**
+ * One row of my_event_position_applications(): the member's own request plus
+ * the position/project labels needed to display it. The RPC resolves these
+ * even when the opening has since closed, which a PostgREST embed cannot.
+ */
+export interface MyEventApplication {
+  id: string;
+  event_position_id: string;
+  status: RequestStatus;
+  availability: string | null;
+  note: string | null;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+  decided_at: string | null;
+  position_title: string;
+  position_is_open: boolean;
+  position_closes_on: string | null;
+  project_id: string | null;
+  project_title: string;
+  project_starts_on: string | null;
+  has_active_assignment: boolean;
+  can_unregister: boolean;
+  unregister_block: 'window_closed' | null;
+}
+
 export interface Participation {
   id: string;
   user_id: string;

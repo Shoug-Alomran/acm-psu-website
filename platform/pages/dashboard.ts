@@ -67,10 +67,7 @@ import type {
 
 interface DashboardEventApplication {
   status: string;
-
-  position: {
-    title: string;
-  } | null;
+  position_title: string;
 }
 
 function errorMessage(
@@ -293,8 +290,7 @@ function pendingList(
       items.push([
         'EVENT POSITION',
 
-        application.position
-          ?.title ??
+        application.position_title ||
         'Awaiting a decision',
       ]);
     }
@@ -469,9 +465,7 @@ async function start(): Promise<void> {
             viewer.userId,
           ),
 
-          myEventApplications(
-            viewer.userId,
-          ),
+          myEventApplications(),
 
           myPositionRequest(
             viewer.userId,

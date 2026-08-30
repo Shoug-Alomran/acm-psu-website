@@ -530,26 +530,34 @@ export async function decideMemberRequest(
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Approve, reject or cancel one event-position request.
+ *
+ * Both branches are RPCs. Rejection used to be a direct table update, which
+ * decided the request without releasing an assignment the member may already
+ * hold — leaving the participation record saying "assigned" while the request
+ * said "rejected". The RPC does the decision, the withdrawal and the audit
+ * entry in one transaction.
+ */
 export async function decideEventRequest(
-  requestId: string, approve: boolean, reason: string | null,
+  requestId: string,
+  approve: boolean,
+  reason: string | null,
+  cancel = false,
 ): Promise<void> {
   const client = requireClient();
 
-  if (approve) {
-    const { error } = await client
-      .rpc('approve_event_position_application', { request_id: requestId, reason });
-    if (error) throw new Error(error.message);
-  } else {
-    const { data } = await client.auth.getSession();
-    const decidedBy = data.session?.user.id ?? null;
+  const { error } = approve
+    ? await client.rpc('approve_event_position_application', {
+      request_id: requestId, reason,
+    })
+    : await client.rpc('decide_event_position_application', {
+      p_application_id: requestId,
+      p_status: cancel ? 'cancelled' : 'rejected',
+      p_reason: reason,
+    });
 
-    unwrap(await client.from('event_position_applications').update({
-      status: 'rejected',
-      admin_note: reason,
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
-    }).eq('id', requestId).select('id'));
-  }
+  if (error) throw new Error(error.message);
 
   await bestEffortFunctionSync('position-application-sheet-sync');
 }

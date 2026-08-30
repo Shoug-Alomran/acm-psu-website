@@ -10,8 +10,8 @@ import type {
   Application, ArchiveCategory, ArchiveFolder, ArchiveItem, ArchiveSubmission,
   ArchiveSubmissionAi, ContentVisibility, Contribution, ContributionType,
   EventPositionAvailability, MemberProfile, MemberRequest, MemberRequestKind,
-  MemberStats, Position, PositionChangeRequest, PositionHistoryRow, Project,
-  ReviewStatus,
+  MemberStats, MyEventApplication, Position, PositionChangeRequest,
+  PositionHistoryRow, Project, ReviewStatus,
 } from './types.js';
 
 /** Throws a readable Error when PostgREST reports a failure. */
@@ -288,40 +288,23 @@ export async function openOpportunities(): Promise<
     .select('*, project:projects(*)').eq('is_open', true).order('title')) ?? [];
 }
 
-export async function myEventApplications(userId: string) {
-  return unwrap(await requireClient().from('event_position_applications')
-    .select('*, position:event_positions(title, project_id)')
-    .eq('user_id', userId).order('created_at', { ascending: false })) ?? [];
-}
+/**
+ * The signed-in member's own event-position requests.
+ *
+ * This deliberately does NOT read the table with a PostgREST embed.
+ * event_position_applications.event_position_id is NOT NULL, so an embedded
+ * `event_positions(...)` is resolved as an inner join, and event_positions is
+ * readable only to active members and staff. Any hiccup in that predicate — or
+ * simply a position that has since been closed out of view — dropped the
+ * member's own rows from an otherwise successful 200 response. The RPC returns
+ * the record plus just the labels needed to display it, scoped to auth.uid().
+ */
+export async function myEventApplications(): Promise<MyEventApplication[]> {
+  const { data, error } = await requireClient()
+    .rpc('my_event_position_applications');
 
-export async function registerInterest(input: {
-  event_position_id: string;
-  user_id: string;
-  availability: string | null;
-  note: string | null;
-}): Promise<void> {
-  const client = requireClient();
-
-  /*
-   * Supabase is authoritative. The application is committed first.
-   */
-  unwrap(
-    await client
-      .from('event_position_applications')
-      .insert(input)
-      .select('id')
-      .single(),
-  );
-
-  /*
-   * Refresh the Position Applications worksheet.
-   *
-   * A Google Sheets failure is deliberately non-fatal because the user's
-   * application has already been successfully stored in Supabase.
-   */
-  await bestEffortFunctionSync(
-    'position-application-sheet-sync',
-  );
+  if (error) throw new Error(readableError(error));
+  return (data ?? []) as MyEventApplication[];
 }
 
 /* ----------------------------------------------------------------- requests */
