@@ -30,8 +30,17 @@ Nothing is deleted. Specifically:
   Supabase by the `position-application-sheet-sync` Edge Function and is the
   administrative snapshot.
 
-## Re-deploying
+## The web app deployment
 
-Re-deploy the Apps Script web app ("Manage deployments" > edit > New version)
-so the live `/exec` URL stops accepting `action: 'positionSignup'`. Until you
-do, the old endpoint keeps serving the previous code.
+Nothing on the website calls this web app any more. `join.html` moved to
+`/portal/apply.html` and `positions.html` moved to Supabase, so a grep for
+`script.google.com/macros` across the repository finds no live caller.
+
+Archive it: **Deploy > Manage deployments >** the menu beside each deployment
+**> Archive**. Do this for *every* deployment, not only the most recent one.
+Each `/exec` URL keeps serving the code version it was published with until it
+is archived, so an old URL can still accept a `positionSignup` POST from a
+cached browser page even after `Code.gs` is edited.
+
+Archiving does not touch the spreadsheet. The container-bound script and its
+editor-run helpers stay available.

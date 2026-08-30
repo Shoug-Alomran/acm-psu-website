@@ -103,6 +103,12 @@ Two quick tests, cheapest first:
 **This section no longer applies.** Event roles and registrations moved to
 Supabase. See `POSITION_SIGNUPS_RETIRED.md` next to this file.
 
+**No page on the website calls this web app any longer.** The membership form
+moved to `/portal/apply.html` and the positions page moved to Supabase, so the
+deployment should be **archived** (Deploy > Manage deployments > Archive)
+rather than re-deployed. Archive every deployment, not just the newest — an
+old `/exec` URL keeps serving its old code until it is archived.
+
 In short:
 
 - `positions.html` reads open roles from the Supabase view
