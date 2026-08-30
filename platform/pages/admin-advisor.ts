@@ -61,6 +61,21 @@ async function loadEvent(id: string): Promise<Project> {
   return data as Project;
 }
 
+async function syncGoogleWorkbook(): Promise<void> {
+  if (!window.confirm('Update every tab in the shared ACM PSU — Club Records workbook from the current Supabase records?')) return;
+  toast('Synchronizing Google workbook…');
+  const { data, error } = await requireClient().functions.invoke('club-records-sheet-sync', {
+    body: { mode: 'full' },
+  });
+  if (error) throw new Error(error.message);
+  const sheets = (data?.sheets ?? {}) as Record<string, { status?: string; error?: string }>;
+  const failures = Object.entries(sheets).filter(([, result]) => result.status === 'failed');
+  if (failures.length) {
+    throw new Error(`${failures.length} worksheet(s) failed: ${failures.map(([name]) => name).join(', ')}`);
+  }
+  toast('Google workbook synchronized.', 'ok');
+}
+
 async function start(): Promise<void> {
   const viewer = await requireAdvisor();
   const content = shell(viewer, 'admin', 'Assigned activities');
@@ -199,17 +214,25 @@ async function start(): Promise<void> {
         pageHeader('ADVISORY INSTRUCTOR', `Welcome, ${displayName(viewer)}`,
           h('div', { class: 'button-row' },
             action('CREATE EVENT', async () => eventEditor(null), 'primary'),
+            action('SYNC GOOGLE SHEET', async () => {
+              try { await syncGoogleWorkbook(); }
+              catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }
+            }),
             h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE RECORDS'),
             h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Member portal'))),
-        notice('info', 'You can manage events and verify attendance/contributions for activities assigned to you. The Google workbook is a read-only administrative snapshot; Supabase remains the source of truth.'),
+        notice('info', 'You can manage events and verify attendance/contributions for activities assigned to you. You can also refresh the shared Google workbook from Supabase; Supabase remains the source of truth.'),
         statRow([
           [activities.length, 'Assigned activities'], [participants.length, 'Participants'],
           [contributions.filter((row: any) => row.status === 'submitted').length, 'Awaiting verification'],
         ]),
         panel('Faculty records access',
-          h('p', 'Open the shared ACM PSU — Club Records workbook for the current synchronized university record.'),
+          h('p', 'Synchronize the shared ACM PSU — Club Records workbook from the current Supabase records, then open it to review the latest snapshot.'),
           h('div', { class: 'button-row' },
-            h('a', { class: 'btn-primary', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE WORKBOOK'))),
+            action('SYNC GOOGLE WORKBOOK', async () => {
+              try { await syncGoogleWorkbook(); }
+              catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }
+            }, 'primary'),
+            h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE WORKBOOK'))),
         panel('Assigned events and workshops', activityRows.length
           ? paginatedTable(['Activity', 'Kind', 'Role', 'Status', 'Dates', 'Actions'], activityRows,
               pages.activities, (value) => redrawPage('activities', value))
