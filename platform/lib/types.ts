@@ -381,7 +381,7 @@ export type AuditActorKind = 'admin' | 'member' | 'system' | 'migration' | 'ai_a
 
 export type AuditCategory =
   | 'membership' | 'positions' | 'events' | 'projects' | 'contributions'
-  | 'archive' | 'requests' | 'administration' | 'exports';
+  | 'archive' | 'requests' | 'administration' | 'exports' | 'inquiries';
 
 export type AuditDecision =
   | 'approved' | 'rejected' | 'changes_requested' | 'interview' | 'published'
