@@ -386,6 +386,10 @@
 .button-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .button-row .btn-submit { margin-top: 0; }
 
+/* Pager controls for a log that keeps growing: page size, steps, position. */
+.pager label { display: inline-flex; align-items: center; gap: 0.5rem; }
+.pager select { width: auto; padding: 0.35rem 0.5rem; font-size: 0.72rem; }
+
 .btn-ghost {
     background: transparent;
     color: var(--text-main);

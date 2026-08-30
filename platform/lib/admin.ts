@@ -667,8 +667,19 @@ export async function runExport(
   return {};
 }
 
-export async function exportHistory() {
-  return unwrap(await requireClient().from('university_exports')
-    .select('*, admin:app_users!university_exports_generated_by_fkey(full_name)')
-    .order('created_at', { ascending: false }).limit(25)) ?? [];
+/**
+ * One page of the export log, newest first, with the total row count so the
+ * page can tell whether another page exists without fetching it.
+ */
+export async function exportHistory(
+  limit = 25,
+  offset = 0,
+): Promise<{ rows: unknown[]; total: number }> {
+  const result = await requireClient().from('university_exports')
+    .select('*, admin:app_users!university_exports_generated_by_fkey(full_name)', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  const rows = unwrap(result) ?? [];
+  return { rows: rows as unknown[], total: result.count ?? rows.length };
 }

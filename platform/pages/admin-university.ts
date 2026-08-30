@@ -177,6 +177,15 @@ async function start(): Promise<void> {
 
   let lastSync: Awaited<ReturnType<typeof syncClubRecordsWorkbook>> | null = null;
 
+  /*
+   * The export log only grows, so it is paged rather than listed in full.
+   * Both values are page state, not data: draw() reads them to ask the
+   * database for exactly the slice being shown.
+   */
+  let historyPageSize = 10;
+
+  let historyPage = 0;
+
   let sheetsEnabled =
     false;
 
@@ -251,11 +260,53 @@ async function start(): Promise<void> {
     );
 
     try {
-      const rawHistory =
-        await exportHistory();
+      const {
+        rows: rawHistory,
+        total: historyTotal,
+      } =
+        await exportHistory(
+          historyPageSize,
+          historyPage * historyPageSize,
+        );
 
       const history =
         rawHistory as unknown as ExportHistoryRow[];
+
+      /*
+       * A deletion elsewhere can leave the viewer past the end of the log.
+       * Rather than showing an empty table, fall back to the last real page.
+       */
+      if (
+        !history.length &&
+        historyPage > 0 &&
+        historyTotal > 0
+      ) {
+        historyPage =
+          Math.max(
+            0,
+            Math.ceil(
+              historyTotal /
+              historyPageSize,
+            ) - 1,
+          );
+
+        await draw();
+
+        return;
+      }
+
+      const historyPageCount =
+        Math.max(
+          1,
+          Math.ceil(
+            historyTotal /
+            historyPageSize,
+          ),
+        );
+
+      const historyFirst =
+        historyPage *
+        historyPageSize;
 
       render(
         content,
@@ -366,6 +417,85 @@ async function start(): Promise<void> {
         panel(
           'Export history',
 
+          h(
+            'div',
+            {
+              class:
+                'button-row pager',
+            },
+
+            h(
+              'label',
+              {
+                class:
+                  'mono-meta dim-text',
+              },
+              'ROWS PER PAGE ',
+
+              (() => {
+                const chooser =
+                  h(
+                    'select',
+                    {},
+
+                    ...[
+                      5,
+                      10,
+                      20,
+                    ].map(
+                      (
+                        size,
+                      ) =>
+                        h(
+                          'option',
+                          {
+                            value:
+                              String(
+                                size,
+                              ),
+                            selected:
+                              size ===
+                              historyPageSize,
+                          },
+                          String(
+                            size,
+                          ),
+                        ),
+                    ),
+                  ) as HTMLSelectElement;
+
+                chooser.addEventListener(
+                  'change',
+
+                  () => {
+                    historyPageSize =
+                      Number(
+                        chooser.value,
+                      );
+
+                    // A new page size makes the old page number meaningless.
+                    historyPage = 0;
+
+                    void draw();
+                  },
+                );
+
+                return chooser;
+              })(),
+            ),
+
+            h(
+              'span',
+              {
+                class:
+                  'mono-meta dim-text',
+              },
+              historyTotal
+                ? `${historyFirst + 1}–${historyFirst + history.length} OF ${historyTotal}`
+                : '0 RECORDS',
+            ),
+          ),
+
           history.length
             ? dataTable(
               [
@@ -450,6 +580,78 @@ async function start(): Promise<void> {
             : emptyState(
               'No exports generated yet.',
             ),
+
+          historyPageCount > 1
+            ? h(
+              'div',
+              {
+                class:
+                  'button-row pager',
+              },
+
+              (() => {
+                const previous =
+                  h(
+                    'button',
+                    {
+                      type:
+                        'button',
+                      class:
+                        'btn-ghost',
+
+                      onclick:
+                        () => {
+                          historyPage -= 1;
+
+                          void draw();
+                        },
+                    },
+                    'PREVIOUS',
+                  ) as HTMLButtonElement;
+
+                previous.disabled =
+                  historyPage <= 0;
+
+                return previous;
+              })(),
+
+              (() => {
+                const next =
+                  h(
+                    'button',
+                    {
+                      type:
+                        'button',
+                      class:
+                        'btn-ghost',
+
+                      onclick:
+                        () => {
+                          historyPage += 1;
+
+                          void draw();
+                        },
+                    },
+                    'NEXT',
+                  ) as HTMLButtonElement;
+
+                next.disabled =
+                  historyPage >=
+                  historyPageCount - 1;
+
+                return next;
+              })(),
+
+              h(
+                'span',
+                {
+                  class:
+                    'mono-meta dim-text',
+                },
+                `PAGE ${historyPage + 1} OF ${historyPageCount}`,
+              ),
+            )
+            : null,
 
           h(
             'p',
