@@ -87,9 +87,12 @@ jobs:
           rm -rf _site
           mkdir -p _site
 
+          # CTF archives and workshop materials are intentionally public. Only
+          # source/build/operations files are excluded from the Pages artifact.
           rsync -a \
             --exclude '.git' \
             --exclude '.github' \
+            --exclude '.gitignore' \
             --exclude 'design-template' \
             --exclude 'node_modules' \
             --exclude 'platform' \
@@ -97,10 +100,9 @@ jobs:
             --exclude 'docs' \
             --exclude 'tmp' \
             --exclude 'scripts' \
-            --exclude 'assets/reports/psu-ctf-competition-report.pdf' \
-            --exclude 'assets/reports/psu-ctf-2-competition-report.pdf' \
-            --exclude 'projects/ctf-2.0/psu-ctf-2.0-report.pdf' \
-            --exclude 'projects/ctf-3.0/workshop-material' \
+            --exclude 'apps-script' \
+            --exclude 'README.md' \
+            --exclude 'deno.lock' \
             --exclude 'package.json' \
             --exclude 'package-lock.json' \
             --exclude 'tsconfig.json' \
