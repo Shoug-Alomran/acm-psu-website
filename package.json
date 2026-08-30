@@ -18,7 +18,7 @@
     "functions:deploy": "supabase functions deploy ai-review && supabase functions deploy records-export && supabase functions deploy member-sheet-sync && supabase functions deploy position-application-sheet-sync"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.28.2",
     "typescript": "^5.6.3"
   },
   "dependencies": {
