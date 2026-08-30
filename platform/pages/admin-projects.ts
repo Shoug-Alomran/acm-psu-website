@@ -584,6 +584,11 @@ async function start(): Promise<void> {
                     : 'Project created.',
                 );
 
+                void bestEffortFunctionSync(
+                  'club-records-sheet-sync',
+                  { sheets: ['people', 'opportunity_positions'] },
+                );
+
                 await draw();
               } catch (error) {
                 console.error(
