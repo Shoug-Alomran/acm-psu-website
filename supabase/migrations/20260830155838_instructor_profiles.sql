@@ -1,0 +1,4 @@
+-- Migration-history marker.
+-- The instructor_profiles schema was first applied directly to the linked project
+-- under remote version 20260830155838. The dependency-safe canonical migration
+-- is 20260901004500_instructor_profiles.sql.
