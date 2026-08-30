@@ -32,11 +32,13 @@ import {
 
 import {
   requireAdmin,
+  isSuperAdmin,
 } from '../lib/session.js';
 
 import {
   runExport,
   exportHistory,
+  syncClubRecordsWorkbook,
   type Dataset,
 } from '../lib/admin.js';
 
@@ -72,6 +74,7 @@ const DATASETS: Array<{
 
       columns: [
         'Name',
+        'University Role',
         'Student ID',
         'PSU Email',
         'Major',
@@ -82,7 +85,7 @@ const DATASETS: Array<{
       ],
 
       note:
-        'Every member and alumnus. Applicants are excluded.',
+        'Every live account, including instructors and other university affiliates.',
     },
 
     {
@@ -172,6 +175,8 @@ async function start(): Promise<void> {
     loading(),
   );
 
+  let lastSync: Awaited<ReturnType<typeof syncClubRecordsWorkbook>> | null = null;
+
   let sheetsEnabled =
     false;
 
@@ -201,8 +206,7 @@ async function start(): Promise<void> {
     dataset: Dataset,
     format:
       'csv' |
-      'xlsx' |
-      'google_sheet',
+      'xlsx',
   ): Promise<void> {
     try {
       const result =
@@ -212,23 +216,6 @@ async function start(): Promise<void> {
         );
 
       if (
-        format ===
-        'google_sheet'
-      ) {
-        toast(
-          `Sheet updated with ${result.rows ?? 0} rows.`,
-        );
-
-        if (
-          result.url
-        ) {
-          window.open(
-            result.url,
-            '_blank',
-            'noopener',
-          );
-        }
-      } else if (
         format ===
         'xlsx'
       ) {
@@ -248,11 +235,7 @@ async function start(): Promise<void> {
         error,
       );
 
-      const label =
-        format ===
-          'google_sheet'
-          ? 'Google Sheet'
-          : format.toUpperCase();
+      const label = format.toUpperCase();
 
       toast(
         `Could not generate ${label}: ${errorMessage(error)}`,
@@ -287,6 +270,28 @@ async function start(): Promise<void> {
           'This page contains student identifiers. It is restricted to club admins — ' +
           'reviewers and members cannot reach it, and the database returns no rows to them ' +
           'even if they try. Share generated files only with the university.',
+        ),
+
+        panel(
+          'Private Google workbook',
+          h('p', 'Update Google Sheet exports the current Supabase club records to every supported tab in the configured private “ACM PSU — Club Records” workbook. Supabase remains the source of truth.'),
+          isSuperAdmin(viewer)
+            ? action('Update Google Sheet', async () => {
+                if (!window.confirm('This exports names, PSU emails, student IDs where applicable, roles, memberships, and operational club records to the configured private Google workbook. Continue?')) return;
+                try {
+                  toast('Updating every Google Sheet tab…');
+                  lastSync = await syncClubRecordsWorkbook();
+                  const failures = Object.values(lastSync.sheets).filter((sheet) => sheet.status === 'failed').length;
+                  toast(failures ? `${failures} worksheet(s) failed. See the results below.` : 'Every workbook tab updated.', failures ? 'err' : 'ok');
+                  await draw();
+                } catch (error) {
+                  toast(`Could not update workbook: ${errorMessage(error)}`, 'err');
+                }
+              }, 'primary')
+            : notice('info', 'Only a super admin can refresh the complete private workbook.'),
+          lastSync ? dataTable(['Worksheet', 'Rows', 'Result'],
+            Object.entries(lastSync.sheets).map(([name, result]) => [name, String(result.rows),
+              result.status === 'updated' ? 'Updated' : `Failed: ${result.error ?? 'Unknown error'}`])) : null,
         ),
 
         DATASETS.map(
@@ -344,25 +349,7 @@ async function start(): Promise<void> {
                   },
                 ),
 
-                sheetsEnabled
-                  ? action(
-                    'Update Google Sheet',
-
-                    async () => {
-                      await runDatasetExport(
-                        dataset.key,
-                        'google_sheet',
-                      );
-                    },
-                  )
-                  : h(
-                    'span',
-                    {
-                      class:
-                        'mono-meta dim-text',
-                    },
-                    'GOOGLE SHEET EXPORT NOT CONFIGURED',
-                  ),
+                null,
               ),
             ),
         ),

@@ -25,22 +25,19 @@
  * zero rows unless is_club_admin() is true, so even a mistake here cannot leak
  * a roster. Every export is recorded in university_exports and the audit log.
  *
- * POST { dataset: 'members'|'participation'|'contributions'|'inquiries'|'all',
- *        format:  'csv'|'xlsx'|'google_sheet' }
- *
- * 'all' is valid only with google_sheet — it refreshes every worksheet.
+ * POST { dataset: 'members'|'participation'|'contributions'|'inquiries',
+ *        format:  'csv'|'xlsx' }
  */
 import { clientForRequest, fail, json, corsHeaders, requireRole } from '../_shared/http.ts';
 import { buildXlsx } from '../_shared/xlsx.ts';
-import { pushToGoogleSheet, WORKBOOK_NAME } from '../_shared/google_sheets.ts';
 
 const DATASETS = {
   members: {
     rpc: 'export_members',
     sheet: 'Members',
-    columns: ['full_name', 'student_id', 'psu_email', 'major', 'academic_year',
+    columns: ['full_name', 'university_role', 'student_id', 'psu_email', 'major', 'academic_year',
               'position_title', 'membership_status', 'join_date'],
-    headers: ['Name', 'Student ID', 'PSU Email', 'Major', 'Academic Year',
+    headers: ['Name', 'University Role', 'Student ID', 'PSU Email', 'Major', 'Academic Year',
               'Position', 'Membership Status', 'Join Date'],
   },
   participation: {
@@ -90,8 +87,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const caller = await requireRole(supabase, ['club_admin']);
   if (!caller) return fail('Club admin access required.', 403, origin);
 
-  let dataset: DatasetKey | 'all';
-  let format: 'csv' | 'xlsx' | 'google_sheet';
+  let dataset: DatasetKey;
+  let format: 'csv' | 'xlsx';
   try {
     const body = await req.json();
     dataset = body.dataset;
@@ -122,27 +119,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       dataset: key, format, row_count: rows, destination, reason: null,
     });
 
-  /* ------------------------------------------------ refresh every worksheet */
-  if (dataset === 'all') {
-    if (format !== 'google_sheet') {
-      return fail('Use a specific dataset for CSV and XLSX downloads.', 400, origin);
-    }
-    const results: Array<{ sheet: string; rows: number }> = [];
-    let workbookUrl = '';
-    try {
-      for (const key of Object.keys(DATASETS) as DatasetKey[]) {
-        const { matrix, rows } = await collect(key);
-        workbookUrl = await pushToGoogleSheet(DATASETS[key].sheet, matrix);
-        await logExport(key, workbookUrl, rows);
-        results.push({ sheet: DATASETS[key].sheet, rows });
-      }
-    } catch (e) {
-      return fail(e instanceof Error ? e.message : 'Google Sheets export failed.', 503, origin);
-    }
-    return json({ ok: true, workbook: WORKBOOK_NAME, url: workbookUrl, sheets: results },
-                200, origin);
-  }
-
   const spec = DATASETS[dataset];
   if (!spec) return fail(`Unknown dataset "${dataset}".`, 400, origin);
 
@@ -156,17 +132,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const stamp = new Date().toISOString().slice(0, 10);
   const filename = `acm-psu-${dataset}-${stamp}`;
-
-  if (format === 'google_sheet') {
-    try {
-      const url = await pushToGoogleSheet(spec.sheet, matrix);
-      await logExport(dataset, url, rows);
-      return json({ ok: true, rows, url, workbook: WORKBOOK_NAME, sheet: spec.sheet },
-                  200, origin);
-    } catch (e) {
-      return fail(e instanceof Error ? e.message : 'Google Sheets export failed.', 503, origin);
-    }
-  }
 
   await logExport(dataset, null, rows);
 

@@ -116,8 +116,8 @@ export async function rejectApplication(
 /* ----------------------------------------------------------------- members */
 
 async function refreshMembersSheet(): Promise<void> {
-  const { error } = await requireClient().functions.invoke('member-sheet-sync', {
-    body: {},
+  const { error } = await requireClient().functions.invoke('club-records-sheet-sync', {
+    body: { sheets: ['people', 'members'] },
   });
   if (error) console.error('Could not refresh the Members worksheet:', error);
 }
@@ -272,7 +272,10 @@ export async function setMembershipStatus(
     internal, close_position: closePosition,
   });
   if (error) throw new Error(error.message);
-  void refreshMembersSheet();
+  void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['people', 'members'] });
+  if (closePosition) {
+    void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['club_positions'] });
+  }
 }
 
 export async function setAccountState(
@@ -282,7 +285,7 @@ export async function setAccountState(
     target_user: userId, new_state: state, reason,
   });
   if (error) throw new Error(error.message);
-  void refreshMembersSheet();
+  void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['people', 'members'] });
 }
 
 export async function grantPosition(
@@ -296,7 +299,7 @@ export async function grantPosition(
     reason,
   });
   if (error) throw new Error(error.message);
-  void refreshMembersSheet();
+  void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['people', 'club_positions'] });
 }
 
 /* --------------------------------------------------------------- decisions */
@@ -317,6 +320,7 @@ export async function verifyContribution(
     reason,
   });
   if (error) throw new Error(error.message);
+  void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['contributions'] });
 }
 
 /** Both outcomes require a reason; the database enforces it. */
@@ -328,6 +332,7 @@ export async function decideContribution(
     contribution_id: id, decision, reason, internal,
   });
   if (error) throw new Error(error.message);
+  void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['contributions'] });
 }
 
 /**
@@ -559,7 +564,7 @@ export async function decideEventRequest(
 
   if (error) throw new Error(error.message);
 
-  await bestEffortFunctionSync('position-application-sheet-sync');
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['position_applications', 'event_participation'] });
 }
 
 export async function eventRequests(statuses: string[]) {
@@ -623,8 +628,22 @@ export async function auditLog(limit = 100): Promise<AuditEntry[]> {
 
 /* ------------------------------------------------------------------ export */
 
-export type Dataset = 'members' | 'participation' | 'contributions' | 'inquiries' | 'all';
-export type ExportFormat = 'csv' | 'xlsx' | 'google_sheet';
+export type Dataset = 'members' | 'participation' | 'contributions' | 'inquiries';
+export type ExportFormat = 'csv' | 'xlsx';
+
+export interface ClubRecordsSyncResult {
+  success: boolean;
+  workbook: string;
+  url?: string;
+  sheets: Record<string, { rows: number; status: 'updated' | 'failed'; error?: string }>;
+}
+
+export async function syncClubRecordsWorkbook(): Promise<ClubRecordsSyncResult> {
+  const response = await callFunction('club-records-sheet-sync', { mode: 'full' });
+  const payload = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+  if (!response.ok && response.status !== 207) throw new Error(payload.error ?? 'Workbook sync failed.');
+  return payload as ClubRecordsSyncResult;
+}
 
 export async function runExport(
   dataset: Dataset, format: ExportFormat,
@@ -635,8 +654,6 @@ export async function runExport(
     const payload = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
     throw new Error(payload.error ?? 'Export failed.');
   }
-
-  if (format === 'google_sheet') return await response.json();
 
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);

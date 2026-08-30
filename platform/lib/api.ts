@@ -10,8 +10,8 @@ import type {
   Application, ArchiveCategory, ArchiveFolder, ArchiveItem, ArchiveSubmission,
   ArchiveSubmissionAi, ContentVisibility, Contribution, ContributionType,
   EventPositionAvailability, MemberProfile, MemberRequest, MemberRequestKind,
-  MemberStats, MyEventApplication, Position, PositionChangeRequest,
-  PositionHistoryRow, Project, ReviewStatus,
+  MemberStats, MyEventApplication, ParticipationStatus, Position, PositionChangeRequest,
+  PositionHistoryRow, Project, ProjectKind, ProjectStatus, ReviewStatus,
 } from './types.js';
 
 /** Throws a readable Error when PostgREST reports a failure. */
@@ -28,6 +28,7 @@ function unwrap<T>(result: { data: T | null; error: unknown }): T {
  */
 export async function bestEffortFunctionSync(
   functionName: string,
+  body: Record<string, unknown> = {},
 ): Promise<void> {
   try {
     const client = requireClient();
@@ -35,7 +36,7 @@ export async function bestEffortFunctionSync(
     const { error } = await client.functions.invoke(
       functionName,
       {
-        body: {},
+        body,
       },
     );
 
@@ -107,6 +108,58 @@ export async function projects(): Promise<Project[]> {
     .is('deleted_at', null).order('sort_index').order('starts_on', { ascending: false })) ?? [];
 }
 
+export interface AdvisorActivity {
+  id: string; title: string; kind: ProjectKind; status: ProjectStatus;
+  starts_on: string | null; ends_on: string | null;
+  role_text: string; is_lead: boolean;
+}
+
+export async function advisorActivities(userId: string): Promise<AdvisorActivity[]> {
+  const rows = unwrap(await requireClient().from('project_organizers')
+    .select('role_text, is_lead, project:projects(id,title,kind,status,starts_on,ends_on)')
+    .eq('user_id', userId)) ?? [];
+  return (rows as unknown as Array<{
+    role_text: string; is_lead: boolean;
+    project: Omit<AdvisorActivity, 'role_text' | 'is_lead'> | null;
+  }>).filter((row) => row.project).map((row) => ({
+    ...row.project!, role_text: row.role_text, is_lead: row.is_lead,
+  }));
+}
+
+export async function advisorParticipants(projectIds: string[]) {
+  if (!projectIds.length) return [];
+  return unwrap(await requireClient().from('participations')
+    .select('*, member:app_users!participations_user_id_fkey(full_name,email)')
+    .in('project_id', projectIds).order('created_at')) ?? [];
+}
+
+export async function advisorContributions(projectIds: string[]) {
+  if (!projectIds.length) return [];
+  return unwrap(await requireClient().from('contributions')
+    .select('*, member:app_users!contributions_user_id_fkey(full_name,email)')
+    .in('project_id', projectIds).is('deleted_at', null).order('created_at')) ?? [];
+}
+
+export async function advisorSetParticipationStatus(
+  id: string, status: ParticipationStatus, reason: string | null = null,
+): Promise<void> {
+  const { error } = await requireClient().rpc('advisor_set_participation_status', {
+    participation_id: id, new_status: status, reason,
+  });
+  if (error) throw new Error(readableError(error));
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['event_participation'] });
+}
+
+export async function advisorVerifyContribution(
+  id: string, reason: string | null = null,
+): Promise<void> {
+  const { error } = await requireClient().rpc('advisor_verify_contribution', {
+    contribution_id: id, reason,
+  });
+  if (error) throw new Error(readableError(error));
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['contributions'] });
+}
+
 /* -------------------------------------------------------------- application */
 
 export async function myApplication(userId: string): Promise<Application | null> {
@@ -141,7 +194,8 @@ export async function saveProfile(
   ) as MemberProfile;
 
   await bestEffortFunctionSync(
-    'member-sheet-sync',
+    'club-records-sheet-sync',
+    { sheets: ['people', 'members'] },
   );
 
   return profile;
@@ -164,7 +218,8 @@ export async function saveName(
   );
 
   await bestEffortFunctionSync(
-    'member-sheet-sync',
+    'club-records-sheet-sync',
+    { sheets: ['people', 'members'] },
   );
 }
 
@@ -193,12 +248,16 @@ export async function saveContribution(
   input: Partial<Contribution> & { user_id: string; title: string; type_slug: string },
 ): Promise<Contribution> {
   const client = requireClient();
+  let saved: Contribution;
   if (input.id) {
     const { id, ...patch } = input;
-    return unwrap(await client.from('contributions')
+    saved = unwrap(await client.from('contributions')
       .update(patch).eq('id', id).select('*').single());
+  } else {
+    saved = unwrap(await client.from('contributions').insert(input).select('*').single());
   }
-  return unwrap(await client.from('contributions').insert(input).select('*').single());
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['contributions'] });
+  return saved;
 }
 
 export async function reviewQueue(statuses: ReviewStatus[] = ['submitted']): Promise<

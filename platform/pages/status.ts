@@ -8,7 +8,7 @@
  */
 import { h, render } from '../lib/dom.js';
 import { shell, pageHeader, panel, statusPill, metaList, notice, loading } from '../lib/ui.js';
-import { requireSignedIn, isMember, isStaff } from '../lib/session.js';
+import { requireSignedIn, isMember, isStaff, isAdvisoryInstructor, isReviewer } from '../lib/session.js';
 import { myApplication, setting } from '../lib/api.js';
 import { myDecisions } from '../lib/audit.js';
 import { memberDecisionList } from '../lib/history.js';
@@ -37,11 +37,25 @@ async function start(): Promise<void> {
   ]);
 
   if (isMember(viewer) || isStaff(viewer)) {
-    window.location.replace(isMember(viewer) ? '/portal/index.html' : '/admin/index.html');
+    window.location.replace(isMember(viewer) ? '/portal/index.html'
+      : isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+        ? '/admin/advisor.html' : '/admin/index.html');
     return;
   }
 
   if (!application) {
+    if (viewer.user.university_role !== 'student') {
+      render(content,
+        pageHeader('ACCOUNT', 'Account ready'),
+        panel('Your university role',
+          h('p', `You are registered as ${enumLabel(viewer.user.university_role)}.`),
+          h('p', 'The membership application is for students, so it does not ask you for a major, academic year, or student ID. An ACM administrator can assign any club access you need.'),
+          h('div', { class: 'button-row' },
+            h('a', { class: 'btn-ghost', href: `mailto:${clubEmail}` }, 'Contact ACM'),
+            h('a', { class: 'btn-ghost', href: '/index.html' }, 'Public website'))));
+      return;
+    }
+
     render(content,
       pageHeader('MEMBERSHIP', 'No application yet'),
       panel('Join ACM PSU',

@@ -456,12 +456,15 @@
     border-radius: var(--radius-md);
     color: var(--text-main);
     padding: 0;
-    width: min(46rem, calc(100vw - 2rem));
-    max-height: 88vh;
+    width: min(60rem, calc(100vw - 3rem));
+    max-width: none;
+    max-height: min(90dvh, 56rem);
+    margin: auto;
+    overflow: hidden;
 }
 
 .portal-dialog::backdrop { background: rgba(5, 5, 7, 0.82); backdrop-filter: blur(4px); }
-.portal-dialog-inner { display: flex; flex-direction: column; max-height: 88vh; }
+.portal-dialog-inner { display: flex; flex-direction: column; max-height: min(90dvh, 56rem); }
 
 .portal-dialog-head {
     display: flex;
@@ -475,6 +478,22 @@
 .portal-dialog-head h2 { font-size: 1rem; }
 .portal-dialog-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
 .portal-dialog-foot { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); }
+
+@media (max-width: 640px) {
+    .portal-dialog {
+        inset: 0;
+        width: auto;
+        max-height: none;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .portal-dialog-inner { min-height: 100dvh; max-height: 100dvh; }
+    .portal-dialog-head,
+    .portal-dialog-body,
+    .portal-dialog-foot { padding-left: 1rem; padding-right: 1rem; }
+}
 
 /* --------------------------------------------------------------------------
    Authentication pages — a single centred card, no sidebar
@@ -2057,6 +2076,92 @@
 .holder-list { display: flex; flex-direction: column; gap: 0.2rem; }
 .holder-list p { font-size: 0.88rem; line-height: 1.45; }
 .holder-list strong { font-weight: 500; }
+
+.position-catalogue { display: flex; flex-direction: column; gap: 0.8rem; }
+.position-catalogue__toolbar {
+    display: grid;
+    grid-template-columns: minmax(16rem, 1fr) minmax(12rem, auto) minmax(11rem, auto) auto;
+    gap: 0.65rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-surface-hover);
+}
+.position-catalogue__search,
+.position-catalogue__select {
+    min-height: 2.75rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #0d0d12;
+    color: var(--text-main);
+    font: 0.78rem var(--font-mono);
+}
+.position-catalogue__search:focus,
+.position-catalogue__select:focus { outline: none; border-color: var(--accent-blue); }
+.position-catalogue__search::placeholder { color: var(--text-dark); }
+.position-catalogue__clear { min-height: 2.75rem; }
+.position-catalogue__count { padding: 0 1rem; color: var(--text-muted); }
+.position-role { min-width: 15rem; max-width: 25rem; }
+.position-role .mono-meta { margin-top: 0.3rem; line-height: 1.55; }
+.capacity-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.8rem;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    font: 0.62rem var(--font-mono);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+.capacity-badge--open { color: var(--pill-ok); }
+.capacity-badge--full { color: var(--text-muted); }
+.capacity-badge--unlimited { color: var(--accent-blue); }
+.position-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 6.4rem);
+    gap: 0.45rem;
+    align-items: stretch;
+}
+.position-actions .btn-submit,
+.position-actions .btn-ghost {
+    width: 6.4rem;
+    min-height: 2.65rem;
+    margin: 0;
+    padding: 0.6rem 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.position-actions__placeholder { width: 6.4rem; }
+.position-table td { vertical-align: middle; }
+.position-table th:last-child,
+.position-table td:last-child { min-width: 21rem; }
+.member-directory__toolbar {
+    display: grid;
+    grid-template-columns: minmax(15rem, 1fr) minmax(13rem, auto);
+    gap: 0.65rem;
+}
+.member-directory__filter {
+    min-height: 2.8rem;
+    padding: 0.65rem 2rem 0.65rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #0d0d12;
+    color: var(--text-main);
+    font: 0.75rem var(--font-mono);
+}
+
+@media (max-width: 880px) {
+    .position-catalogue__toolbar { grid-template-columns: 1fr 1fr; }
+    .position-catalogue__search { grid-column: 1 / -1; }
+}
+
+@media (max-width: 560px) {
+    .position-catalogue__toolbar { grid-template-columns: 1fr; }
+    .position-catalogue__search { grid-column: auto; }
+    .member-directory__toolbar { grid-template-columns: 1fr; }
+}
 
 /* --------------------------------------------------------------------------
    Form sections

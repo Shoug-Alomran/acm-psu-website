@@ -46,6 +46,7 @@ import {
   archiveItems,
   itemUrl,
   setting,
+  bestEffortFunctionSync,
 } from '../lib/api.js';
 
 import {
@@ -748,6 +749,11 @@ async function start(): Promise<void> {
                   'Opening published to members.',
                 );
 
+                void bestEffortFunctionSync(
+                  'club-records-sheet-sync',
+                  { sheets: ['opportunity_positions'] },
+                );
+
                 await draw();
               } catch (error) {
                 console.error(
@@ -989,7 +995,7 @@ async function start(): Promise<void> {
       memberList =
         await members(
           '',
-          'active',
+          '',
         );
     } catch (error) {
       console.error(
@@ -1013,7 +1019,7 @@ async function start(): Promise<void> {
       },
 
       field({
-        label: 'Member',
+        label: 'Person',
         name: 'user_id',
         type: 'select',
         required: true,
@@ -1112,6 +1118,11 @@ async function start(): Promise<void> {
 
                 toast(
                   'Organiser added.',
+                );
+
+                void bestEffortFunctionSync(
+                  'club-records-sheet-sync',
+                  { sheets: ['people', 'opportunity_positions'] },
                 );
 
                 await draw();
@@ -1604,6 +1615,11 @@ async function start(): Promise<void> {
                               : 'Opening reopened.',
                           );
 
+                          void bestEffortFunctionSync(
+                            'club-records-sheet-sync',
+                            { sheets: ['opportunity_positions'] },
+                          );
+
                           await draw();
                         } catch (error) {
                           console.error(
@@ -1706,6 +1722,11 @@ async function start(): Promise<void> {
 
                           toast(
                             'Organiser removed.',
+                          );
+
+                          void bestEffortFunctionSync(
+                            'club-records-sheet-sync',
+                            { sheets: ['people', 'opportunity_positions'] },
                           );
 
                           await draw();

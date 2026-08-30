@@ -174,6 +174,31 @@ export async function pushToGoogleSheet(
     },
   );
 
+  // Canonical mirror tabs remain ordinary, readable worksheet tables. This
+  // changes only structure/formatting; Apps Script never supplies the data.
+  if (existing && matrix.length && matrix[0].length) {
+    await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
+      method: 'POST',
+      body: JSON.stringify({ requests: [
+        { clearBasicFilter: { sheetId: existing.properties.sheetId } },
+        { repeatCell: {
+          range: { sheetId: existing.properties.sheetId, startRowIndex: 0, endRowIndex: 1,
+            startColumnIndex: 0, endColumnIndex: matrix[0].length },
+          cell: { userEnteredFormat: { backgroundColor: { red: 0.08, green: 0.13, blue: 0.20 },
+            textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
+          fields: 'userEnteredFormat(backgroundColor,textFormat)',
+        } },
+        { updateSheetProperties: { properties: { sheetId: existing.properties.sheetId,
+          gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
+        { setBasicFilter: { filter: { range: { sheetId: existing.properties.sheetId,
+          startRowIndex: 0, endRowIndex: Math.max(matrix.length, 2), startColumnIndex: 0,
+          endColumnIndex: matrix[0].length } } } },
+        { autoResizeDimensions: { dimensions: { sheetId: existing.properties.sheetId,
+          dimension: 'COLUMNS', startIndex: 0, endIndex: matrix[0].length } } },
+      ] }),
+    });
+  }
+
   const gid = existing?.properties.sheetId;
   return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` +
     (gid !== undefined ? `#gid=${gid}` : '');

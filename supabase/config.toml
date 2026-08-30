@@ -44,8 +44,5 @@ verify_jwt = true
 [functions.records-export]
 verify_jwt = true
 
-[functions.member-sheet-sync]
-verify_jwt = true
-
-[functions.position-application-sheet-sync]
+[functions.club-records-sheet-sync]
 verify_jwt = true

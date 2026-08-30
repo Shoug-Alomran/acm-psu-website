@@ -67,12 +67,17 @@ const ROLES: Array<{
       label: 'Club admin',
       blurb: 'Applications, members, positions, projects, archive and exports.',
     },
-    {
-      value: 'reviewer',
+  {
+    value: 'reviewer',
       label: 'Reviewer',
       blurb: 'Review queues only. No member management, settings or exports.',
-    },
-  ];
+  },
+  {
+    value: 'advisory_instructor',
+    label: 'Advisory instructor',
+    blurb: 'Assigned projects, participants, attendance and contribution verification only.',
+  },
+];
 
 /**
  * Settings a committee legitimately changes, and how to render each one.

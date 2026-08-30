@@ -12,8 +12,8 @@
  * answer here is one the application form no longer has to ask for — it
  * arrives pre-filled instead.
  *
- * Only the credentials are required. Everything below them is optional and can
- * be changed later in the portal, which is why none of it blocks the button.
+ * Credentials and the person's university role are required. The student-only
+ * details below them are optional, which is why none of them blocks the button.
  *
  * The extra answers travel in the auth user's metadata rather than being
  * written directly: with email confirmation on there is no session at this
@@ -28,6 +28,15 @@ import { h, formValues, textOf, asArray } from '../lib/dom.js';
 import { wideAuthShell, field, chipPicker, notice, submitButton } from '../lib/ui.js';
 import { INTERESTS, ACADEMIC_YEARS } from '../lib/membership.js';
 import { isConfigured, supabase, requireClient, siteUrl, readableError } from '../lib/supabase.js';
+import { applySignupMetadata } from '../lib/signup-profile.js';
+
+const UNIVERSITY_ROLES = [
+  { value: 'student', label: 'Student' },
+  { value: 'instructor', label: 'Instructor / faculty' },
+  { value: 'staff', label: 'University staff' },
+  { value: 'alumni', label: 'Alumni' },
+  { value: 'other', label: 'Other' },
+];
 
 /** A labelled break in a long form, matching the review console's captions. */
 function section(title: string, blurb: string): HTMLElement {
@@ -59,10 +68,13 @@ async function start(): Promise<void> {
       field({ label: 'Confirm password', name: 'confirm', type: 'password', required: true })),
 
     section('About you',
-      'Optional. It saves you answering the same questions on the membership ' +
-      'application, and you can change any of it later.'),
+      'Tell us how you are connected to PSU. Student details are optional here and ' +
+      'can be changed later.'),
 
-    h('div', { class: 'field-pair' },
+    field({ label: 'I am a', name: 'university_role', type: 'select', required: true,
+            options: UNIVERSITY_ROLES }),
+
+    h('div', { class: 'field-pair', id: 'student-fields' },
       field({ label: 'Major', name: 'major', maxlength: 120,
               placeholder: 'e.g. Software Engineering' }),
 
@@ -79,6 +91,17 @@ async function start(): Promise<void> {
     submitButton('Create account'),
   ) as HTMLFormElement;
 
+  const roleSelect = form.elements.namedItem('university_role') as HTMLSelectElement;
+  const studentFields = form.querySelector<HTMLElement>('#student-fields')!;
+  const syncStudentFields = (): void => {
+    const isStudent = roleSelect.value === 'student';
+    studentFields.hidden = !isStudent;
+    studentFields.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
+      .forEach((control) => { control.disabled = !isStudent; });
+  };
+  roleSelect.addEventListener('change', syncStudentFields);
+  syncStudentFields();
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
@@ -86,6 +109,7 @@ async function start(): Promise<void> {
     const values = formValues(form);
     const email = textOf(values, 'email');
     const password = textOf(values, 'password');
+    const universityRole = textOf(values, 'university_role');
     const button = form.querySelector('button')!;
 
     if (password.length < 8) {
@@ -111,6 +135,7 @@ async function start(): Promise<void> {
          */
         data: {
           full_name: textOf(values, 'full_name'),
+          university_role: universityRole,
           major: textOf(values, 'major'),
           academic_year: textOf(values, 'academic_year'),
           interests: asArray(values.interests),
@@ -128,7 +153,12 @@ async function start(): Promise<void> {
     // With email confirmation on, there is no session yet — which is correct:
     // membership is tied to a real person, so the address must be proven.
     if (data.session) {
-      window.location.replace('/portal/apply.html');
+      // Confirmation can be disabled in development. Persist the optional
+      // answers and wait for the Members-sheet refresh before navigating away.
+      await applySignupMetadata();
+      window.location.replace(
+        universityRole === 'student' ? '/portal/apply.html' : '/portal/status.html',
+      );
       return;
     }
 

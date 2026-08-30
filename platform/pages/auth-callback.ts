@@ -27,6 +27,8 @@ import {
   loadViewer,
   isStaff,
   isMember,
+  isAdvisoryInstructor,
+  isReviewer,
 } from '../lib/session.js';
 
 import {
@@ -238,7 +240,8 @@ async function start(): Promise<void> {
       )
     ) {
       window.location.replace(
-        '/admin/index.html',
+        isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+          ? '/admin/advisor.html' : '/admin/index.html',
       );
 
       return;
@@ -253,6 +256,14 @@ async function start(): Promise<void> {
         '/portal/index.html',
       );
 
+      return;
+    }
+
+    // Membership applications collect student-specific information. Faculty,
+    // staff, alumni and other university affiliates keep a valid account and
+    // can be assigned the appropriate club access by an administrator.
+    if (viewer?.user.university_role !== 'student') {
+      window.location.replace('/portal/status.html');
       return;
     }
 

@@ -12,7 +12,7 @@
 import { h, render, type Child } from './dom.js';
 import { daysSince, enumLabel, initials } from './format.js';
 import { signOut, isClubAdmin, isReviewer, isSuperAdmin, isStaff, isMember,
-         displayName, type Viewer } from './session.js';
+         isAdvisoryInstructor, displayName, type Viewer } from './session.js';
 
 /* ------------------------------------------------------------------- chrome */
 
@@ -36,6 +36,9 @@ function memberLinks(viewer: Viewer): NavLink[] {
 }
 
 function adminLinks(viewer: Viewer): NavLink[] {
+  if (isAdvisoryInstructor(viewer) && !isReviewer(viewer)) {
+    return [{ href: '/admin/advisor.html', label: 'Assigned Activities' }];
+  }
   const links: NavLink[] = [{ href: '/admin/index.html', label: 'Overview' }];
   if (isClubAdmin(viewer)) {
     links.push(
@@ -90,9 +93,11 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
       }, link.label)),
     ),
     // Staff move between the two areas constantly; keep the hop one click away.
-    isStaff(viewer)
+    (isStaff(viewer) || isAdvisoryInstructor(viewer))
       ? h('nav', { class: 'portal-nav portal-nav--secondary' },
-          h('a', { href: area === 'admin' ? '/portal/index.html' : '/admin/index.html' },
+          h('a', { href: area === 'admin' ? '/portal/index.html'
+            : isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+              ? '/admin/advisor.html' : '/admin/index.html' },
             area === 'admin' ? '← Member portal' : 'Admin console →'),
           h('a', { href: '/index.html' }, 'Public website'))
       : h('nav', { class: 'portal-nav portal-nav--secondary' },

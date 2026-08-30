@@ -10,7 +10,7 @@
  * leave rate limiting with nowhere to live.
  */
 import { requireClient, readableError } from './supabase.js';
-import { unwrap } from './api.js';
+import { unwrap, bestEffortFunctionSync } from './api.js';
 import type {
   Inquiry, InquiryCategory, InquiryCounts, InquiryNote, InquiryStatus, MyInquiry,
 } from './types.js';
@@ -53,6 +53,7 @@ export async function submitInquiry(draft: InquiryDraft): Promise<string> {
   });
 
   if (error) throw new Error(readableError(error));
+  void bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['inquiries'] });
   return data as string;
 }
 
@@ -130,6 +131,7 @@ export async function assignInquiry(
     inquiry_id: inquiryId, assignee, reason,
   });
   if (error) throw new Error(error.message);
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['inquiries'] });
 }
 
 export async function setInquiryStatus(
@@ -139,6 +141,7 @@ export async function setInquiryStatus(
     inquiry_id: inquiryId, new_status: status, reason,
   });
   if (error) throw new Error(error.message);
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['inquiries'] });
 }
 
 /**
@@ -162,6 +165,7 @@ export async function respondToInquiry(
     delivery_note: options.deliveryNote ?? null,
   });
   if (error) throw new Error(error.message);
+  await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['inquiries'] });
 }
 
 /* ------------------------------------------------------------ the sender */

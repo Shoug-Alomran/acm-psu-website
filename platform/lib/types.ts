@@ -15,6 +15,8 @@ export type MembershipStatus =
 
 export type AccountState = 'active' | 'disabled';
 
+export type UniversityRole = 'student' | 'instructor' | 'staff' | 'alumni' | 'other';
+
 export type ApplicationStatus =
   | 'submitted' | 'interview' | 'approved' | 'rejected' | 'withdrawn';
 
@@ -23,7 +25,8 @@ export type ReviewStatus =
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
-export type AdminRole = 'super_admin' | 'club_admin' | 'reviewer';
+export type AdminRole =
+  | 'super_admin' | 'club_admin' | 'reviewer' | 'advisory_instructor';
 
 export type ProfileVisibility = 'public' | 'private';
 
@@ -47,6 +50,7 @@ export interface AppUser {
   full_name: string;
   student_id: string | null;
   major: string | null;
+  university_role: UniversityRole;
   account_state: AccountState;
   created_at: string;
   deleted_at: string | null;
@@ -87,6 +91,8 @@ export interface Position {
   description: string | null;
   category: string;
   rank: number;
+  /** Maximum simultaneous holders; null means unlimited. */
+  max_holders: number | null;
   is_active: boolean;
   archived_at: string | null;
 }

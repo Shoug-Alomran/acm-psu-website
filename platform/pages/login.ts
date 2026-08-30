@@ -30,6 +30,8 @@ import {
 import {
   loadViewer,
   isStaff,
+  isAdvisoryInstructor,
+  isReviewer,
 } from '../lib/session.js';
 
 import {
@@ -107,7 +109,8 @@ async function landingFor(): Promise<string> {
         viewer,
       )
     ) {
-      return '/admin/index.html';
+      return isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+        ? '/admin/advisor.html' : '/admin/index.html';
     }
 
     if (

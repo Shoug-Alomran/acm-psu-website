@@ -77,7 +77,7 @@ export async function registerEventApplication(input: {
    * something actually changed, and never let it undo a committed write.
    */
   if (outcome === 'created' || outcome === 'reopened' || outcome === 'approved') {
-    await bestEffortFunctionSync('position-application-sheet-sync');
+    await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['position_applications'] });
   }
 
   return {
@@ -108,7 +108,7 @@ export async function unregisterEventApplication(
     : 'already_closed';
 
   if (outcome === 'cancelled') {
-    await bestEffortFunctionSync('position-application-sheet-sync');
+    await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['position_applications'] });
   }
 
   return {

@@ -27,7 +27,7 @@ Nothing is deleted. Specifically:
   now created by admins in the portal under a project. This tab is now
   reference data only.
 - **Position Applications** — unchanged and still live. It is refreshed from
-  Supabase by the `position-application-sheet-sync` Edge Function and is the
+  Supabase by the unified `club-records-sheet-sync` Edge Function and is the
   administrative snapshot.
 
 ## The web app deployment

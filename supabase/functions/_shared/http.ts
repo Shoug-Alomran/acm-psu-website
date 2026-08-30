@@ -16,7 +16,20 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ??
   .map((o) => o.trim());
 
 export function corsHeaders(origin: string | null): Record<string, string> {
-  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  // Local static servers use arbitrary ports (and macOS often exposes the
+  // IPv6 wildcard as [::]). Permit only HTTP loopback origins in addition to
+  // the explicit production allow-list; never reflect an arbitrary website.
+  let localDevelopment = false;
+  if (origin) {
+    try {
+      const parsed = new URL(origin);
+      localDevelopment = parsed.protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '[::1]', '[::]'].includes(parsed.hostname);
+    } catch { /* invalid origins remain disallowed */ }
+  }
+  const allowed = origin && (ALLOWED_ORIGINS.includes(origin) || localDevelopment)
+    ? origin
+    : ALLOWED_ORIGINS[0];
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

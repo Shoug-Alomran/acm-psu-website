@@ -52,6 +52,7 @@ export async function loadViewer(force = false): Promise<Viewer | null> {
       full_name: (auth.user.user_metadata?.full_name as string) ?? '',
       student_id: null,
       major: null,
+      university_role: 'student',
       account_state: 'active',
       created_at: new Date().toISOString(),
       deleted_at: null,
@@ -89,7 +90,13 @@ export function isReviewer(v: Viewer | null): boolean {
   return isClubAdmin(v) || !!v?.roles.includes('reviewer');
 }
 
-export function isStaff(v: Viewer | null): boolean { return isReviewer(v); }
+export function isStaff(v: Viewer | null): boolean {
+  return isReviewer(v) || isAdvisoryInstructor(v);
+}
+
+export function isAdvisoryInstructor(v: Viewer | null): boolean {
+  return !!v?.roles.includes('advisory_instructor');
+}
 
 /** Active members and alumni can use the member portal. */
 export function isMember(v: Viewer | null): boolean {
@@ -147,6 +154,15 @@ export async function requireAdmin(
     : isReviewer(viewer);
 
   if (!ok) {
+    window.location.replace('/portal/index.html?denied=1');
+    return new Promise<Viewer>(() => {});
+  }
+  return viewer;
+}
+
+export async function requireAdvisor(): Promise<Viewer> {
+  const viewer = await requireSignedIn();
+  if (!isAdvisoryInstructor(viewer) && !isClubAdmin(viewer)) {
     window.location.replace('/portal/index.html?denied=1');
     return new Promise<Viewer>(() => {});
   }

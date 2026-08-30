@@ -79,9 +79,13 @@ export async function applySignupMetadata(): Promise<void> {
     // The private university workbook is a snapshot of Supabase. Refresh its
     // Members tab after the signup answers have reached their source rows.
     // This is best-effort: a Google outage must never block account access.
-    void client.functions.invoke('member-sheet-sync', { body: {} }).then(({ error }) => {
-      if (error) console.error('Could not refresh the Members worksheet:', error);
-    });
+    const { error: syncError } = await client.functions.invoke(
+      'club-records-sheet-sync',
+      { body: { sheets: ['people', 'members'] } },
+    );
+    if (syncError) {
+      console.error('Could not refresh the Members worksheet:', syncError);
+    }
   } catch (error) {
     // Pre-filling is a convenience. Never let it break a sign-in.
     console.error('Could not apply sign-up answers to the profile:', error);
