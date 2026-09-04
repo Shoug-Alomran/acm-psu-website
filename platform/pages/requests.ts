@@ -52,6 +52,17 @@ async function start(): Promise<void> {
   }
   const positionList = (positionChoiceRows ?? []) as MemberPositionChoice[];
 
+  const { data: currentRole, error: currentRoleError } = await requireClient()
+    .from('current_positions').select('position_id, rank, title')
+    .eq('user_id', viewer.userId).maybeSingle();
+  const hasStandingRole = Boolean(viewer.currentPosition && viewer.currentPosition !== 'Member');
+  const hierarchyKnown = !currentRoleError && (!hasStandingRole || currentRole?.rank != null);
+  // Lower rank values represent more senior roles in the club catalogue.
+  const alternatives = positionList.filter(p => p.id !== currentRole?.position_id && p.title !== viewer.currentPosition)
+    .sort((a, b) => a.rank - b.rank || a.title.localeCompare(b.title));
+  const promotions = hierarchyKnown ? alternatives.filter(p => !hasStandingRole || p.rank < currentRole!.rank!) : [];
+  const transfers = hierarchyKnown && hasStandingRole ? alternatives.filter(p => p.rank >= currentRole!.rank!) : [];
+
   function simpleRequest(
     kind: MemberRequestKind, title: string, explanation: string, prompt: string,
     extra?: HTMLElement,
@@ -80,10 +91,12 @@ async function start(): Promise<void> {
   }
 
   function positionRequestForm(mode: 'promotion' | 'change'): void {
+    const choices = mode === 'promotion' ? promotions : transfers;
+    if (!choices.length) return;
     const title = mode === 'promotion' ? 'Apply for a promotion' : 'Request a different club role';
     const explanation = mode === 'promotion'
-      ? 'You can apply for an available standing club role. The committee reviews the request and your current position stays unchanged unless the request is approved.'
-      : 'You can ask to move to another available standing club role. Your position history is never overwritten; an approved change closes the current term and records the new one.';
+      ? 'Only available roles above your current level are shown. Members without a standing role can apply for an entry into the club organization. The committee reviews the request and your current position stays unchanged unless the request is approved.'
+      : 'Only available roles at your current level or below are shown. Higher roles are listed under promotion. Your position history is never overwritten; an approved change closes the current term and records the new one.';
 
     const form = h('form', { class: 'portal-form', novalidate: true },
       notice('info', explanation),
@@ -94,7 +107,7 @@ async function start(): Promise<void> {
         required: true,
         options: [
           { value: '', label: 'Select an available role…' },
-          ...positionList.map((p) => ({
+          ...choices.map((p) => ({
             value: p.id,
             label: p.max_holders === null
               ? `${p.title} — available`
@@ -119,7 +132,7 @@ async function start(): Promise<void> {
           if (!form.reportValidity()) return;
           const values = formValues(form);
           const selected = textOf(values, 'requested_position_id');
-          if (!selected) {
+          if (!choices.some(p => p.id === selected)) {
             toast('Choose an available role.', 'err');
             return;
           }
@@ -148,7 +161,6 @@ async function start(): Promise<void> {
       requests.some((r) => r.kind === kind && r.status === 'pending');
 
     const isPublic = viewer.profile?.visibility === 'public';
-    const hasStandingRole = Boolean(viewer.currentPosition && viewer.currentPosition !== 'Member');
 
     render(content,
       pageHeader('MEMBER / REQUESTS', 'Requests'),
@@ -222,20 +234,23 @@ async function start(): Promise<void> {
         positionRequest?.admin_note
           ? h('p', { class: 'mono-meta dim-text' }, `ADMIN: ${positionRequest.admin_note}`)
           : null,
-        h('div', { class: 'button-row' },
-          positionRequest?.status === 'pending'
-            ? statusPill('pending')
-            : canSubmit(viewer)
-              ? [
-                  h('button', { type: 'button', class: 'btn-ghost',
-                    onclick: () => positionRequestForm('promotion') },
-                    hasStandingRole ? 'Apply for promotion' : 'Apply for a club role'),
-                  hasStandingRole
-                    ? h('button', { type: 'button', class: 'btn-ghost',
-                        onclick: () => positionRequestForm('change') }, 'Request different role')
-                    : null,
-                ]
-              : null)),
+        positionRequest?.status === 'pending'
+          ? statusPill('pending')
+          : canSubmit(viewer)
+            ? h('div', { class: 'role-paths' },
+                !hierarchyKnown ? notice('warn', 'Your current role ranking could not be determined. Ask the committee to check your role before requesting a change.') : null,
+                h('div', { class: 'role-path' },
+                  h('h3', hasStandingRole ? 'Move up' : 'Join a club team'),
+                  h('p', hasStandingRole ? 'Apply for a role above your current level.' : 'Apply for an available standing club role.'),
+                  promotions.length ? h('button', { type: 'button', class: 'btn-submit', onclick: () => positionRequestForm('promotion') },
+                    hasStandingRole ? `Apply for promotion (${promotions.length})` : 'Apply for a club role')
+                    : h('p', { class: 'role-path__empty' }, hierarchyKnown ? 'No higher roles are currently open for applications. President and Vice President are appointed through the committee.' : 'Role options unavailable.')),
+                hasStandingRole ? h('div', { class: 'role-path' },
+                  h('h3', 'Change direction'),
+                  h('p', 'Move to a different role at the same level or step down to a lower level.'),
+                  transfers.length ? h('button', { type: 'button', class: 'btn-ghost', onclick: () => positionRequestForm('change') }, 'Request a role change')
+                    : h('p', { class: 'role-path__empty' }, 'No alternative roles are currently available.')) : null)
+            : null),
 
       panel('Account',
         h('p', 'Deleting your account removes your ability to sign in. Official ACM ' +

@@ -170,11 +170,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!synchronizer) return fail('Club admin or advisory instructor access required.', 403, origin);
 
   let body: { mode?: string; sheets?: SheetKey[] } = {}; try { body = await req.json(); } catch { /* defaults */ }
+  const website = body.mode === 'website';
   const full = body.mode === 'full';
-  let requested = full ? ORDER : (body.sheets ?? []);
+  let requested = (full || website) ? ORDER : (body.sheets ?? []);
   requested = [...new Set(requested)].filter((key): key is SheetKey => ORDER.includes(key));
   if (!requested.length) return fail('No supported worksheets requested.', 400, origin);
-  if (!full && requested.length > 2) return fail('Targeted refreshes may update at most two worksheets.', 400, origin);
+  if (!full && !website && requested.length > 2) return fail('Targeted refreshes may update at most two worksheets.', 400, origin);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -184,6 +185,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const service = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  // The website view is the independent fallback for the Google workbook. It
+  // uses the exact same collectors and headings, but returns the current data
+  // directly from Supabase without touching Google or consulting the Google
+  // Sheets feature flag. The browser never receives service credentials.
+  if (website) {
+    const sheets: Record<string, { columns: unknown[]; rows: unknown[][] }> = {};
+    for (const key of requested) {
+      const matrix = await COLLECT[key](service);
+      sheets[NAMES[key]] = {
+        columns: matrix[0] ?? [],
+        rows: matrix.slice(1),
+      };
+    }
+    return json({ source: 'supabase', generated_at: new Date().toISOString(), sheets }, 200, origin);
+  }
 
   const { data: sheetsEnabled, error: sheetsEnabledError } = await caller.rpc('setting_bool', {
     setting_key: 'google_sheets_enabled',

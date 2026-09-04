@@ -24,6 +24,7 @@ function memberLinks(viewer: Viewer): NavLink[] {
     links.push(
       { href: '/portal/profile.html', label: 'Profile' },
       { href: '/portal/record.html', label: 'My Record' },
+      { href: '/portal/opportunities.html?view=responsibilities', label: 'My responsibilities' },
       { href: '/portal/opportunities.html', label: 'Opportunities' },
       { href: '/portal/contributions.html', label: 'Contributions' },
       { href: '/portal/submissions.html', label: 'Archive Submissions' },
@@ -37,7 +38,10 @@ function memberLinks(viewer: Viewer): NavLink[] {
 
 function adminLinks(viewer: Viewer): NavLink[] {
   if (isAdvisoryInstructor(viewer) && !isReviewer(viewer)) {
-    return [{ href: '/admin/advisor.html', label: 'Assigned Activities' }];
+    return [
+      { href: '/admin/advisor.html', label: 'Assigned Activities' },
+      { href: '/admin/records-backup.html', label: 'Records Backup' },
+    ];
   }
   const links: NavLink[] = [{ href: '/admin/index.html', label: 'Overview' }];
   if (isClubAdmin(viewer)) {
@@ -58,6 +62,7 @@ function adminLinks(viewer: Viewer): NavLink[] {
     links.push(
       { href: '/admin/requests.html', label: 'Requests' },
       { href: '/admin/university-records.html', label: 'Club Records' },
+      { href: '/admin/records-backup.html', label: 'Records Backup' },
     );
   }
   // Reviewers get the audit page too: it is where they can account for their
@@ -75,7 +80,7 @@ function adminLinks(viewer: Viewer): NavLink[] {
  */
 export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): HTMLElement {
   const links = area === 'admin' ? adminLinks(viewer) : memberLinks(viewer);
-  const here = window.location.pathname;
+  const here = window.location.pathname + (new URLSearchParams(window.location.search).get('view') === 'responsibilities' ? '?view=responsibilities' : '');
   const content = h('div', { class: 'portal-content', id: 'portal-content' });
 
   const sidebar = h('aside', { class: 'portal-sidebar' },

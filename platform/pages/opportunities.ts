@@ -2,7 +2,7 @@
 import { h, render, formValues, textOf } from '../lib/dom.js';
 import {
   shell, pageHeader, panel, statusPill, emptyState, loading, dialog, field,
-  notice, toast, action,
+  notice, toast, action, metaList,
 } from '../lib/ui.js';
 import { requireMember, canSubmit } from '../lib/session.js';
 import { openOpportunities, myEventApplications } from '../lib/api.js';
@@ -52,7 +52,8 @@ function legend(): HTMLElement {
 
 async function start(): Promise<void> {
   const viewer = await requireMember();
-  const content = shell(viewer, 'member', 'Opportunities');
+  const responsibilitiesView = new URLSearchParams(location.search).get('view') === 'responsibilities';
+  const content = shell(viewer, 'member', responsibilitiesView ? 'My responsibilities' : 'Opportunities');
 
   async function draw(): Promise<void> {
     render(content, loading('LOADING OPEN POSITIONS'));
@@ -230,20 +231,21 @@ async function start(): Promise<void> {
     }
 
     function requestRow(row: MyEventApplication): HTMLElement {
-      const closedNote = row.unregister_block === 'window_closed'
-        ? h('p', { class: 'mono-meta dim-text' }, 'WITHIN 72 HOURS OF THE EVENT — CONTACT AN ORGANISER TO WITHDRAW')
-        : null;
-      return h('div', { class: `history-row request-row request-row--${row.status}` },
-        h('span', { class: 'mono-meta' }, archiveDate(row.created_at)),
-        h('div', {},
-          h('p', { class: 'mono-meta accent-text' }, row.project_title),
-          h('strong', row.position_title), ' ', statusPill(row.status),
-          !row.position_is_open ? h('span', { class: 'mono-meta dim-text' }, ' · POSITION CLOSED') : null,
-          row.project_starts_on ? h('p', { class: 'mono-meta dim-text' }, `EVENT STARTS ${archiveDate(row.project_starts_on)}`) : null,
-          row.admin_note ? h('p', { class: 'mono-meta dim-text' }, row.admin_note) : null,
-          closedNote,
-        ),
-        row.can_unregister ? h('button', { type: 'button', class: 'btn-ghost', onclick: () => openUnregister(row) }, 'Unregister') : null,
+      return h('article', { class: 'dashboard-card event-request-card' },
+        h('div', { class: 'dashboard-card__heading' },
+          h('h3', row.position_title), statusPill(row.status)),
+        h('p', { class: 'dashboard-card__event' }, row.project_title),
+        metaList([
+          ['Requested on', archiveDate(row.created_at)],
+          ['Event starts', row.project_starts_on ? archiveDate(row.project_starts_on) : 'To be announced'],
+          ['Registration', row.position_is_open ? 'Open' : 'Closed'],
+        ]),
+        row.admin_note ? h('div', { class: 'dashboard-card__note' },
+          h('strong', 'Organiser feedback'), h('p', row.admin_note)) : null,
+        row.unregister_block === 'window_closed'
+          ? h('p', { class: 'event-request-card__notice' }, 'The event starts within 72 hours. Contact an organiser to withdraw.') : null,
+        row.can_unregister ? h('div', { class: 'event-request-card__actions' },
+          h('button', { type: 'button', class: 'btn-ghost', onclick: () => openUnregister(row) }, 'Unregister')) : null,
       );
     }
 
@@ -261,17 +263,30 @@ async function start(): Promise<void> {
         ));
       }
       return panel('Your requests',
-        h('p', { class: 'mono-meta dim-text' }, 'Pending and approved registrations can be withdrawn online until 72 hours before the event starts.'),
-        h('div', { class: 'history-list' }, mine.map(requestRow)),
+        h('p', { class: 'event-request-intro' }, 'Pending and approved registrations can be withdrawn online until 72 hours before the event starts.'),
+        h('div', { class: 'dashboard-cards' }, mine.map(requestRow)),
       );
     }
 
+    const active = mine.filter(row => row.status === 'approved' && row.has_active_assignment);
+    const other = mine.filter(row => !(row.status === 'approved' && row.has_active_assignment));
     render(content,
-      pageHeader('MEMBER / OPPORTUNITIES', 'Open positions', h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Dashboard')),
-      notice('info', 'These are roles on upcoming ACM events. No prior experience is expected — that is what taking one is for. Approved involvement becomes part of your verified record.'),
-      legend(),
-      boardPanels(),
-      requestsPanel(),
+      pageHeader('MEMBER / EVENTS', responsibilitiesView ? 'My responsibilities' : 'Open positions',
+        h('a', { class: 'btn-ghost', href: responsibilitiesView ? '/portal/opportunities.html' : '/portal/opportunities.html?view=responsibilities' },
+          responsibilitiesView ? 'Find an opportunity' : 'My responsibilities')),
+      responsibilitiesView ? [
+        h('p', { class: 'event-request-intro' }, 'Your accepted event roles appear first. Use these cards to check dates, organiser feedback and withdrawal options.'),
+        requests.error ? notice('err', `Could not load responsibilities: ${requests.error}`) :
+          panel('Accepted responsibilities', active.length
+            ? h('div', { class: 'dashboard-cards' }, active.map(requestRow))
+            : emptyState('No active assignments yet.', 'Accepted event roles will appear here once you are assigned.')),
+        !requests.error && other.length ? panel('Other registrations',
+          h('p', { class: 'event-request-intro' }, 'Pending, cancelled and previous registrations.'),
+          h('div', { class: 'dashboard-cards' }, other.map(requestRow))) : null,
+      ] : [
+        notice('info', 'Browse event roles and register interest. Track accepted responsibilities and your registrations on My responsibilities.'),
+        legend(), boardPanels(),
+      ],
     );
   }
 

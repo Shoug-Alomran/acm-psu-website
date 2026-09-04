@@ -219,6 +219,7 @@ async function start(): Promise<void> {
               catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }
             }),
             h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE RECORDS'),
+            h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP'),
             h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Member portal'))),
         notice('info', 'You can manage events and verify attendance/contributions for activities assigned to you. You can also refresh the shared Google workbook from Supabase; Supabase remains the source of truth.'),
         statRow([
@@ -232,7 +233,8 @@ async function start(): Promise<void> {
               try { await syncGoogleWorkbook(); }
               catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }
             }, 'primary'),
-            h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE WORKBOOK'))),
+            h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE WORKBOOK'),
+            h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP'))),
         panel('Assigned events and workshops', activityRows.length
           ? paginatedTable(['Activity', 'Kind', 'Role', 'Status', 'Dates', 'Actions'], activityRows,
               pages.activities, (value) => redrawPage('activities', value))

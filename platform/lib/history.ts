@@ -101,20 +101,19 @@ export function memberDecisionList(decisions: MemberDecision[]): Child {
       'Approvals, verifications and requests about you will appear here.');
   }
 
-  return h('div', { class: 'history-trail' },
-    decisions.map((decision) => h('div', { class: 'history-entry' },
-      h('div', { class: 'history-entry-head' },
-        h('span', { class: 'mono-meta' }, archiveDate(decision.created_at)),
-        decision.decision ? statusPill(decision.decision) : null),
-      h('div', {},
-        h('strong', decision.summary),
-        h('p', { class: 'mono-meta dim-text' },
-          `${CATEGORY_LABELS[decision.category] ?? decision.category}` +
-          (decision.actor_name ? ` · ${actorLine(decision)}` : '')),
-        decision.reason
-          ? h('p', { class: 'history-reason' },
-              h('span', { class: 'mono-meta dim-text' }, 'REASON  '), decision.reason)
-          : null))));
+  return h('div', { class: 'dashboard-cards' },
+    decisions.map(decision => h('article', { class: 'dashboard-card dashboard-card--decision' },
+      h('div', { class: 'dashboard-card__heading' },
+        h('h3', decision.summary), decision.decision ? statusPill(decision.decision) : null),
+      h('dl', { class: 'meta-list' },
+        h('dt', 'Decision date'), h('dd', archiveDateTime(decision.created_at)),
+        h('dt', 'Category'), h('dd', CATEGORY_LABELS[decision.category] ?? enumLabel(decision.category)),
+        h('dt', 'Recorded by'), h('dd', decision.actor_name ? actorLine(decision) : 'Not recorded'),
+        decision.entity_label ? [h('dt', 'Related record'), h('dd', decision.entity_label)] : null),
+      h('div', { class: 'dashboard-card__note' },
+        h('strong', 'Reason / feedback'),
+        h('p', decision.reason || 'No additional reason was recorded for this decision.')))));
+
 }
 
 export { CATEGORY_LABELS, DECISION_LABELS };

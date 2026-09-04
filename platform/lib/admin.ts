@@ -638,6 +638,19 @@ export interface ClubRecordsSyncResult {
   sheets: Record<string, { rows: number; status: 'updated' | 'failed'; error?: string }>;
 }
 
+export interface WebsiteRecordsResult {
+  source: 'supabase';
+  generated_at: string;
+  sheets: Record<string, { columns: unknown[]; rows: unknown[][] }>;
+}
+
+export async function websiteClubRecords(): Promise<WebsiteRecordsResult> {
+  const response = await callFunction('club-records-sheet-sync', { mode: 'website' });
+  const payload = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+  if (!response.ok) throw new Error(payload.error ?? 'Website records could not be loaded.');
+  return payload as WebsiteRecordsResult;
+}
+
 export async function syncClubRecordsWorkbook(): Promise<ClubRecordsSyncResult> {
   const response = await callFunction('club-records-sheet-sync', { mode: 'full' });
   const payload = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));

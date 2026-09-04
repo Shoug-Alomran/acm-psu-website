@@ -326,6 +326,7 @@ async function start(): Promise<void> {
         panel(
           'Private Google workbook',
           h('p', 'Update Google Sheet exports the current Supabase club records to every supported tab in the configured private “ACM PSU — Club Records” workbook. Supabase remains the source of truth.'),
+          h('p', {}, h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP')),
           isSuperAdmin(viewer)
             ? action('Update Google Sheet', async () => {
                 if (!window.confirm('This exports names, PSU emails, student IDs where applicable, roles, memberships, and operational club records to the configured private Google workbook. Continue?')) return;

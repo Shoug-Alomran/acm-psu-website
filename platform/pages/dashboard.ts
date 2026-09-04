@@ -340,7 +340,7 @@ function recentContributions(
     'div',
     {
       class:
-        'history-list',
+        'contribution-preview',
     },
 
     rows
@@ -356,7 +356,7 @@ function recentContributions(
             'div',
             {
               class:
-                'history-row',
+                'contribution-preview__row',
             },
 
             h(
@@ -373,7 +373,7 @@ function recentContributions(
 
             h(
               'div',
-              {},
+              { class: 'contribution-preview__detail' },
 
               h(
                 'strong',
@@ -391,7 +391,7 @@ function recentContributions(
                   'p',
                   {
                     class:
-                      'mono-meta dim-text',
+                      'contribution-preview__note',
                   },
                   row.review_note,
                 )
@@ -528,455 +528,34 @@ async function start(): Promise<void> {
           )
           : 'MEMBER';
 
-      render(
-        content,
-
-        pageHeader(
-          `MEMBER / ${membershipStatus}`,
-
-          displayName(
-            viewer,
-          ),
-
-          h(
-            'a',
-            {
-              class:
-                'btn-ghost',
-              href:
-                '/portal/profile.html',
-            },
-            'Edit profile',
-          ),
-
-          isStaff(
-            viewer,
-          )
-            ? h(
-              'a',
-              {
-                class:
-                  'btn-ghost',
-                href:
-                  '/admin/index.html',
-              },
-              'Admin console',
-            )
-            : null,
-        ),
-
-        denied
-          ? notice(
-            'warn',
-            'That page needs an admin role you do not hold.',
-          )
-          : null,
-
-        statRow([
-          [
-            stats.events_count,
-            'Events',
-          ],
-
-          [
-            stats.projects_count,
-            'Projects',
-          ],
-
-          [
-            stats.workshops_count,
-            'Workshops',
-          ],
-
-          [
-            stats.verified_contributions,
-            'Verified contributions',
-          ],
-        ]),
-
-        h(
-          'div',
-          {
-            class:
-              'panel-grid',
-          },
-
-          panel(
-            'ACM record',
-
-            h(
-              'p',
-              {
-                class:
-                  'mono-meta dim-text',
-              },
-              '',
-            ),
-
-            metaList([
-              [
-                'Status',
-                statusPill(
-                  membership?.status ??
-                  'inactive',
-                ),
-              ],
-
-              [
-                'Current position',
-                viewer.currentPosition ??
-                'Member',
-              ],
-
-              [
-                'Years active',
-                yearsActive(
-                  membership
-                    ?.started_on ??
-                  null,
-
-                  membership
-                    ?.ended_on ??
-                  null,
-                ),
-              ],
-
-              [
-                'Member since',
-                archiveDate(
-                  membership
-                    ?.started_on ??
-                  null,
-                ),
-              ],
-
-              [
-                'Chapter',
-                membership
-                  ?.chapter_year ??
-                '—',
-              ],
-
-              [
-                'Record ID',
-                membership
-                  ?.member_no ??
-                '—',
-              ],
-            ]),
-          ),
-
-          panel(
-            'Your profile',
-
-            h(
-              'p',
-              {
-                class:
-                  'mono-meta dim-text',
-              },
-              '',
-            ),
-
-            metaList([
-              [
-                'Visibility',
-                statusPill(
-                  profile?.visibility ?? 'private',
-                ),
-              ],
-
-              [
-                'Public listing',
-                profile?.visibility ===
-                  'public'
-                  ? 'Shown on the ACM team page'
-                  : 'Not shown publicly',
-              ],
-
-              [
-                'Academic year',
-                profile
-                  ?.academic_year ??
-                '—',
-              ],
-
-              [
-                'Interests',
-                profile?.interests
-                  ?.length
-                  ? profile.interests.join(
-                    ', ',
-                  )
-                  : '—',
-              ],
-
-              [
-                'Links',
-                [
-                  profile?.linkedin_url
-                    ? 'LinkedIn'
-                    : null,
-
-                  profile?.github_url
-                    ? 'GitHub'
-                    : null,
-
-                  profile?.website_url
-                    ? 'Website'
-                    : null,
-
-                  ...(profile?.extra_links ?? []).map((link) => link.label),
-                ]
-                  .filter(
-                    Boolean,
-                  )
-                  .join(
-                    ', ',
-                  ) ||
-                '—',
-              ],
-            ]),
-
-            h(
-              'div',
-              {
-                class:
-                  'button-row',
-              },
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/profile.html',
-                },
-                'Edit',
-              ),
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/requests.html',
-                },
-                'Privacy & membership',
-              ),
-            ),
-          ),
-        ),
-
-        panel(
-          'Position history',
-          historyList(
-            history,
-          ),
-        ),
-
-        h(
-          'div',
-          {
-            class:
-              'panel-grid',
-          },
-
-          panel(
-            'Recent contributions',
-
-            recentContributions(
-              contributions,
-            ),
-
-            h(
-              'div',
-              {
-                class:
-                  'button-row',
-              },
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/contributions.html',
-                },
-                'All contributions',
-              ),
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/record.html',
-                },
-                'My verified record',
-              ),
-            ),
-          ),
-
-          panel(
-            'Waiting on ACM',
-
-            pendingList(
-              requests,
-              positionRequest,
-              eventApps,
-            ),
-
-            h(
-              'div',
-              {
-                class:
-                  'button-row',
-              },
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/requests.html',
-                },
-                'Make a request',
-              ),
-            ),
-          ),
-        ),
-
-        panel(
-          'Archive submissions',
-
-          submissions.length
-            ? metaList(
-              submissions
-                .slice(
-                  0,
-                  5,
-                )
-                .map(
-                  (
-                    submission,
-                  ) =>
-                    [
-                      submission.title,
-
-                      statusPill(
-                        submission.status,
-                      ),
-                    ] as [
-                      string,
-                      HTMLElement,
-                    ],
-                ),
-            )
-            : emptyState(
-              'You have not submitted anything to the archive yet.',
-              'Workshop material, posters, reports and source code all belong in the archive.',
-            ),
-
-          h(
-            'div',
-            {
-              class:
-                'button-row',
-            },
-
-            h(
-              'a',
-              {
-                class:
-                  'btn-ghost',
-                href:
-                  '/portal/submissions.html',
-              },
-              'Submit to the archive',
-            ),
-          ),
-        ),
-
-        decisions.length
-          ? panel(
-            'Recent decisions about you',
-
-            memberDecisionList(
-              decisions,
-            ),
-
-            h(
-              'div',
-              {
-                class:
-                  'button-row',
-              },
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/record.html',
-                },
-                'Full decision history',
-              ),
-            ),
-          )
-          : null,
-
-        opportunities.length
-          ? panel(
-            'Open positions on ACM events',
-
-            metaList(
-              opportunities
-                .slice(
-                  0,
-                  5,
-                )
-                .map(
-                  (
-                    opportunity,
-                  ) =>
-                    [
-                      opportunity.title,
-
-                      `${opportunity.remaining} of ${opportunity.openings} open — ${opportunity.project?.title ?? ''}`,
-                    ] as [
-                      string,
-                      string,
-                    ],
-                ),
-            ),
-
-            h(
-              'div',
-              {
-                class:
-                  'button-row',
-              },
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/portal/opportunities.html',
-                },
-                'See all opportunities',
-              ),
-            ),
-          )
-          : null,
+      const accepted = eventAppsRaw.filter(row => row.status === 'approved' && row.has_active_assignment);
+      const pendingCount = requests.filter(row => row.status === 'pending').length +
+        eventAppsRaw.filter(row => row.status === 'pending').length + (positionRequest?.status === 'pending' ? 1 : 0);
+      const destination = (title: string, description: string, href: string) =>
+        h('a', { class: 'dashboard-card dashboard-destination', href },
+          h('h3', title), h('p', { class: 'dashboard-card__description' }, description),
+          h('span', { class: 'dashboard-card__link' }, 'View →'));
+      render(content,
+        pageHeader(`MEMBER / ${membershipStatus}`, displayName(viewer)),
+        denied ? notice('warn', 'That page needs an admin role you do not hold.') : null,
+        panel('Your current responsibilities',
+          h('p', { class: 'dashboard-card__event' }, `Standing club role: ${viewer.currentPosition || 'General member'}`),
+          accepted.length ? h('div', { class: 'dashboard-cards' }, accepted.map(row =>
+            h('a', { class: 'dashboard-card dashboard-destination', href: '/portal/opportunities.html?view=responsibilities' },
+              h('div', { class: 'dashboard-card__heading' }, h('h3', row.position_title), statusPill('approved')),
+              h('p', { class: 'dashboard-card__event' }, row.project_title),
+              h('p', { class: 'dashboard-card__description' }, row.project_starts_on ? `Event starts ${archiveDate(row.project_starts_on)}` : 'Event date to be announced'),
+              h('span', { class: 'dashboard-card__link' }, 'View responsibility →'))))
+            : h('p', 'You have no active event assignments. Browse Opportunities to find a role.'),
+          h('a', { class: 'btn-ghost', href: '/portal/opportunities.html?view=responsibilities' }, 'Manage my responsibilities')),
+        panel('Where to go', h('div', { class: 'dashboard-cards dashboard-cards--opportunities' },
+          destination('Opportunities', 'Discover available event roles and register interest.', '/portal/opportunities.html'),
+          destination('Contributions', 'Submit your work and track its review status.', '/portal/contributions.html'),
+          destination('Archive submissions', `${submissions.length} submissions. View details, reviewer feedback or send an updated revision.`, '/portal/submissions.html'),
+          destination('My Record', `${stats.verified_contributions} verified contributions. View position history, participation and decisions.`, '/portal/record.html'),
+          destination('Requests', 'Manage club role changes, membership and privacy requests.', '/portal/requests.html'),
+          destination('Profile', 'Update your personal details and public profile.', '/portal/profile.html'))),
+        h('p', { class: 'event-request-intro' }, `${pendingCount} pending membership, role or event requests. Event registrations are tracked in My responsibilities; other requests are tracked in Requests.`),
       );
     } catch (error) {
       console.error(

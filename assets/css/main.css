@@ -10,9 +10,9 @@
     --bg-surface: #0a0a0d;
     --bg-surface-hover: #121218;
     --text-main: #f8f9fa;
-    --text-muted: #8b949e;
-    --text-dark: #30363d;
-    --accent-blue: #3b82f6;
+    --text-muted: #b0bdd0;
+    --text-dark: #91a2ba;
+    --accent-blue: #70b5ff;
     --accent-blue-dim: rgba(59, 130, 246, 0.15);
     --border-color: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.15);
@@ -2847,7 +2847,7 @@ img, svg { max-width: 100%; }
 .btn-blue {
     flex: 1;
     background: var(--accent-blue);
-    color: #fff;
+    color: #08182d;
     border: none;
     font-family: var(--font-mono);
     font-size: 0.75rem;
