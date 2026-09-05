@@ -34,6 +34,14 @@ export const DATE_RULES: Record<string, DateRule> = {
 };
 
 /**
+ * Public event registration worksheets are named after the event, so they
+ * cannot be listed in DATE_RULES — a new event would need a code change to
+ * become filterable. They are recognised by the column the mirror always
+ * writes instead.
+ */
+const REGISTRATION_DATE = { kind: 'point', column: 'Registered At' } as const;
+
+/**
  * Builds the term lookup for one worksheet, or null when it cannot be placed
  * in time. Columns are matched by heading rather than by position, so adding a
  * column upstream cannot silently shift the filter onto the wrong date — if
@@ -42,7 +50,8 @@ export const DATE_RULES: Record<string, DateRule> = {
 export function termsResolver(
   columns: unknown[], sheetName: string,
 ): ((row: unknown[]) => Term[]) | null {
-  const rule = DATE_RULES[sheetName];
+  const rule = DATE_RULES[sheetName]
+    ?? (columns.some((c) => String(c) === REGISTRATION_DATE.column) ? REGISTRATION_DATE : undefined);
   if (!rule) return null;
   const indexOf = (name: string) => columns.findIndex((c) => String(c) === name);
 

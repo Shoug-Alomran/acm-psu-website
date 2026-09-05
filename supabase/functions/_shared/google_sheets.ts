@@ -260,3 +260,34 @@ export async function pushToGoogleSheet(
   return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` +
     (gid !== undefined ? `#gid=${gid}` : '');
 }
+
+/**
+ * Reads one worksheet's display values, header row first.
+ *
+ * This is the single read path in this module, and it deliberately does NOT
+ * point at the club records workbook. It exists for the public event
+ * registration workbook, which Apps Script owns and Supabase has never
+ * written to: there, Google holds the original and reading it is recovering a
+ * record rather than re-importing our own export. Reading the mirror workbook
+ * back into Supabase would create exactly the diverging second truth the rest
+ * of this file avoids.
+ *
+ * A missing tab is an empty result, not an error — an event whose worksheet
+ * has not been created yet simply has no registrations.
+ */
+export async function readGoogleSheet(
+  spreadsheetId: string, tabName: string,
+): Promise<string[][]> {
+  const token = await accessToken();
+  const range = `${encodeURIComponent(tabName)}!A1:ZZ`;
+  const payload = await sheetsRequest(
+    token, spreadsheetId,
+    `/values/${range}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
+  ).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/Unable to parse range|not found/i.test(message)) return { values: [] };
+    throw error;
+  }) as { values?: unknown[][] };
+
+  return (payload.values ?? []).map((row) => row.map((cell) => String(cell ?? '')));
+}

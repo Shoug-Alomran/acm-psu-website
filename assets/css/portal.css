@@ -2390,3 +2390,61 @@
 .dashboard-destination { text-decoration: none; }
 .dashboard-destination:hover { border-color: var(--accent-blue); background: var(--bg-surface-hover); }
 .dashboard-destination h3 { color: var(--text-main); font-size: 1.1rem; }
+
+/* --------------------------------------------------------------------------
+   Records tree — the folder view over the club records backup
+
+   The workbook grew to more worksheets than a row of tabs can hold legibly,
+   and public event registrations add one more per event. Folders are plain
+   <details> elements so keyboard use, screen readers and a browser without
+   JavaScript all behave without anything being reimplemented here.
+   -------------------------------------------------------------------------- */
+
+.record-tree {
+    border: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+}
+
+.record-tree .tree-children {
+    /* The indent guide, so a nested event folder reads as nested. */
+    margin-left: 0.85rem;
+    border-left: 1px solid var(--border-color);
+}
+
+.record-tree summary,
+.record-tree .tree-sheet {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.5rem 0.85rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.record-tree summary { color: var(--text-main); letter-spacing: 0.04em; }
+.record-tree summary::marker { color: var(--text-dark); }
+.record-tree summary:hover,
+.record-tree .tree-sheet:hover { color: var(--accent-blue); }
+
+.record-tree .tree-name { flex: 1; min-width: 0; }
+
+.record-tree .tree-count {
+    color: var(--text-dark);
+    font-size: 0.7rem;
+}
+
+/* The admin area re-points --accent-blue at its own colour, so the open
+   worksheet is highlighted in whichever accent the current area uses. */
+.record-tree .tree-sheet--active {
+    background: var(--accent-blue);
+    color: #08182d;
+    font-weight: 700;
+}
+
+.record-tree .tree-sheet--active .tree-count { color: #08182d; opacity: 0.75; }

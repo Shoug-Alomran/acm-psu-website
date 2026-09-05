@@ -46,6 +46,29 @@ because an older migration document said all Apps Script callers were retired.
 Older membership/position-signup endpoints can be retired after confirming they
 are not the event endpoint.
 
+## Copying registrations into the platform (optional)
+
+An accepted registration can also be copied into the ACM PSU platform, where it
+appears in **Admin → Records Backup** under *Events / Registrations* and no
+longer exists only in Google.
+
+Configure it with two **Script Properties** (Project Settings → Script
+Properties) — never in a `.gs` file, because this directory is public:
+
+| Property | Value |
+|---|---|
+| `PLATFORM_INTAKE_URL` | the `event-registration-intake` Edge Function URL |
+| `PLATFORM_INTAKE_TOKEN` | its `EVENT_REGISTRATION_TOKEN` secret |
+
+With either missing, the copy is skipped and registration behaves exactly as it
+did before. The copy runs only after the worksheet row is appended and flushed,
+its failures are swallowed, and its response is never inspected — so it cannot
+change what a participant is told, and it cannot lose a registration. Rows the
+copy never reached are recovered by the admin **IMPORT FROM REGISTRATION SHEET**
+button, which reads this workbook and adds only what is missing.
+
+The full platform-side procedure is `docs/SETUP.md` step 5b.
+
 ## Security and operational limits
 
 The handler allows only `jam26` and `ctf30`; validates fields and exact headers;

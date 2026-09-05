@@ -20,6 +20,67 @@ const NAMES: Record<SheetKey, string> = {
   university_export_log: 'University Export Log',
 };
 
+/**
+ * Where each worksheet sits in the records browser's folder tree.
+ *
+ * Ten flat tabs made finding one a matter of reading every label. The grouping
+ * is stated here, next to the collectors, so the page draws the workbook's
+ * shape rather than inventing its own — and so a worksheet added later gets
+ * filed by the same hand that writes it.
+ */
+const FOLDERS: Record<SheetKey, string[]> = {
+  people: ['People'], members: ['People'], membership_applications: ['People'],
+  opportunity_positions: ['Events'], position_applications: ['Events'],
+  event_participation: ['Events'], contributions: ['Events'],
+  club_positions: ['Admin'], inquiries: ['Admin'], university_export_log: ['Admin'],
+};
+
+/** The folder public event signups appear in, one worksheet per event. */
+const REGISTRATION_FOLDER = ['Events', 'Registrations'];
+const TIMESTAMP_HEADER = 'Timestamp';
+
+type RegistrationForm = { event_key: string; label: string; headers: string[] };
+
+/**
+ * Public event registrations, one worksheet per event.
+ *
+ * These are not a mirror of anything in Supabase — they are collected by the
+ * Apps Script registration workbook and copied here by
+ * event-registration-intake. They appear in the website view only: pushing
+ * them into the club records workbook would make this platform a second writer
+ * of a spreadsheet Apps Script owns, which is how two copies start disagreeing.
+ */
+async function registrationSheets(
+  client: SupabaseClient,
+): Promise<Array<{ name: string; columns: unknown[]; rows: unknown[][] }>> {
+  const { data: formData, error: formError } = await client
+    .from('event_registration_forms')
+    .select('event_key, label, headers').eq('is_active', true).order('rank');
+  if (formError) throw new Error(`event_registration_forms: ${formError.message}`);
+  const forms = (formData ?? []) as RegistrationForm[];
+  if (!forms.length) return [];
+
+  const registrations = await rows(client, 'event_registrations');
+  return forms.map((form) => {
+    // 'Registered At' replaces the worksheet's own Timestamp column: the
+    // mirror stores it as a real timestamp, which is what dates the row by
+    // semester here.
+    const headings = form.headers.filter((header) => header !== TIMESTAMP_HEADER);
+    const mine = registrations
+      .filter((row) => row.event_key === form.event_key)
+      .sort((a, b) => String(b.registered_at).localeCompare(String(a.registered_at)));
+    return {
+      name: form.label,
+      columns: ['Registered At', ...headings, 'Source'],
+      rows: mine.map((row) => [
+        row.registered_at,
+        ...headings.map((header) => (row.fields ?? {})[header] ?? ''),
+        row.source === 'sheet_import' ? 'Imported from sheet' : 'Live registration',
+      ]),
+    };
+  });
+}
+
 async function rows(client: SupabaseClient, table: string, columns = '*'): Promise<Row[]> {
   const { data, error } = await client.from(table).select(columns);
   if (error) throw new Error(`${table}: ${error.message}`);
@@ -305,15 +366,35 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // directly from Supabase without touching Google or consulting the Google
   // Sheets feature flag. The browser never receives service credentials.
   if (website) {
-    const sheets: Record<string, { columns: unknown[]; rows: unknown[][] }> = {};
+    const sheets: Record<string, { columns: unknown[]; rows: unknown[][]; folder: string[] }> = {};
     for (const key of requested) {
       const matrix = await COLLECT[key](service);
       sheets[NAMES[key]] = {
         columns: matrix[0] ?? [],
         rows: matrix.slice(1),
+        folder: FOLDERS[key],
       };
     }
-    return json({ source: 'supabase', generated_at: new Date().toISOString(), sheets }, 200, origin);
+
+    // Registrations are additional to the ten canonical worksheets, so a
+    // failure to read them must not take the whole backup down with it — the
+    // page reports the gap and still shows everything else.
+    let registrationError: string | undefined;
+    try {
+      for (const sheet of await registrationSheets(service)) {
+        // A collision with a canonical worksheet name would silently replace
+        // it. Keep both, and say which one this is.
+        const name = sheets[sheet.name] ? `${sheet.name} (registrations)` : sheet.name;
+        sheets[name] = { columns: sheet.columns, rows: sheet.rows, folder: REGISTRATION_FOLDER };
+      }
+    } catch (error) {
+      registrationError = error instanceof Error ? error.message : String(error);
+    }
+
+    return json({
+      source: 'supabase', generated_at: new Date().toISOString(), sheets,
+      ...(registrationError ? { registration_error: registrationError } : {}),
+    }, 200, origin);
   }
 
   const { data: sheetsEnabled, error: sheetsEnabledError } = await caller.rpc('setting_bool', {

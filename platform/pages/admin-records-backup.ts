@@ -2,8 +2,10 @@ import { h, render, type Child } from '../lib/dom.js';
 import {
   shell, pageHeader, panel, dataTable, loading, notice, action, attentionRow, attentionLegend,
 } from '../lib/ui.js';
-import { requireAdvisor } from '../lib/session.js';
-import { websiteClubRecords, type WebsiteRecordsResult } from '../lib/admin.js';
+import { requireAdvisor, isClubAdmin } from '../lib/session.js';
+import {
+  websiteClubRecords, importEventRegistrations, type WebsiteRecordsResult,
+} from '../lib/admin.js';
 import { archiveDateTime } from '../lib/format.js';
 import { newestFirst, type Term } from '../lib/terms.js';
 import { csvCell, termsResolver, rowTintResolver, type RowTint } from '../lib/record-terms.js';
@@ -26,6 +28,59 @@ function display(value: unknown): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
+}
+
+/**
+ * The records browser tree.
+ *
+ * The Edge Function says which folder each worksheet belongs in. This is the
+ * fallback for one it does not place — an older deployment, or a worksheet
+ * added upstream before this page learns about it. Filing it under Admin keeps
+ * it reachable instead of dropping it from the tree.
+ */
+const FALLBACK_FOLDER = ['Admin'];
+
+interface TreeFolder {
+  name: string;
+  path: string;
+  folders: TreeFolder[];
+  sheets: Array<{ name: string; rows: number }>;
+}
+
+/**
+ * Groups the worksheets into their folders, preserving the order the Edge
+ * Function returned them in so the tree reads in the same sequence as the
+ * workbook itself.
+ */
+function buildTree(result: WebsiteRecordsResult): TreeFolder {
+  const root: TreeFolder = { name: '', path: '', folders: [], sheets: [] };
+
+  for (const [name, sheet] of Object.entries(result.sheets)) {
+    let node = root;
+    for (const segment of (sheet.folder?.length ? sheet.folder : FALLBACK_FOLDER)) {
+      const path = node.path ? `${node.path}/${segment}` : segment;
+      let child = node.folders.find((f) => f.name === segment);
+      if (!child) { child = { name: segment, path, folders: [], sheets: [] }; node.folders.push(child); }
+      node = child;
+    }
+    node.sheets.push({ name, rows: sheet.rows.length });
+  }
+  return root;
+}
+
+/** Every worksheet in a folder and everything below it. */
+function folderSheets(folder: TreeFolder): string[] {
+  return [...folder.sheets.map((s) => s.name), ...folder.folders.flatMap(folderSheets)];
+}
+
+/** The folder path leading to a worksheet, for the breadcrumb above the table. */
+function pathTo(folder: TreeFolder, sheet: string): string[] | null {
+  if (folder.sheets.some((s) => s.name === sheet)) return [];
+  for (const child of folder.folders) {
+    const below = pathTo(child, sheet);
+    if (below) return [child.name, ...below];
+  }
+  return null;
 }
 
 function slug(value: string): string {
@@ -53,6 +108,10 @@ async function start(): Promise<void> {
   let term = '';
   let query = '';
   let page = 0;
+  // Folders are open unless the viewer closed them. Their state lives here
+  // rather than in the DOM because every keystroke re-renders the page.
+  const collapsed = new Set<string>();
+  let importNote: Child = null;
 
   // The whole workbook arrives in one call, so filtering, searching and paging
   // are local. Only REFRESH goes back to the server — otherwise every keystroke
@@ -61,6 +120,7 @@ async function start(): Promise<void> {
 
   async function refresh(): Promise<void> {
     cache = null;
+    importNote = null;
     await draw();
   }
 
@@ -129,10 +189,48 @@ async function start(): Promise<void> {
         downloadCsv(exportName, [columns, ...filtered]);
       }, filtered.length ? 'primary' : undefined);
 
-      const tabs = h('div', { class: 'button-row', role: 'navigation', 'aria-label': 'Workbook pages' },
-        names.map((name) => action(`${name} (${result.sheets[name]!.rows.length})`, async () => {
-          active = name; query = ''; page = 0; await draw();
-        }, name === active ? 'primary' : undefined)));
+      const openSheet = (name: string) => async () => {
+        active = name; query = ''; page = 0; await draw();
+      };
+
+      function leaf(sheet: { name: string; rows: number }): HTMLElement {
+        return h('button', {
+          type: 'button',
+          class: `tree-sheet${sheet.name === active ? ' tree-sheet--active' : ''}`,
+          'aria-current': sheet.name === active ? 'true' : undefined,
+          onclick: openSheet(sheet.name),
+        }, h('span', { class: 'tree-name' }, sheet.name),
+          h('span', { class: 'tree-count' }, String(sheet.rows)));
+      }
+
+      function branch(folder: TreeFolder): HTMLElement {
+        const contained = folderSheets(folder);
+        // The folder holding the open worksheet is never drawn closed, so the
+        // tree cannot hide what the table below it is showing.
+        const holdsActive = contained.includes(active);
+        const details = h('details', {
+          class: 'tree-branch',
+          open: holdsActive || !collapsed.has(folder.path),
+        },
+          h('summary', { class: 'tree-folder' },
+            h('span', { class: 'tree-name' }, folder.name),
+            h('span', { class: 'tree-count' }, String(contained.length))),
+          h('div', { class: 'tree-children' },
+            folder.folders.map(branch), folder.sheets.map(leaf)));
+
+        details.addEventListener('toggle', () => {
+          if (details.open) collapsed.delete(folder.path);
+          else collapsed.add(folder.path);
+        });
+        return details;
+      }
+
+      const tree = buildTree(result);
+      const browser = h('div', { class: 'record-tree', role: 'navigation', 'aria-label': 'Records' },
+        tree.folders.map(branch), tree.sheets.map(leaf));
+
+      const crumbs = h('p', { class: 'mono-meta dim-text' },
+        [...(pathTo(tree, active) ?? []), active].join(' / ').toUpperCase());
 
       const pager: Child = pages > 1 ? h('div', { class: 'button-row pager' },
         page > 0 ? action('PREVIOUS', async () => { page -= 1; await draw(); }) : null,
@@ -141,14 +239,47 @@ async function start(): Promise<void> {
 
       const scope = selected ? `${selected.code} · ${selected.label}` : 'ALL SEMESTERS';
 
+      // Public event signups are collected by the Apps Script registration
+      // workbook and copied here as they arrive. Anything submitted before
+      // that copy existed is recovered on demand rather than automatically:
+      // it reads Google, so it is a deliberate act, not a page load.
+      const registrations = tree.folders.find((f) => f.name === 'Events')
+        ?.folders.find((f) => f.name === 'Registrations');
+      const canImport = isClubAdmin(viewer) && !!registrations;
+      const importControls: Child = canImport ? h('div', { class: 'button-row' },
+        action('IMPORT FROM REGISTRATION SHEET', async () => {
+          importNote = loading('IMPORTING REGISTRATIONS');
+          await draw();
+          try {
+            const outcome = await importEventRegistrations();
+            const entries = Object.entries(outcome.imported);
+            const added = entries.reduce((total, [, r]) => total + r.added, 0);
+            const failed = entries.filter(([, r]) => r.error);
+            importNote = notice(failed.length ? 'warn' : 'ok',
+              `${added} registration${added === 1 ? '' : 's'} recovered from the sheet.` +
+              (failed.length ? ` Could not read: ${failed.map(([label, r]) => `${label} (${r.error})`).join('; ')}` : ''));
+            cache = null;
+          } catch (error) {
+            importNote = notice('err', `Import failed: ${message(error)}`);
+          }
+          await draw();
+        }),
+        h('span', { class: 'mono-meta dim-text' },
+          'READS THE EVENT REGISTRATION WORKBOOK AND ADDS ANYTHING MISSING HERE.')) : null;
+
       render(content,
         pageHeader('ADMIN / RECORDS BACKUP', 'Live club records', action('REFRESH', refresh, 'primary')),
         notice('warn', 'Private records: this page can contain student identifiers and internal notes. Access is limited to club admins and advisory instructors.'),
         notice('info', `Last loaded: ${archiveDateTime(result.generated_at)}.`),
         h('p', { class: 'mono-meta dim-text' },
           h('a', { href: 'https://psu.edu.sa/en/academiccalendar', target: '_blank', rel: 'noopener' })),
-        panel('Workbook pages', tabs),
+        result.registration_error
+          ? notice('warn', `Event registrations could not be read: ${result.registration_error}. Everything else below is current.`)
+          : null,
+        importNote,
+        panel('Records', browser, importControls),
         panel(active || 'Records',
+          crumbs,
           h('div', { class: 'browser-toolbar' }, search, semester, exportButton),
           resolve ? null : h('p', { class: 'mono-meta dim-text' },
             'THIS WORKSHEET HAS NO DATE COLUMN, SO IT IS NOT FILTERED BY SEMESTER.'),

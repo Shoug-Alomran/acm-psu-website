@@ -106,6 +106,32 @@ GET returns only status/message/version, never workbook data:
 {"status":"ok","message":"ACM PSU event registration endpoint is live.","version":"2026-09-05.1"}
 ```
 
+## Platform mirror
+
+After the worksheet row is appended and flushed — and only then — the script
+POSTs the same row to the ACM PSU platform's `event-registration-intake` Edge
+Function as JSON:
+
+```json
+{
+  "event": "jam26",
+  "requestId": "0123456789abcdef0123456789abcdef",
+  "fields": { "Timestamp": "2026-09-05T15:44:00.000Z", "Full Name": "…" }
+}
+```
+
+`fields` is keyed by the exact worksheet headings above, and authorization is
+the `x-registration-token` header carrying the shared secret. The endpoint is
+idempotent: a registration is identified by a hash of its answers with the
+timestamp excluded, so re-posting it, and a later import of the same worksheet
+row, both write nothing.
+
+This mirror is not part of the front-end contract. It is configured by Script
+Properties (`PLATFORM_INTAKE_URL`, `PLATFORM_INTAKE_TOKEN`), skipped when they
+are absent, wrapped so that no failure reaches the reply, and its response is
+never read. The acknowledgement a participant sees is still produced solely by
+the worksheet append, and `OK` continues to mean the worksheet row was written.
+
 ## Live acceptance checklist (not yet completed)
 
 1. Jam: `ZZ Test Jam Delete Me`, ID `999000001`, email

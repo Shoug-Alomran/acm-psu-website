@@ -226,7 +226,62 @@ function handleEventRegistration(config, form) {
   // back to the caller, cleared, or overwritten anywhere in this handler.
   sheet.appendRow(row);
   SpreadsheetApp.flush();
+
+  // The worksheet row is written and the registration is safe. Copying it to
+  // the platform is a convenience for the club's records backup, so it happens
+  // after the durable write and can never turn a saved registration into an
+  // error the participant sees. A copy that fails is recovered by the admin
+  // import, which reads this worksheet.
+  try {
+    mirrorRegistrationToPlatform_(config.sheet, headers, row, form.requestId);
+  } catch (mirrorError) {
+    console.error('Registration mirror failed for ' + config.sheet);
+  }
+
   return reply('OK');
+}
+
+
+/**
+ * Best-effort second copy into the ACM PSU platform.
+ *
+ * Configured through Script Properties rather than constants, because the
+ * token is a credential and this file is public in the website repository:
+ *
+ *   PLATFORM_INTAKE_URL     the event-registration-intake Edge Function
+ *   PLATFORM_INTAKE_TOKEN   the value of its EVENT_REGISTRATION_TOKEN secret
+ *
+ * With either missing the mirror is skipped silently, so registration keeps
+ * working before the platform side is configured and after a token is rotated.
+ * Nothing is read back and no response is inspected: this call cannot change
+ * what the participant is told.
+ */
+function mirrorRegistrationToPlatform_(eventKey, headers, row, requestId) {
+  var properties = PropertiesService.getScriptProperties();
+  var url = String(properties.getProperty('PLATFORM_INTAKE_URL') || '').trim();
+  var token = String(properties.getProperty('PLATFORM_INTAKE_TOKEN') || '').trim();
+  if (!url || !token) return;
+
+  var fields = {};
+  for (var i = 0; i < headers.length; i += 1) {
+    var value = row[i];
+    fields[String(headers[i])] = value instanceof Date
+      ? value.toISOString()
+      : String(value === undefined || value === null ? '' : value);
+  }
+
+  UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'x-registration-token': token },
+    // A non-2xx reply must not throw: the registration is already recorded.
+    muteHttpExceptions: true,
+    payload: JSON.stringify({
+      event: String(eventKey),
+      requestId: String(requestId || ''),
+      fields: fields
+    })
+  });
 }
 
 

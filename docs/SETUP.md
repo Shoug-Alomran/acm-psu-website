@@ -195,6 +195,62 @@ Sheet.
 
 ---
 
+## Step 5b — Public event registrations in the records backup (optional)
+
+Public event signups (Programming Jam, CTF) are collected by the Apps Script in
+`apps-script/`, which appends them to its **own** registration workbook. That
+stays the intake surface and nothing here changes it.
+
+This step gives those signups a second home in Supabase, so they appear in
+**Admin → Records Backup** under *Events / Registrations* and survive anything
+that happens to the spreadsheet. Without it, registration still works exactly
+as before — it simply stays Google-only.
+
+1. Invent a long random shared secret (any 40+ random characters):
+
+   ```sh
+   openssl rand -hex 32
+   ```
+
+2. Give it to Supabase, along with the ID of the **registration** workbook —
+   the one the Apps Script writes to, not the Club Records workbook from
+   step 5. The service account from step 9 above needs at least **Viewer** on
+   it for the import button to work:
+
+   ```sh
+   npx supabase secrets set \
+     EVENT_REGISTRATION_TOKEN='<the secret from step 1>' \
+     EVENT_REGISTRATION_SPREADSHEET_ID='<the registration workbook ID>'
+
+   npx supabase functions deploy event-registration-intake --no-verify-jwt
+   ```
+
+3. Give the same secret to the Apps Script. In the Apps Script editor:
+   **Project Settings → Script Properties → Add script property**, twice:
+
+   | Property | Value |
+   |---|---|
+   | `PLATFORM_INTAKE_URL` | `https://<project-ref>.supabase.co/functions/v1/event-registration-intake` |
+   | `PLATFORM_INTAKE_TOKEN` | the secret from step 1 |
+
+   The secret is a credential and `apps-script/` is public in this repository,
+   so it lives in Script Properties and never in a `.gs` file. With either
+   property missing the copy is skipped silently and registration is unaffected.
+
+4. Redeploy the Apps Script web app (see `apps-script/SETUP.md`).
+5. Register once on the live event site and confirm the row appears both in the
+   worksheet and under **Records Backup → Events → Registrations**.
+6. Click **IMPORT FROM REGISTRATION SHEET** on that page once, to bring in
+   everything submitted before this was configured. It is safe to click again
+   at any time — a registration already recorded is counted, not duplicated.
+
+> The copy is deliberately one-directional and best-effort. The Apps Script
+> writes its worksheet row first and only then tries this endpoint, so a
+> Supabase outage can never turn a saved registration into an error the
+> participant sees; the import in step 6 recovers anything the copy missed.
+
+---
+
 ## Step 6 — Emailing inquiry responses (not yet implemented)
 
 **This does not exist yet, and the interface says so rather than pretending
