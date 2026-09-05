@@ -185,6 +185,13 @@ Sheet.
 > Keep that workbook private. Nothing in the member portal or on the public
 > website can reach it.
 >
+> **Converting a worksheet into a Google Sheets Table is safe but pointless
+> here.** A Table's columns are typed and reject the formatting the sync
+> applies, so the export writes its data, logs a warning, and leaves that tab
+> plainer than the others. The records themselves are unaffected, and the sync
+> neither creates nor removes filters, so nothing it does can collide with a
+> Table you add by hand.
+>
 > **This is the club's live administrative workbook, and it stays one file.**
 > Google applies permissions to a whole spreadsheet rather than tab by tab, and
 > the Inquiries worksheet can contain information submitted by members of the
