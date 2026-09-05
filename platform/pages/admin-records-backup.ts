@@ -239,15 +239,16 @@ async function start(): Promise<void> {
 
       const scope = selected ? `${selected.code} · ${selected.label}` : 'ALL SEMESTERS';
 
-      // Public event signups are collected by the Apps Script registration
-      // workbook and copied here as they arrive. Anything submitted before
-      // that copy existed is recovered on demand rather than automatically:
-      // it reads Google, so it is a deliberate act, not a page load.
+      // Public event signups are collected in the club records workbook's own
+      // jam26/ctf30 tabs by Apps Script, and copied here as they arrive.
+      // Anything submitted before that copy existed is recovered on demand
+      // rather than automatically: it reads Google, so it is a deliberate act
+      // and not something a page load should do.
       const registrations = tree.folders.find((f) => f.name === 'Events')
         ?.folders.find((f) => f.name === 'Registrations');
       const canImport = isClubAdmin(viewer) && !!registrations;
       const importControls: Child = canImport ? h('div', { class: 'button-row' },
-        action('IMPORT FROM REGISTRATION SHEET', async () => {
+        action('IMPORT FROM REGISTRATION TABS', async () => {
           importNote = loading('IMPORTING REGISTRATIONS');
           await draw();
           try {
@@ -265,7 +266,7 @@ async function start(): Promise<void> {
           await draw();
         }),
         h('span', { class: 'mono-meta dim-text' },
-          'READS THE EVENT REGISTRATION WORKBOOK AND ADDS ANYTHING MISSING HERE.')) : null;
+          'READS THE JAM26/CTF30 TABS AND ADDS ANYTHING MISSING HERE.')) : null;
 
       render(content,
         pageHeader('ADMIN / RECORDS BACKUP', 'Live club records', action('REFRESH', refresh, 'primary')),

@@ -2,8 +2,10 @@
 -- 0060 — Public event registrations, mirrored into the platform.
 --
 -- Public event signups (Programming Jam, CTF) are collected by a Google Apps
--- Script that appends a row to its own registration workbook. That workbook is
--- the intake surface and stays the place the organizers work in.
+-- Script that appends a row to the jam26/ctf30 tabs of the "ACM PSU — Club
+-- Records" workbook. Those tabs are the intake surface and stay the place the
+-- organizers work in; the Supabase snapshot sync excludes them by name and has
+-- never written to them.
 --
 -- The problem this fixes: those signups existed ONLY in Google. The admin
 -- "Records backup" page reads Supabase, so the one dataset most likely to be

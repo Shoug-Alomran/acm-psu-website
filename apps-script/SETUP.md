@@ -28,6 +28,14 @@ Web app writes use `SpreadsheetApp.openById` with workbook ID
    Newly empty tabs are seeded. If either reports **HEADER MISMATCH**, stop:
    review the existing schema and preserve all registrations before correcting
    headers. Neither setup nor registration overwrites mismatching event data.
+
+   Lines beginning `WARNING` are expected on a workbook whose sheets are Google
+   Sheets **Tables**: a typed column rejects the cosmetic formatting with
+   *"You can't set the number format of cells in a typed column."* Setup treats
+   every appearance step as best-effort, so it records the refusal and carries
+   on to the next column — the run still finishes, still prints this report, and
+   still writes no data. Setup never creates, removes or modifies a filter,
+   because a basic filter and a Table cannot share a range.
 5. **Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone
    → Deploy**. Saving editor code alone does not update an existing deployment.
 6. Copy the resulting `/exec` URL. If it differs, update only:
@@ -64,8 +72,9 @@ With either missing, the copy is skipped and registration behaves exactly as it
 did before. The copy runs only after the worksheet row is appended and flushed,
 its failures are swallowed, and its response is never inspected — so it cannot
 change what a participant is told, and it cannot lose a registration. Rows the
-copy never reached are recovered by the admin **IMPORT FROM REGISTRATION SHEET**
-button, which reads this workbook and adds only what is missing.
+copy never reached are recovered by the admin **IMPORT FROM REGISTRATION TABS**
+button, which reads the `jam26`/`ctf30` tabs of this same workbook and adds only
+what is missing.
 
 The full platform-side procedure is `docs/SETUP.md` step 5b.
 

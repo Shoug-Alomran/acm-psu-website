@@ -264,13 +264,14 @@ export async function pushToGoogleSheet(
 /**
  * Reads one worksheet's display values, header row first.
  *
- * This is the single read path in this module, and it deliberately does NOT
- * point at the club records workbook. It exists for the public event
- * registration workbook, which Apps Script owns and Supabase has never
- * written to: there, Google holds the original and reading it is recovering a
- * record rather than re-importing our own export. Reading the mirror workbook
- * back into Supabase would create exactly the diverging second truth the rest
- * of this file avoids.
+ * This is the single read path in this module, and what keeps it from creating
+ * a second source of truth is the TAB it is pointed at, not the file. The
+ * public event registration tabs — jam26, ctf30 — live in the same "ACM PSU —
+ * Club Records" workbook as everything else, but Apps Script owns them and
+ * Supabase has never written a cell of them: they are excluded from the
+ * snapshot sync by name, on purpose. There, Google holds the original and
+ * reading it recovers a record. Reading back one of the tabs this file writes
+ * would be re-importing our own export, and nothing here does that.
  *
  * A missing tab is an empty result, not an error — an event whose worksheet
  * has not been created yet simply has no registrations.

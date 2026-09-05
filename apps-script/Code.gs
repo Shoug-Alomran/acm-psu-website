@@ -10,11 +10,23 @@
  *
  * This script:
  * - creates missing workbook tabs;
- * - applies headers and formatting;
+ * - applies headers, and attempts formatting;
  * - protects externally managed event-registration tabs from accidental edits;
  * - never reads data from Supabase;
  * - delegates public event registration to EventRegistration.gs;
- * - never clears registration rows.
+ * - never clears registration rows;
+ * - never creates, removes or modifies a filter.
+ *
+ * FORMATTING IS BEST-EFFORT
+ * -------------------------
+ * Worksheets in this workbook may be Google Sheets Tables, whose columns carry
+ * a declared type and reject formatting:
+ *
+ *   "You can't set the number format of cells in a typed column."
+ *
+ * Appearance is not the point of this workbook, so every cosmetic step is
+ * attempted independently and a refusal becomes a warning in the report rather
+ * than an exception that abandons the run half-finished.
  *
  * TWO DIFFERENT GROUPS OF TABS
  * ----------------------------
@@ -172,26 +184,52 @@ function setupClubRecordsWorkbook() {
 
   /*
    * Prepare Supabase-owned mirror tabs.
+   *
+   * One worksheet that cannot be prepared must not cost the run: the event
+   * tabs below are the ones an organizer is usually here to check, and a
+   * report that never printed is how a partial run went unnoticed. Nothing in
+   * either loop clears a data row, so an abandoned worksheet is left exactly
+   * as it was found.
    */
   Object.keys(CANONICAL_SHEETS).forEach(function (name) {
-    prepareCanonicalSheet_(
-      book,
-      name,
-      CANONICAL_SHEETS[name],
-      notes
-    );
+    try {
+      prepareCanonicalSheet_(
+        book,
+        name,
+        CANONICAL_SHEETS[name],
+        notes
+      );
+    } catch (err) {
+      notes.push(
+        'WARNING Mirror  ' +
+          name +
+          ' — not prepared: ' +
+          (err && err.message ? err.message : String(err)) +
+          ' (no data was cleared).'
+      );
+    }
   });
 
   /*
    * Prepare externally managed event-registration tabs.
    */
   Object.keys(EVENT_SHEETS).forEach(function (name) {
-    prepareEventSheet_(
-      book,
-      name,
-      EVENT_SHEETS[name],
-      notes
-    );
+    try {
+      prepareEventSheet_(
+        book,
+        name,
+        EVENT_SHEETS[name],
+        notes
+      );
+    } catch (err) {
+      notes.push(
+        'WARNING Event ' +
+          name +
+          ' — not prepared: ' +
+          (err && err.message ? err.message : String(err)) +
+          ' (no registration data was cleared).'
+      );
+    }
   });
 
   SpreadsheetApp.flush();
@@ -248,32 +286,33 @@ function prepareCanonicalSheet_(book, name, headers, notes) {
     sheet = book.insertSheet(name);
   }
 
+  var label = 'Mirror  ' + name;
+
   ensureEnoughColumns_(sheet, headers.length);
 
   sheet
     .getRange(1, 1, 1, headers.length)
     .setValues([headers]);
 
-  styleHeader_(
-    sheet,
-    headers.length,
-    HEADER_BACKGROUND
-  );
-
-  formatColumns_(sheet, headers);
-
-  applyFilter_(
-    sheet,
-    headers.length
-  );
-
   notes.push(
-    'Mirror  ' +
-      name +
+    label +
       ' — headers applied (' +
       headers.length +
       ' columns).'
   );
+
+  /*
+   * Appearance only, and only after the header row is safely in place.
+   */
+  styleHeader_(
+    sheet,
+    headers.length,
+    HEADER_BACKGROUND,
+    label,
+    notes
+  );
+
+  formatColumns_(sheet, headers, label, notes);
 }
 
 
@@ -409,29 +448,32 @@ function prepareEventSheet_(book, name, headers, notes) {
   }
 
   /*
-   * Styling is allowed because it does not change registration values.
+   * Styling is allowed because it does not change registration values, and
+   * every step of it is best-effort: a registration tab that refuses to be
+   * formatted is still a correct registration tab.
    */
   var width =
     existing.length ||
     sheet.getLastColumn();
 
+  var label = 'Event ' + name;
+
   if (width > 0) {
     styleHeader_(
       sheet,
       width,
-      EVENT_HEADER_BACKGROUND
-    );
-
-    applyFilter_(
-      sheet,
-      width
+      EVENT_HEADER_BACKGROUND,
+      label,
+      notes
     );
 
     formatColumns_(
       sheet,
       existing.length
         ? existing
-        : headers
+        : headers,
+      label,
+      notes
     );
   }
 
@@ -440,10 +482,12 @@ function prepareEventSheet_(book, name, headers, notes) {
    *
    * This is intentionally warning-only, not a hard lock.
    */
-  protectEventSheet_(
-    sheet,
-    name
-  );
+  safely_(label + ' edit warning', notes, function () {
+    protectEventSheet_(
+      sheet,
+      name
+    );
+  });
 }
 
 
@@ -546,7 +590,46 @@ function sameHeaders_(a, b) {
 
 /* ==========================================================================
    FORMATTING
+
+   Everything in this section is cosmetic and everything in it is best-effort.
+
+   A worksheet in this workbook may be a Google Sheets Table, and a table gives
+   each column a declared type. A typed column rejects formatting outright:
+
+     "You can't set the number format of cells in a typed column."
+
+   That is a presentation failure, not a records failure — the header row, the
+   registration rows and the mirror data are all correct either way. So a step
+   that throws is reported as a warning and setup carries on. Letting it
+   propagate left the workbook half-prepared and the report never printed,
+   which is how this surfaced in production.
+
+   FILTERS ARE NOT TOUCHED AT ALL. Creating, removing or replacing a basic
+   filter conflicts with a Table occupying the same range, and there is no
+   version of that operation this script needs: sorting and filtering are
+   things a person does in the workbook, not something setup has to install.
    ========================================================================== */
+
+
+/**
+ * Runs one cosmetic step, recording a warning instead of failing.
+ *
+ * Returns whether the step succeeded, for callers that want to know.
+ */
+function safely_(label, notes, action) {
+  try {
+    action();
+    return true;
+  } catch (err) {
+    notes.push(
+      'WARNING ' +
+        label +
+        ' — skipped: ' +
+        (err && err.message ? err.message : String(err))
+    );
+    return false;
+  }
+}
 
 
 /**
@@ -570,42 +653,55 @@ function ensureEnoughColumns_(sheet, requiredColumns) {
 
 
 /**
- * Applies the standard header appearance.
+ * Applies the standard header appearance, one step at a time.
+ *
+ * Each step stands alone so that a worksheet which refuses one of them still
+ * receives the others.
  */
-function styleHeader_(sheet, width, background) {
+function styleHeader_(sheet, width, background, label, notes) {
   if (width < 1) {
     return;
   }
 
-  sheet.setFrozenRows(1);
+  safely_(label + ' frozen header row', notes, function () {
+    sheet.setFrozenRows(1);
+  });
 
-  sheet
-    .getRange(
-      1,
-      1,
-      1,
-      width
-    )
-    .setBackground(background)
-    .setFontColor(
-      HEADER_FONT_COLOR
-    )
-    .setFontWeight('bold')
-    .setHorizontalAlignment('center')
-    .setVerticalAlignment('middle')
-    .setWrap(true);
+  safely_(label + ' header appearance', notes, function () {
+    sheet
+      .getRange(
+        1,
+        1,
+        1,
+        width
+      )
+      .setBackground(background)
+      .setFontColor(
+        HEADER_FONT_COLOR
+      )
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle')
+      .setWrap(true);
+  });
 
-  sheet.setRowHeight(
-    1,
-    42
-  );
+  safely_(label + ' header row height', notes, function () {
+    sheet.setRowHeight(
+      1,
+      42
+    );
+  });
 }
 
 
 /**
  * Applies column sizing and data formatting.
+ *
+ * The number-format calls are the ones a typed column rejects, so each column
+ * is formatted independently: one typed date column no longer costs every
+ * other column its width and wrapping.
  */
-function formatColumns_(sheet, headers) {
+function formatColumns_(sheet, headers, label, notes) {
   if (
     !headers ||
     !headers.length
@@ -621,10 +717,18 @@ function formatColumns_(sheet, headers) {
       var column =
         index + 1;
 
-      sheet.setColumnWidth(
-        column,
-        columnWidthFor_(header)
-      );
+      var where =
+        label +
+        ' column "' +
+        header +
+        '"';
+
+      safely_(where + ' width', notes, function () {
+        sheet.setColumnWidth(
+          column,
+          columnWidthFor_(header)
+        );
+      });
 
       /*
        * Do not needlessly format an empty worksheet below row 1.
@@ -641,77 +745,42 @@ function formatColumns_(sheet, headers) {
           1
         );
 
-      dataRange
-        .setVerticalAlignment(
-          'middle'
-        );
+      safely_(where + ' text layout', notes, function () {
+        if (
+          isLongTextColumn_(header)
+        ) {
+          dataRange
+            .setWrap(true)
+            .setVerticalAlignment(
+              'top'
+            );
+        } else {
+          dataRange
+            .setWrap(false)
+            .setVerticalAlignment(
+              'middle'
+            );
+        }
+      });
 
+      /*
+       * A typed column carries its own date format and refuses this one.
+       * Warn and move on: the stored value is unchanged either way.
+       */
       if (
-        isLongTextColumn_(header)
-      ) {
-        dataRange
-          .setWrap(true)
-          .setVerticalAlignment(
-            'top'
-          );
-      } else {
-        dataRange.setWrap(false);
-      }
-
-      if (
+        isDateOnlyColumn_(header) ||
         isDateTimeColumn_(header)
       ) {
-        dataRange.setNumberFormat(
-          'yyyy-mm-dd hh:mm'
-        );
-      }
-
-      if (
-        isDateOnlyColumn_(header)
-      ) {
-        dataRange.setNumberFormat(
-          'yyyy-mm-dd'
-        );
+        safely_(where + ' date format', notes, function () {
+          dataRange.setNumberFormat(
+            isDateOnlyColumn_(header)
+              ? 'yyyy-mm-dd'
+              : 'yyyy-mm-dd hh:mm'
+          );
+        });
       }
     }
   );
-}
-
-
-/**
- * Recreates a basic filter for the visible table.
- */
-function applyFilter_(sheet, width) {
-  if (width < 1) {
-    return;
-  }
-
-  var existingFilter =
-    sheet.getFilter();
-
-  if (existingFilter) {
-    existingFilter.remove();
-  }
-
-  /*
-   * Only create the filter when there is at least one actual data row.
-   *
-   * Header-only filters can conflict with an existing Google Sheets table or
-   * overlapping filter range. The frozen/styled header remains enough until
-   * data exists.
-   */
-  if (sheet.getLastRow() <= 1) {
-    return;
-  }
-
-  sheet
-    .getRange(
-      1,
-      1,
-      sheet.getLastRow(),
-      width
-    )
-    .createFilter();
 }
 
 

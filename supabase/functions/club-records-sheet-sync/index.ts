@@ -44,11 +44,12 @@ type RegistrationForm = { event_key: string; label: string; headers: string[] };
 /**
  * Public event registrations, one worksheet per event.
  *
- * These are not a mirror of anything in Supabase — they are collected by the
- * Apps Script registration workbook and copied here by
+ * These are not a mirror of anything in Supabase — they are collected in the
+ * workbook's own jam26/ctf30 tabs by Apps Script and copied here by
  * event-registration-intake. They appear in the website view only: pushing
- * them into the club records workbook would make this platform a second writer
- * of a spreadsheet Apps Script owns, which is how two copies start disagreeing.
+ * them back would make this platform a second writer of tabs Apps Script owns,
+ * which is how two copies start disagreeing. Those tabs are absent from ORDER
+ * and NAMES above for exactly that reason.
  */
 async function registrationSheets(
   client: SupabaseClient,

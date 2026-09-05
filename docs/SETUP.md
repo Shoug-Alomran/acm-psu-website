@@ -198,10 +198,20 @@ Sheet.
 ## Step 5b — Public event registrations in the records backup (optional)
 
 Public event signups (Programming Jam, CTF) are collected by the Apps Script in
-`apps-script/`, which appends them to its **own** registration workbook. That
-stays the intake surface and nothing here changes it.
+`apps-script/`, which appends them to the `jam26` and `ctf30` tabs of the **same
+`ACM PSU — Club Records` workbook** you set up in step 5:
 
-This step gives those signups a second home in Supabase, so they appear in
+```
+1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s
+```
+
+There is no separate registration file and nothing extra to share — the service
+account already has Editor on this workbook from step 5, step 11. What keeps
+those tabs safe is that the snapshot sync excludes them **by name**: it writes
+only the ten canonical worksheets and has never written a cell of `jam26` or
+`ctf30`. Those two tabs stay the intake surface and nothing here changes them.
+
+This step gives the signups a second home in Supabase, so they appear in
 **Admin → Records Backup** under *Events / Registrations* and survive anything
 that happens to the spreadsheet. Without it, registration still works exactly
 as before — it simply stays Google-only.
@@ -212,18 +222,18 @@ as before — it simply stays Google-only.
    openssl rand -hex 32
    ```
 
-2. Give it to Supabase, along with the ID of the **registration** workbook —
-   the one the Apps Script writes to, not the Club Records workbook from
-   step 5. The service account from step 9 above needs at least **Viewer** on
-   it for the import button to work:
+2. Give it to Supabase and deploy the function:
 
    ```sh
-   npx supabase secrets set \
-     EVENT_REGISTRATION_TOKEN='<the secret from step 1>' \
-     EVENT_REGISTRATION_SPREADSHEET_ID='<the registration workbook ID>'
+   npx supabase secrets set EVENT_REGISTRATION_TOKEN='<the secret from step 1>'
 
    npx supabase functions deploy event-registration-intake --no-verify-jwt
    ```
+
+   The import reads `GOOGLE_SHEETS_SPREADSHEET_ID` from step 5, because that is
+   the workbook the registration tabs are in. `EVENT_REGISTRATION_SPREADSHEET_ID`
+   exists only to override it if those tabs are ever moved into a file of their
+   own; leave it unset.
 
 3. Give the same secret to the Apps Script. In the Apps Script editor:
    **Project Settings → Script Properties → Add script property**, twice:
@@ -239,8 +249,8 @@ as before — it simply stays Google-only.
 
 4. Redeploy the Apps Script web app (see `apps-script/SETUP.md`).
 5. Register once on the live event site and confirm the row appears both in the
-   worksheet and under **Records Backup → Events → Registrations**.
-6. Click **IMPORT FROM REGISTRATION SHEET** on that page once, to bring in
+   `jam26`/`ctf30` tab and under **Records Backup → Events → Registrations**.
+6. Click **IMPORT FROM REGISTRATION TABS** on that page once, to bring in
    everything submitted before this was configured. It is safe to click again
    at any time — a registration already recorded is counted, not duplicated.
 

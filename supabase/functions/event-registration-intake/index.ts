@@ -2,10 +2,12 @@
  * event-registration-intake — the second copy of a public event signup.
  *
  * Public registration is collected by the Apps Script web app in
- * apps-script/EventRegistration.gs, which appends a row to its own Google
- * workbook. That remains the intake surface. This function exists so the same
- * registration also lands in Supabase, where the admin records backup can show
- * it and where it survives anything that happens to the spreadsheet.
+ * apps-script/EventRegistration.gs, which appends a row to the jam26/ctf30
+ * tabs of the "ACM PSU — Club Records" workbook. Those tabs are Apps Script's
+ * — the Supabase snapshot sync excludes them by name — and they remain the
+ * intake surface. This function exists so the same registration also lands in
+ * Supabase, where the admin records backup can show it and where it survives
+ * anything that happens to the spreadsheet.
  *
  * Two ways in, and they are authorized completely differently:
  *
@@ -26,8 +28,12 @@
  *
  * Required secrets:
  *   EVENT_REGISTRATION_TOKEN           shared with the Apps Script
- *   EVENT_REGISTRATION_SPREADSHEET_ID  the registration workbook (import only)
  *   GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY  (import only)
+ *
+ * The import reads GOOGLE_SHEETS_SPREADSHEET_ID — the club records workbook,
+ * which is where the registration tabs are. EVENT_REGISTRATION_SPREADSHEET_ID
+ * overrides it, and exists only for the day those tabs move to a file of their
+ * own; setting it is not part of ordinary setup.
  */
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { clientForRequest, corsHeaders, fail, json, requireRole } from '../_shared/http.ts';
@@ -159,9 +165,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (!caller) return fail('Sign in required.', 401, origin);
     if (!await requireRole(caller, ['club_admin'])) return fail('Club admin access required.', 403, origin);
 
-    const spreadsheetId = Deno.env.get('EVENT_REGISTRATION_SPREADSHEET_ID');
+    // Same workbook as the rest of the club records, different tabs.
+    const spreadsheetId = Deno.env.get('EVENT_REGISTRATION_SPREADSHEET_ID')
+      ?? Deno.env.get('GOOGLE_SHEETS_SPREADSHEET_ID');
     if (!spreadsheetId) {
-      return fail('EVENT_REGISTRATION_SPREADSHEET_ID is not set — see docs/SETUP.md step 5.', 500, origin);
+      return fail('GOOGLE_SHEETS_SPREADSHEET_ID is not set — see docs/SETUP.md step 5.', 500, origin);
     }
 
     const imported: Record<string, { added: number; already: number; error?: string }> = {};
