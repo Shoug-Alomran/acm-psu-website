@@ -215,7 +215,10 @@ section {
    Navigation
    -------------------------------------------------------------------------- */
 
-nav {
+/* The site header only. Scoped to a direct child of <body> so it never
+   leaks onto content navs (breadcrumbs, tab strips, portal sidebars), which
+   would otherwise be fixed-positioned over the page. */
+body > nav {
     position: fixed;
     top: 0;
     width: 100%;

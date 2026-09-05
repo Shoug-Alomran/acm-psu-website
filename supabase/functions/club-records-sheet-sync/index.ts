@@ -57,7 +57,17 @@ async function registrationSheets(
   const { data: formData, error: formError } = await client
     .from('event_registration_forms')
     .select('event_key, label, headers').eq('is_active', true).order('rank');
-  if (formError) throw new Error(`event_registration_forms: ${formError.message}`);
+  if (formError) {
+    // The tables arrive with a migration, and this function can be deployed
+    // before it is applied. Say which step is missing rather than handing an
+    // admin a PostgREST schema-cache message to interpret.
+    const missing = (formError as { code?: string }).code === '42P01' ||
+      /Could not find the table|does not exist/i.test(formError.message);
+    throw new Error(missing
+      ? 'the event registration tables do not exist yet — apply the database migration ' +
+        '(npx supabase db push), see docs/SETUP.md step 5b'
+      : `event_registration_forms: ${formError.message}`);
+  }
   const forms = (formData ?? []) as RegistrationForm[];
   if (!forms.length) return [];
 
