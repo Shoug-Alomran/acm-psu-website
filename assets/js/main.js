@@ -28,7 +28,7 @@
     runtime.async = false;
     runtime.addEventListener('load', function () {
         var registration = document.createElement('script');
-        registration.src = '/assets/js/upcoming-registration.js?v=20260905-1';
+        registration.src = '/assets/js/upcoming-registration.js?v=20260905-2';
         registration.async = false;
         document.head.appendChild(registration);
     });

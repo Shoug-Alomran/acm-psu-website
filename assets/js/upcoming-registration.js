@@ -72,18 +72,23 @@
             if (!response.ok) throw new Error('Registration data request failed');
             return response.json();
         }).then(function (events) {
+            /*
+             * The public runtime re-renders the upcoming-event cards from its
+             * cached Supabase data on every language switch, which discards the
+             * buttons injected here. Re-apply them rather than only re-labelling,
+             * and register this before the early return below so the listener is
+             * attached even when the first pass succeeds.
+             */
+            document.addEventListener('acm:languagechange', function () {
+                applyRegistrationButtons(events);
+            });
+
             if (applyRegistrationButtons(events)) return;
             var observer = new MutationObserver(function () {
                 if (applyRegistrationButtons(events)) observer.disconnect();
             });
             observer.observe(document.body, { childList: true, subtree: true });
             window.setTimeout(function () { observer.disconnect(); }, 10000);
-
-            document.addEventListener('acm:languagechange', function () {
-                document.querySelectorAll('[data-event-register]').forEach(function (link) {
-                    link.textContent = isArabic() ? 'سجل الآن' : 'Register';
-                });
-            });
         }).catch(function () {
             /* The event cards remain usable without registration enhancements. */
         });
