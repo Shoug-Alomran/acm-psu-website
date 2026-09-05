@@ -95,6 +95,9 @@ function adminLinks(viewer: Viewer): NavLink[] {
   return links;
 }
 
+/** Remembers a collapsed sidebar for this browser. */
+const NAV_COLLAPSED_KEY = 'acm-portal-nav-collapsed';
+
 /**
  * Draws the portal shell into the page's <body> and returns the element that
  * page content should be rendered into.
@@ -106,7 +109,7 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
   const here = window.location.pathname + (new URLSearchParams(window.location.search).get('view') === 'responsibilities' ? '?view=responsibilities' : '');
   const content = h('div', { class: 'portal-content', id: 'portal-content' });
 
-  const sidebar = h('aside', { class: 'portal-sidebar' },
+  const sidebar = h('aside', { class: 'portal-sidebar', id: 'portal-navigation' },
     h('a', { class: 'nav-logo portal-brand', href: '/index.html' },
       h('img', { src: '/assets/img/acm.png', alt: '' }),
       h('span', 'ACM'), h('span', { class: 'divider' }, '/'), h('span', 'PSU'),
@@ -153,6 +156,32 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
     type: 'button', class: 'portal-menu-toggle', 'aria-label': 'Toggle navigation',
     onclick: () => document.body.classList.toggle('portal-nav-open'),
   }, '☰');
+
+  // Collapsing the sidebar is available to every account, not just admins:
+  // the widest pages here are tables, and on a laptop the navigation is the
+  // easiest 260px to give back. The choice is remembered per browser, and a
+  // browser that refuses storage simply starts expanded every time.
+  const collapse = h('button', {
+    type: 'button', class: 'portal-collapse', 'aria-controls': 'portal-navigation',
+  }) as HTMLButtonElement;
+
+  function paintCollapse(collapsed: boolean): void {
+    document.body.classList.toggle('portal-collapsed', collapsed);
+    collapse.textContent = collapsed ? '»' : '«';
+    collapse.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
+    collapse.setAttribute('aria-label', collapse.title);
+    collapse.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  }
+
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(NAV_COLLAPSED_KEY) === '1'; } catch { /* storage unavailable */ }
+  paintCollapse(collapsed);
+  collapse.addEventListener('click', () => {
+    collapsed = !collapsed;
+    paintCollapse(collapsed);
+    try { localStorage.setItem(NAV_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch { /* storage unavailable */ }
+  });
+  sidebar.prepend(collapse);
 
   render(document.body,
     h('div', { class: 'ambient-glow ambient-glow--corner' }),

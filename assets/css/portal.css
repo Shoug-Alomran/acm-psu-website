@@ -2448,3 +2448,55 @@
 }
 
 .record-tree .tree-sheet--active .tree-count { color: #08182d; opacity: 0.75; }
+
+/* --------------------------------------------------------------------------
+   Collapsible sidebar
+
+   Available on every portal page and to every account. The widest pages here
+   are record tables, and the navigation is the easiest 260px to hand back to
+   them. Below 880px the sidebar is already an off-canvas drawer with its own
+   ☰ button, so the collapse control is hidden there rather than competing.
+   -------------------------------------------------------------------------- */
+
+.portal-collapse {
+    align-self: flex-end;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    flex: none;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-dark);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.portal-collapse:hover {
+    color: var(--accent-blue);
+    border-color: var(--border-strong);
+}
+
+@media (min-width: 881px) {
+    /* A rail rather than nothing at all: the control that re-opens the
+       navigation stays exactly where the one that closed it was. */
+    .portal-collapsed .portal-layout {
+        grid-template-columns: 3.25rem minmax(0, 1fr);
+    }
+
+    .portal-collapsed .portal-sidebar {
+        padding: 1.75rem 0.5rem;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .portal-collapsed .portal-sidebar > *:not(.portal-collapse) { display: none; }
+    .portal-collapsed .portal-collapse { align-self: center; }
+}
+
+@media (max-width: 880px) {
+    .portal-collapse { display: none; }
+}

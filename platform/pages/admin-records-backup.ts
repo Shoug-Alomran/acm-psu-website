@@ -232,6 +232,25 @@ async function start(): Promise<void> {
       const crumbs = h('p', { class: 'mono-meta dim-text' },
         [...(pathTo(tree, active) ?? []), active].join(' / ').toUpperCase());
 
+      // Every registration worksheet, so the toolbar can offer them the same
+      // way it offers semesters. An event is a thing you pick, not a folder
+      // you have to find first.
+      const registrations = tree.folders.find((f) => f.name === 'Events')
+        ?.folders.find((f) => f.name === 'Registrations');
+      const events = registrations?.sheets ?? [];
+
+      const eventPicker = events.length ? h('select', {
+        'aria-label': 'Choose an event',
+      }, [
+        h('option', { value: '', selected: !events.some((e) => e.name === active) },
+          `Event registrations (${events.length})`),
+        ...events.map((e) => h('option', { value: e.name, selected: e.name === active },
+          `${e.name} (${e.rows})`)),
+      ]) as HTMLSelectElement : null;
+      eventPicker?.addEventListener('change', () => {
+        if (eventPicker.value) void openSheet(eventPicker.value)();
+      });
+
       const pager: Child = pages > 1 ? h('div', { class: 'button-row pager' },
         page > 0 ? action('PREVIOUS', async () => { page -= 1; await draw(); }) : null,
         h('span', { class: 'mono-meta dim-text' }, `PAGE ${page + 1} OF ${pages}`),
@@ -244,8 +263,6 @@ async function start(): Promise<void> {
       // Anything submitted before that copy existed is recovered on demand
       // rather than automatically: it reads Google, so it is a deliberate act
       // and not something a page load should do.
-      const registrations = tree.folders.find((f) => f.name === 'Events')
-        ?.folders.find((f) => f.name === 'Registrations');
       const canImport = isClubAdmin(viewer) && !!registrations;
       const importControls: Child = canImport ? h('div', { class: 'button-row' },
         action('IMPORT FROM REGISTRATION TABS', async () => {
@@ -277,11 +294,20 @@ async function start(): Promise<void> {
         result.registration_error
           ? notice('warn', `Event registrations could not be read: ${result.registration_error}. Everything else below is current.`)
           : null,
+        // Every worksheet arriving without a folder means the records function
+        // answering this page predates the tree — so it also predates event
+        // registrations. Say that plainly instead of quietly filing everything
+        // under Admin and leaving the missing events to be guessed at.
+        !result.registration_error && names.every((name) => !result.sheets[name]!.folder)
+          ? notice('info', 'This page is being answered by an older records function: worksheets arrive ' +
+            'without folders and public event registrations are not included. Deploy ' +
+            'club-records-sheet-sync (npm run functions:deploy) to enable both — see docs/SETUP.md step 5b.')
+          : null,
         importNote,
         panel('Records', browser, importControls),
         panel(active || 'Records',
           crumbs,
-          h('div', { class: 'browser-toolbar' }, search, semester, exportButton),
+          h('div', { class: 'browser-toolbar' }, search, eventPicker, semester, exportButton),
           resolve ? null : h('p', { class: 'mono-meta dim-text' },
             'THIS WORKSHEET HAS NO DATE COLUMN, SO IT IS NOT FILTERED BY SEMESTER.'),
           tintOf ? attentionLegend(
