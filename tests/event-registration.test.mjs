@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import { createHash } from 'node:crypto';
+const sources = ['Code.gs', 'EventRegistration.gs'].map(f => readFileSync(new URL('../apps-script/' + f, import.meta.url), 'utf8')).join('\n');
+function fixture() {
+  const sheets = {}, cache = new Map();
+  let flushed = 0;
+  const context = vm.createContext({ console: {error(){}}, Date, Object,
+    LockService: {getScriptLock: () => ({waitLock(){}, releaseLock(){}})},
+    CacheService: {getScriptCache: () => ({get: k => cache.get(k), put: (k,v) => cache.set(k,v)})},
+    Utilities: {DigestAlgorithm: {SHA_256:'sha256'}, computeDigest: (_,s) => createHash('sha256').update(s).digest(), base64EncodeWebSafe: b => b.toString('base64url')},
+    HtmlService: {XFrameOptionsMode:{ALLOWALL:'ALLOWALL'}, createHtmlOutput: html => ({html, setXFrameOptionsMode(mode){this.mode=mode;return this;}})},
+    ContentService: {MimeType:{JSON:'json'},createTextOutput: text => ({text,setMimeType(){return this;}})},
+    SpreadsheetApp: {openById(id){assert.equal(id,'1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s');return {getSheetByName:n=>sheets[n]};}, flush(){flushed++;}}
+  });
+  vm.runInContext(sources, context);
+  function sheet(rows) {return {rows, getLastColumn:()=>Math.max(0,...rows.map(r=>r.length)), getLastRow:()=>rows.length,
+    getRange(r,c,n,w){return {getValues:()=>rows.slice(r-1,r-1+n).map(row=>Array.from({length:w},(_,i)=>row[c-1+i]??'')),getDisplayValues:()=>rows.slice(r-1,r-1+n).map(row=>row.slice(c-1,c-1+w).map(v=>String(v).replace(/^'/,''))),setValues(values){rows.splice(r-1,values.length,...values);}};},appendRow(row){rows.push(row);}};}
+  for(const [name,headers] of Object.entries(context.EVENT_SHEETS)) sheets[name]=sheet([Array.from(headers)]);
+  function post(payload) {const response=context.doPost({parameter:payload});assert.equal(response.mode,'ALLOWALL');assert.match(response.html,/parent.postMessage/);assert.match(response.html,/top.postMessage/);const data=JSON.parse(response.html.match(/var m=(.*?);try/)[1]);assert.equal(data.source,'acm-event-registration');assert.equal(data.event,payload.event??'');return data.message;}
+  return {context,sheets,post,cache,sheet,get flushed(){return flushed;}};
+}
+const jam={event:'jam26',fullName:'ZZ Test Jam Delete Me',universityId:'999000001',universityEmail:'999000001@psu.edu.sa',phoneNumber:'0500000000',major:'Software Engineering',teamName:'ZZ_TEST_DELETE_ME',teamMembers:'jam.test.member@psu.edu.sa',website:''};
+const ctf={event:'ctf30',teamName:'ZZ_TEST_TEAM_DELETE_ME',captainName:'ZZ Test Captain',captainId:'999000002',captainEmail:'999000002@psu.edu.sa',captainPhone:'0500000000',captainMajor:'Computer Science',member2Name:'ZZ Test Member Two',member2Id:'999000003',member2Email:'999000003@psu.edu.sa',member2Major:'Computer Science',member3Name:'',member3Id:'',member3Email:'',member3Major:'',experience:'Beginner',website:''};
+let count=0;
+function test(name,fn){fn();count++;console.log('PASS '+name);}
+test('Jam append, column H, explicit OK, duplicate email and ID',()=>{const f=fixture();assert.equal(f.post(jam),'OK');assert.equal(f.sheets.jam26.rows[1][7],jam.teamMembers);assert.equal(f.flushed,1);assert.match(f.post(jam),/already registered/);assert.match(f.post({...jam,universityEmail:'another@psu.edu.sa'}),/already registered/);assert.equal(f.sheets.jam26.rows.length,2);});
+test('CTF append, blank optional columns, enum and duplicate participant across slots',()=>{const f=fixture();assert.equal(f.post(ctf),'OK');assert.deepEqual(Array.from(f.sheets.ctf30.rows[1].slice(11,15)),['','','','']);assert.equal(f.sheets.ctf30.rows[1][15],'Beginner');assert.match(f.post({...ctf,teamName:'Different',captainId:'999000004',captainEmail:'new@psu.edu.sa'}),/already registered/);assert.equal(f.sheets.ctf30.rows.length,2);});
+for(const [name,payload,pattern] of [
+ ['partial member3',{...ctf,member3Name:'Only a name'},/complete every optional member/],
+ ['invalid experience',{...ctf,experience:'Expert'},/invalid experience/],
+ ['duplicate member IDs',{...ctf,member2Id:ctf.captainId},/different university ID/],
+ ['duplicate member emails',{...ctf,member2Email:ctf.captainEmail.toUpperCase()},/different university email/],
+ ['missing field',{...jam,fullName:''},/missing/],['bad email',{...jam,universityEmail:'invalid'},/invalid/],
+ ['bad teammate email',{...jam,teamMembers:'invalid'},/valid team member emails/],
+ ['length limit',{...jam,fullName:'a'.repeat(121)},/too long/],['honeypot',{...jam,website:'bot'},/not be accepted/],
+ ['canonical target',{...jam,event:'People'},/unsupported/],['no event',{...jam,event:''},/unsupported/],['prototype target',{...jam,event:'constructor'},/unsupported/],
+ ['bad requestId',{...jam,requestId:'bad'},/invalid request/]
+]) test(name+' never writes',()=>{const f=fixture();assert.match(f.post(payload),pattern);assert.equal(f.sheets.jam26.rows.length,1);assert.equal(f.sheets.ctf30.rows.length,1);});
+test('exact header mismatch refuses writes without mutation',()=>{for(const mutate of [h=>h.reverse(),h=>h[0]+=' ',h=>h.push('Extra')]){const f=fixture();mutate(f.sheets.jam26.rows[0]);const before=JSON.stringify(f.sheets.jam26.rows);assert.match(f.post(jam),/not ready/);assert.equal(JSON.stringify(f.sheets.jam26.rows),before);}});
+test('formula cells stored as literal text',()=>{const f=fixture();for(const prefix of ['=','+','-','@']) assert.equal(f.context.safeRegistrationCell(' '+prefix+'SUM(1)'),"'"+prefix+'SUM(1)');assert.equal(f.post({...jam,fullName:'=IMPORTXML("x")'}),'OK');assert.equal(f.sheets.jam26.rows[1][1],"'=IMPORTXML(\"x\")");});
+test('burst throttle and lock failure never append',()=>{const f=fixture();f.cache.set('event-burst:jam26:'+Math.floor(Date.now()/60000),'120');assert.match(f.post(jam),/busy/);f.context.LockService.getScriptLock=()=>({waitLock(){throw Error('lock');},releaseLock(){}});assert.match(f.post(jam),/not be confirmed/);assert.equal(f.sheets.jam26.rows.length,1);});
+test('storage/flush failure never acknowledges OK',()=>{const f=fixture();f.context.SpreadsheetApp.flush=()=>{throw Error('private details');};const result=f.post(jam);assert.match(result,/not be confirmed/);assert.doesNotMatch(result,/private details/);});
+test('setup leaves event rows intact and refuses header mismatch including blank row1 with data',()=>{for(const rows of [[['wrong'],['registration']],[[''],['registration']]]){const f=fixture();const sheet=f.sheet(rows);const before=JSON.stringify(rows),notes=[];f.context.prepareEventSheet_({getSheetByName:()=>sheet},'jam26',f.context.EVENT_SHEETS.jam26,notes);assert.match(notes.join(''),/HEADER MISMATCH/);assert.equal(JSON.stringify(rows),before);}});
+test('setup seeds only empty tabs and preserves matching rows',()=>{for(const initial of [[],null]){const f=fixture();for(const name of ['ensureEnoughColumns_','styleHeader_','applyFilter_','formatColumns_','protectEventSheet_'])f.context[name]=()=>{};let sheet=initial===null?null:f.sheet(initial);const book={getSheetByName:()=>sheet,insertSheet(){sheet=f.sheet([]);return sheet;}};const notes=[];f.context.prepareEventSheet_(book,'jam26',f.context.EVENT_SHEETS.jam26,notes);assert.deepEqual(Array.from(sheet.rows[0]),Array.from(f.context.EVENT_SHEETS.jam26));sheet.rows.push(['existing registration']);const before=JSON.stringify(sheet.rows);f.context.prepareEventSheet_(book,'jam26',f.context.EVENT_SHEETS.jam26,notes);assert.equal(JSON.stringify(sheet.rows),before);assert.match(notes.join(''),/header row matches, left untouched/);}});
+test('complete third member, team duplicate and optional email validation',()=>{const f=fixture();const third={...ctf,member3Name:'Third',member3Id:'999000004',member3Email:'third@psu.edu.sa',member3Major:'CS'};assert.equal(f.post(third),'OK');assert.equal(f.sheets.ctf30.rows[1][13],third.member3Email);assert.match(f.post({...ctf,captainEmail:'other@psu.edu.sa',captainId:'100000',member2Email:'other2@psu.edu.sa',member2Id:'100001'}),/team name/);const g=fixture();assert.match(g.post({...third,member3Email:'bad'}),/invalid member3Email/);assert.equal(g.sheets.ctf30.rows.length,1);});
+test('reply safely escapes script markup and echoes correlation',()=>{const f=fixture();const result=f.context.registrationReply('jam26','</script><script>bad()</script>','a'.repeat(32));assert.doesNotMatch(result.html,/<script>bad/);const payload=JSON.parse(result.html.match(/var m=(.*?);try/)[1]);assert.equal(payload.requestId,'a'.repeat(32));assert.equal(payload.message,'</script><script>bad()</script>');});
+test('health version and single entrypoints',()=>{const f=fixture();assert.deepEqual(JSON.parse(f.context.doGet().text),{status:'ok',message:'ACM PSU event registration endpoint is live.',version:'2026-09-05.1'});assert.equal((sources.match(/function doPost\(/g)||[]).length,1);assert.equal((sources.match(/function doGet\(/g)||[]).length,1);for(const name of ['jam26','ctf30']) assert.equal(name in f.context.CANONICAL_SHEETS,false);});
+console.log(`${count} server contract tests passed`);
