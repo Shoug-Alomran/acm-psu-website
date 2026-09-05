@@ -661,7 +661,27 @@ export interface ClubRecordsSyncResult {
 export interface WebsiteRecordsResult {
   source: 'supabase';
   generated_at: string;
-  sheets: Record<string, { columns: unknown[]; rows: unknown[][] }>;
+  /** `folder` is the worksheet's path in the records browser tree. */
+  sheets: Record<string, { columns: unknown[]; rows: unknown[][]; folder?: string[] }>;
+  /** Set when public event registrations could not be read; the rest is still valid. */
+  registration_error?: string;
+}
+
+export interface RegistrationImportResult {
+  imported: Record<string, { added: number; already: number; error?: string }>;
+}
+
+/**
+ * Recovers the public event registrations that are in the Apps Script
+ * workbook but not yet mirrored here — everything submitted before the mirror
+ * existed, plus anything a mirror call lost. Safe to run repeatedly: a
+ * registration already recorded is counted, not duplicated.
+ */
+export async function importEventRegistrations(): Promise<RegistrationImportResult> {
+  const response = await callFunction('event-registration-intake', { mode: 'import' });
+  const payload = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+  if (!response.ok) throw new Error(payload.error ?? 'Registrations could not be imported.');
+  return payload as RegistrationImportResult;
 }
 
 export async function websiteClubRecords(): Promise<WebsiteRecordsResult> {

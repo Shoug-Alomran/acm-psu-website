@@ -185,6 +185,13 @@ Sheet.
 > Keep that workbook private. Nothing in the member portal or on the public
 > website can reach it.
 >
+> **Converting a worksheet into a Google Sheets Table is safe but pointless
+> here.** A Table's columns are typed and reject the formatting the sync
+> applies, so the export writes its data, logs a warning, and leaves that tab
+> plainer than the others. The records themselves are unaffected, and the sync
+> neither creates nor removes filters, so nothing it does can collide with a
+> Table you add by hand.
+>
 > **This is the club's live administrative workbook, and it stays one file.**
 > Google applies permissions to a whole spreadsheet rather than tab by tab, and
 > the Inquiries worksheet can contain information submitted by members of the
@@ -192,6 +199,72 @@ Sheet.
 > containing only the relevant worksheets — the per-dataset CSV and XLSX
 > downloads on the Club Records page are the simplest way to produce one.
 > Do not share the live workbook itself.
+
+---
+
+## Step 5b — Public event registrations in the records backup (optional)
+
+Public event signups (Programming Jam, CTF) are collected by the Apps Script in
+`apps-script/`, which appends them to the `jam26` and `ctf30` tabs of the **same
+`ACM PSU — Club Records` workbook** you set up in step 5:
+
+```
+1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s
+```
+
+There is no separate registration file and nothing extra to share — the service
+account already has Editor on this workbook from step 5, step 11. What keeps
+those tabs safe is that the snapshot sync excludes them **by name**: it writes
+only the ten canonical worksheets and has never written a cell of `jam26` or
+`ctf30`. Those two tabs stay the intake surface and nothing here changes them.
+
+This step gives the signups a second home in Supabase, so they appear in
+**Admin → Records Backup** under *Events / Registrations* and survive anything
+that happens to the spreadsheet. Without it, registration still works exactly
+as before — it simply stays Google-only.
+
+1. Invent a long random shared secret (any 40+ random characters):
+
+   ```sh
+   openssl rand -hex 32
+   ```
+
+2. Give it to Supabase and deploy the function:
+
+   ```sh
+   npx supabase secrets set EVENT_REGISTRATION_TOKEN='<the secret from step 1>'
+
+   npx supabase functions deploy event-registration-intake --no-verify-jwt
+   ```
+
+   The import reads `GOOGLE_SHEETS_SPREADSHEET_ID` from step 5, because that is
+   the workbook the registration tabs are in. `EVENT_REGISTRATION_SPREADSHEET_ID`
+   exists only to override it if those tabs are ever moved into a file of their
+   own; leave it unset.
+
+3. Give the same secret to the Apps Script. In the Apps Script editor:
+   **Project Settings → Script Properties → Add script property**, twice:
+
+   | Property | Value |
+   |---|---|
+   | `PLATFORM_INTAKE_URL` | `https://<project-ref>.supabase.co/functions/v1/event-registration-intake` |
+   | `PLATFORM_INTAKE_TOKEN` | the secret from step 1 |
+
+   The secret is a credential and `apps-script/` is public in this repository,
+   so it lives in Script Properties and never in a `.gs` file. With either
+   property missing the copy is skipped silently and registration is unaffected.
+
+4. Redeploy the Apps Script web app (see `apps-script/SETUP.md`).
+5. Register once on the live event site and confirm the row appears both in the
+   `jam26`/`ctf30` tab and under **Records Backup → Events → Registrations**.
+6. Click **IMPORT FROM REGISTRATION TABS** on that page once, to bring in
+   everything submitted before this was configured. It is safe to click again
+   at any time — a registration already recorded is counted, not duplicated.
+
+> The copy is deliberately one-directional and best-effort. The Apps Script
+> writes its worksheet row first and only then tries this endpoint, so a
+> Supabase outage can never turn a saved registration into an error the
+> participant sees; the import in step 6 recovers anything the copy missed.
 
 ---
 

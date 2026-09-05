@@ -7,8 +7,16 @@
  * spreadsheet per dataset.
  *
  * Supabase stays the operational system. This writes snapshots out and never
- * reads back, so the workbook cannot become a second, diverging source of
- * truth.
+ * reads back one of the worksheets it writes, so the workbook cannot become a
+ * second, diverging source of truth. (readGoogleSheet below reads the event
+ * registration tabs, which this module never writes — see its comment.)
+ *
+ * WHAT IS ALLOWED TO FAIL. The data write is not: a snapshot that did not
+ * land must be reported as a failure. Everything after it — header styling,
+ * frozen row, column widths, row tints — is presentation and is best-effort,
+ * because a canonical worksheet may have been turned into a Google Sheets
+ * Table whose typed columns reject formatting. No filter is created, cleared
+ * or modified at all; a basic filter cannot share a range with a Table.
  *
  * Authentication is a service account: a JWT signed with the account's private
  * key is exchanged for an access token. The key lives in an Edge Function
@@ -148,12 +156,89 @@ const TINTS: Record<RowTint, { red: number; green: number; blue: number }> = {
   interview: { red: 1, green: 0.95, blue: 0.83 },
 };
 
+/**
+ * The only worksheets this module may write.
+ *
+ * The list is a copy of NAMES in club-records-sheet-sync, stated here so the
+ * WRITER enforces it rather than trusting every caller to. The tabs that must
+ * never appear in it are the public event registration tabs — jam26 and ctf30
+ * — which live in this same workbook, are owned by Apps Script, and hold rows
+ * that exist nowhere else. Clearing one would destroy registrations outright,
+ * so a mistake upstream should fail here rather than run.
+ */
+const CANONICAL_TABS = new Set([
+  'People', 'Membership Applications', 'Members', 'Club Positions',
+  'Opportunity Positions', 'Position Applications', 'Event Participation',
+  'Contributions', 'Inquiries', 'University Export Log',
+]);
+
+/**
+ * Applies presentation, and never fails the sync doing it.
+ *
+ * A canonical worksheet may have been converted into a Google Sheets Table,
+ * whose columns carry a declared type and reject formatting outright:
+ *
+ *   "You can't set the number format of cells in a typed column."
+ *
+ * The data is already written by the time this runs. A snapshot that is
+ * correct but plain is a working sync; an exception here would mark a
+ * successful export as failed and, in a multi-worksheet refresh, stop the
+ * worksheets after it. So the batch is attempted once, and if the API refuses
+ * it the requests are retried individually — one rejected step then costs only
+ * itself, and the header styling, freeze and column widths still land.
+ *
+ * FILTERS ARE NOT TOUCHED AT ALL. A basic filter cannot share a range with a
+ * Table, so clearBasicFilter/setBasicFilter are the two calls most likely to
+ * fail here, and sorting is something a person does in the workbook rather
+ * than something a sync has to install.
+ */
+async function applyPresentation(
+  token: string, spreadsheetId: string, tabName: string,
+  requests: Array<Record<string, unknown>>,
+): Promise<void> {
+  if (!requests.length) return;
+
+  const send = (batch: Array<Record<string, unknown>>) =>
+    sheetsRequest(token, spreadsheetId, ':batchUpdate', {
+      method: 'POST',
+      body: JSON.stringify({ requests: batch }),
+    });
+
+  try {
+    await send(requests);
+    return;
+  } catch (error) {
+    console.warn(`${tabName}: formatting was rejected as one batch ` +
+      `(${error instanceof Error ? error.message : String(error)}). ` +
+      'Retrying step by step; the exported data is already written and is unaffected.');
+  }
+
+  for (const request of requests) {
+    try {
+      await send([request]);
+    } catch (error) {
+      console.warn(`${tabName}: skipped one formatting step — ` +
+        `${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+}
+
 export async function pushToGoogleSheet(
   tabName: string,
   matrix: Array<Array<unknown>>,
   /** One entry per data row of `matrix` (so index 0 is matrix[1]). */
   tints: Array<RowTint | null> = [],
 ): Promise<string> {
+  // This function clears the worksheet before writing it. Refuse outright for
+  // any tab that is not a Supabase-owned mirror, so no upstream mistake can
+  // point a snapshot at jam26, ctf30, or anything else a human maintains.
+  if (!CANONICAL_TABS.has(tabName)) {
+    throw new Error(
+      `Refusing to write "${tabName}": only Supabase mirror worksheets may be replaced. ` +
+      'Public event registration tabs are owned by Apps Script and are never snapshot targets.',
+    );
+  }
+
   const spreadsheetId = Deno.env.get('GOOGLE_SHEETS_SPREADSHEET_ID');
   if (!spreadsheetId) {
     throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID is not set — see docs/SETUP.md step 5.');
@@ -196,7 +281,6 @@ export async function pushToGoogleSheet(
   // changes only structure/formatting; Apps Script never supplies the data.
   if (existing && matrix.length && matrix[0].length) {
     const requests: Array<Record<string, unknown>> = [
-      { clearBasicFilter: { sheetId: existing.properties.sheetId } },
       { repeatCell: {
         range: { sheetId: existing.properties.sheetId, startRowIndex: 0, endRowIndex: 1,
           startColumnIndex: 0, endColumnIndex: matrix[0].length },
@@ -237,26 +321,46 @@ export async function pushToGoogleSheet(
       i = end + 1;
     }
 
-    // A header-only snapshot has no data rows to filter. Applying a basic
-    // filter to an artificially extended two-row range can partially intersect
-    // a pre-existing Google Sheets table and make an otherwise valid empty
-    // export fail. Keep the header styling/freeze/resize, but only add a filter
-    // when the snapshot actually contains data rows.
-    if (matrix.length > 1) {
-      requests.splice(3, 0, {
-        setBasicFilter: { filter: { range: { sheetId: existing.properties.sheetId,
-          startRowIndex: 0, endRowIndex: matrix.length, startColumnIndex: 0,
-          endColumnIndex: matrix[0].length } } },
-      });
-    }
-
-    await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
-      method: 'POST',
-      body: JSON.stringify({ requests }),
-    });
+    // No filter is created here, and none is cleared. See applyPresentation:
+    // a basic filter and a Table cannot occupy the same range, and a worksheet
+    // that sorts a little less conveniently is a far smaller problem than a
+    // records export that reports failure.
+    await applyPresentation(token, spreadsheetId, tabName, requests);
   }
 
   const gid = existing?.properties.sheetId;
   return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` +
     (gid !== undefined ? `#gid=${gid}` : '');
+}
+
+/**
+ * Reads one worksheet's display values, header row first.
+ *
+ * This is the single read path in this module, and what keeps it from creating
+ * a second source of truth is the TAB it is pointed at, not the file. The
+ * public event registration tabs — jam26, ctf30 — live in the same "ACM PSU —
+ * Club Records" workbook as everything else, but Apps Script owns them and
+ * Supabase has never written a cell of them: they are excluded from the
+ * snapshot sync by name, on purpose. There, Google holds the original and
+ * reading it recovers a record. Reading back one of the tabs this file writes
+ * would be re-importing our own export, and nothing here does that.
+ *
+ * A missing tab is an empty result, not an error — an event whose worksheet
+ * has not been created yet simply has no registrations.
+ */
+export async function readGoogleSheet(
+  spreadsheetId: string, tabName: string,
+): Promise<string[][]> {
+  const token = await accessToken();
+  const range = `${encodeURIComponent(tabName)}!A1:ZZ`;
+  const payload = await sheetsRequest(
+    token, spreadsheetId,
+    `/values/${range}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
+  ).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/Unable to parse range|not found/i.test(message)) return { values: [] };
+    throw error;
+  }) as { values?: unknown[][] };
+
+  return (payload.values ?? []).map((row) => row.map((cell) => String(cell ?? '')));
 }
