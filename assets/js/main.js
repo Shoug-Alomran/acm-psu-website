@@ -1,6 +1,6 @@
 /* ACM PSU — public-site bootstrap.
  * Hides recruitment navigation for authenticated users, then loads the
- * shared public-site runtime.
+ * shared public-site runtime and public event registration actions.
  */
 (function () {
     'use strict';
@@ -26,5 +26,11 @@
     var runtime = document.createElement('script');
     runtime.src = '/assets/js/main-core.js?v=20260905-1';
     runtime.async = false;
+    runtime.addEventListener('load', function () {
+        var registration = document.createElement('script');
+        registration.src = '/assets/js/upcoming-registration.js?v=20260905-1';
+        registration.async = false;
+        document.head.appendChild(registration);
+    });
     document.head.appendChild(runtime);
 }());
