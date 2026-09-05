@@ -268,6 +268,46 @@ as before — it simply stays Google-only.
 
 ---
 
+## Step 5c — Registration for a new event
+
+Once step 5b is done, adding registration to a future event needs no migration,
+no code and no hand-made worksheet.
+
+In **Admin → Projects & Events** (or, for a faculty advisor, **Assigned
+Activities**), open or create the event and use the **Public registration**
+section:
+
+1. Tick **Enable registration**.
+2. Choose a **registration template** — Individual, Basic team, or Structured
+   3-person team. The columns it will create are listed underneath.
+3. Accept or edit the suggested **worksheet name** (for example
+   `hackathon261`). Lowercase letters, digits, underscore and hyphen only.
+4. Save.
+
+The platform then records the form against that event and creates the worksheet
+in the club records workbook with exactly the template's columns. The event
+appears under **Records Backup → Events → Registrations**, and **IMPORT FROM
+REGISTRATION TABS** picks it up automatically — nothing has a list of events in
+it.
+
+What it will not do, on purpose:
+
+- overwrite a worksheet that already exists with different columns — it reports
+  the difference and changes nothing;
+- change the template or the worksheet name once the first registration has
+  been recorded, because the columns describe rows that already exist;
+- delete anything when registration is switched off. Closing a form leaves the
+  worksheet and every recorded registration exactly as they are.
+
+> **The public form itself is separate.** This provisions the platform's side —
+> the record, the worksheet and the backup view. The page people register on,
+> and the Apps Script `REGISTRATION_EVENTS` entry that accepts its submissions,
+> are still added by hand for each event; see `apps-script/SETUP.md`. Until that
+> entry exists, the worksheet is ready and the import works, but the public form
+> has nowhere to post.
+
+---
+
 ## Step 6 — Emailing inquiry responses (not yet implemented)
 
 **This does not exist yet, and the interface says so rather than pretending

@@ -5,6 +5,11 @@ import { requireAdvisor, displayName } from '../lib/session.js';
 import { advisorActivities, advisorParticipants, advisorContributions,
   advisorSetParticipationStatus, advisorVerifyContribution } from '../lib/api.js';
 import { requireClient, readableError } from '../lib/supabase.js';
+import {
+  registrationSection, registrationTemplates, eventRegistrationForm, registrationFormLocked,
+  provisionRegistration, provisionSummary, sheetNameProblem,
+  type RegistrationTemplate, type RegistrationForm,
+} from '../lib/registration-setup.js';
 import { archiveDate, enumLabel } from '../lib/format.js';
 import type { ParticipationStatus, Project, ProjectStatus, ContentVisibility } from '../lib/types.js';
 
@@ -81,7 +86,17 @@ async function start(): Promise<void> {
   const content = shell(viewer, 'admin', 'Assigned activities');
   const pages: Record<PageKey, number> = { activities: 1, participants: 1, contributions: 1 };
 
-  function eventEditor(existing: Project | null): void {
+  function eventEditor(
+    existing: Project | null,
+    templates: RegistrationTemplate[] = [],
+    registration: RegistrationForm | null = null,
+    registrationLocked = false,
+  ): void {
+    const registrationBlock = templates.length ? registrationSection({
+      templates, existing: registration, locked: registrationLocked,
+      title: existing?.title ?? '', term: existing?.chapter_year, projectId: existing?.id ?? null,
+    }) : null;
+
     const form = h('form', { class: 'portal-form', novalidate: true },
       field({ label: 'Event title', name: 'title', required: true, maxlength: 140, value: existing?.title }),
       h('div', { class: 'field-pair' },
@@ -106,6 +121,7 @@ async function start(): Promise<void> {
         field({ label: 'Website path', name: 'site_path', value: existing?.site_path, placeholder: '/projects/…/' }),
         field({ label: 'Repository', name: 'repo_url', type: 'url', value: existing?.repo_url }),
       ),
+      registrationBlock?.element ?? null,
     ) as HTMLFormElement;
 
     const modal = dialog(existing ? `Edit event — ${existing.title}` : 'Create event', form,
@@ -131,13 +147,39 @@ async function start(): Promise<void> {
             repo_url: textOf(values, 'repo_url') || null,
             visibility: textOf(values, 'visibility') as ContentVisibility,
           };
+          const wanted = registrationBlock?.read();
+          if (wanted?.enabled) {
+            // Reject an unusable worksheet name before the event is written,
+            // so a fixable typo never leaves an event without its form.
+            const problem = sheetNameProblem(wanted.sheet_name);
+            if (problem) { toast(problem, 'err'); return; }
+          }
+
           const client = requireClient();
           const result = existing
             ? await client.rpc('advisor_update_event', { event_id: existing.id, ...args })
             : await client.rpc('advisor_create_event', args);
           if (result.error) throw new Error(readableError(result.error));
+
+          // The event is saved. Registration is a second step on purpose: it
+          // talks to Google, and a worksheet that could not be created must
+          // not undo an event that was.
+          const projectId = existing?.id ?? (result.data as string | null);
+          let registrationNote = '';
+          if (wanted && projectId && (wanted.enabled || registration)) {
+            try {
+              registrationNote = provisionSummary(await provisionRegistration({
+                project_id: projectId, enabled: wanted.enabled,
+                template_key: wanted.template_key, sheet_name: wanted.sheet_name, label: title,
+              }));
+            } catch (error) {
+              registrationNote = `Event saved, but registration setup failed: ${message(error)}`;
+            }
+          }
+
           modal.close();
-          toast(existing ? 'Event updated.' : 'Event created and assigned to you.');
+          toast(registrationNote || (existing ? 'Event updated.' : 'Event created and assigned to you.'),
+            registrationNote.includes('failed') ? 'err' : 'ok');
           pages.activities = 1;
           await draw();
         }, 'primary')));
@@ -160,8 +202,20 @@ async function start(): Promise<void> {
   }
 
   async function openEdit(id: string): Promise<void> {
-    try { eventEditor(await loadEvent(id)); }
-    catch (error) { toast(`Could not open event: ${message(error)}`, 'err'); }
+    try {
+      const event = await loadEvent(id);
+      const [templates, registration] = await Promise.all([
+        registrationTemplates(), eventRegistrationForm(id),
+      ]);
+      const locked = registration ? await registrationFormLocked(registration.event_key) : false;
+      eventEditor(event, templates, registration, locked);
+    } catch (error) { toast(`Could not open event: ${message(error)}`, 'err'); }
+  }
+
+  /** Creating: no event exists yet, so there is no form to read — only shapes. */
+  async function openCreate(): Promise<void> {
+    try { eventEditor(null, await registrationTemplates()); }
+    catch (error) { toast(`Could not open the event form: ${message(error)}`, 'err'); }
   }
 
   async function openDelete(id: string): Promise<void> {
@@ -213,7 +267,7 @@ async function start(): Promise<void> {
       render(content,
         pageHeader('ADVISORY INSTRUCTOR', `Welcome, ${displayName(viewer)}`,
           h('div', { class: 'button-row' },
-            action('CREATE EVENT', async () => eventEditor(null), 'primary'),
+            action('CREATE EVENT', openCreate, 'primary'),
             action('SYNC GOOGLE SHEET', async () => {
               try { await syncGoogleWorkbook(); }
               catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }

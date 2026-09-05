@@ -78,6 +78,21 @@ what is missing.
 
 The full platform-side procedure is `docs/SETUP.md` step 5b.
 
+## Adding a new event's registration
+
+The platform provisions the worksheet itself: an admin enables registration on
+an event, picks a template, and the tab is created with the right columns (see
+`docs/SETUP.md` step 5c). Nothing in this directory has to be edited for the
+worksheet to exist, for the records backup to show it, or for the import to
+read it.
+
+What still has to be added here is the **intake config** — the entry in
+`REGISTRATION_EVENTS` in `EventRegistration.gs` that says which fields the
+public form posts, which are required, and which must be unique. Copy the
+closest existing entry, set `sheet` to the worksheet name chosen in the admin
+UI, and redeploy the web app. Until then the public form has no endpoint that
+will accept it, though everything on the platform side is already in place.
+
 ## Security and operational limits
 
 The handler allows only `jam26` and `ctf30`; validates fields and exact headers;

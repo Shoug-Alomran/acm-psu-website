@@ -364,3 +364,117 @@ export async function readGoogleSheet(
 
   return (payload.values ?? []).map((row) => row.map((cell) => String(cell ?? '')));
 }
+
+/**
+ * Creates or verifies a public event registration worksheet.
+ *
+ * This is deliberately NOT pushToGoogleSheet. That function replaces a
+ * worksheet's contents, which is right for a Supabase snapshot and catastrophic
+ * for a registration tab: those rows are the only copy of somebody's signup
+ * until the mirror has seen them. So this function only ever adds — a missing
+ * tab, or a header row on a tab that has none — and refuses everything else.
+ *
+ * Three outcomes, and no fourth:
+ *
+ *   created   the worksheet did not exist; it now does, with these headings
+ *   seeded    the worksheet existed and was empty; row 1 now holds them
+ *   verified  the worksheet existed with exactly these headings; untouched
+ *
+ * Anything else — a worksheet whose row 1 disagrees — throws. A registration
+ * tab with unexpected columns is either a different event's data or a schema
+ * that has been edited by hand, and in both cases writing to it would put
+ * values in the wrong columns. The Apps Script applies the same rule before
+ * appending a row, so a mismatch stops registration rather than corrupting it.
+ *
+ * Styling is best-effort for the same reason it is in the setup script: a
+ * worksheet may be a Google Sheets Table whose typed columns reject formatting,
+ * and a plain worksheet that exists beats a styled one that failed. No filter
+ * is created or removed.
+ */
+export async function ensureEventWorksheet(
+  spreadsheetId: string, tabName: string, headers: string[],
+): Promise<{ status: 'created' | 'seeded' | 'verified'; warnings: string[] }> {
+  if (!headers.length) throw new Error('A registration worksheet needs at least one column.');
+
+  // The inverse of pushToGoogleSheet's guard. A registration tab must never be
+  // a canonical mirror name, because the snapshot sync clears those.
+  if (CANONICAL_TABS.has(tabName)) {
+    throw new Error(
+      `"${tabName}" is a Supabase mirror worksheet and is rebuilt on every records sync. ` +
+      'Choose a different registration worksheet name.',
+    );
+  }
+
+  const token = await accessToken();
+  const warnings: string[] = [];
+
+  const meta = await sheetsRequest(token, spreadsheetId, '') as {
+    sheets?: Array<{ properties: { title: string; sheetId: number } }>;
+  };
+  let sheet = meta.sheets?.find((s) => s.properties.title === tabName);
+  let status: 'created' | 'seeded' | 'verified';
+
+  if (!sheet) {
+    const created = await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
+      method: 'POST',
+      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tabName } } }] }),
+    }) as { replies?: Array<{ addSheet?: { properties: { title: string; sheetId: number } } }> };
+    const props = created.replies?.[0]?.addSheet?.properties;
+    if (!props) throw new Error(`Google did not report creating the worksheet "${tabName}".`);
+    sheet = { properties: props };
+    status = 'created';
+  } else {
+    // Read row 1 only. Nothing below it is read, compared or touched.
+    const existing = await sheetsRequest(
+      token, spreadsheetId,
+      `/values/${encodeURIComponent(tabName)}!1:1?valueRenderOption=FORMATTED_VALUE`,
+    ) as { values?: unknown[][] };
+    const row = (existing.values?.[0] ?? []).map((cell) => String(cell ?? '').trim());
+    // Trailing empty cells are how Sheets represents an unused column.
+    while (row.length && row[row.length - 1] === '') row.pop();
+
+    if (!row.length) {
+      status = 'seeded';
+    } else if (row.length === headers.length && row.every((cell, i) => cell === headers[i])) {
+      return { status: 'verified', warnings };
+    } else {
+      throw new Error(
+        `The worksheet "${tabName}" already exists with different columns, so it was left ` +
+        `untouched. In the sheet: ${row.join(' | ')}. Expected: ${headers.join(' | ')}. ` +
+        'Resolve the worksheet with an organizer, or choose another worksheet name.',
+      );
+    }
+  }
+
+  // Only ever row 1, and only on a worksheet proven to have none.
+  await sheetsRequest(
+    token, spreadsheetId,
+    `/values/${encodeURIComponent(tabName)}!A1?valueInputOption=RAW`,
+    { method: 'PUT', body: JSON.stringify({ values: [headers] }) },
+  );
+
+  const sheetId = sheet.properties.sheetId;
+  for (const request of [
+    { repeatCell: {
+      range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: headers.length },
+      cell: { userEnteredFormat: { backgroundColor: { red: 0.11, green: 0.23, blue: 0.18 },
+        textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
+      fields: 'userEnteredFormat(backgroundColor,textFormat)',
+    } },
+    { updateSheetProperties: {
+      properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
+      fields: 'gridProperties.frozenRowCount',
+    } },
+  ]) {
+    try {
+      await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
+        method: 'POST', body: JSON.stringify({ requests: [request] }),
+      });
+    } catch (error) {
+      warnings.push(`${tabName}: header styling was not applied — ` +
+        `${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  return { status, warnings };
+}

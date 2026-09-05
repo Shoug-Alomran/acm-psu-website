@@ -14,6 +14,18 @@ import {
 } from '../lib/dom.js';
 
 import {
+  registrationSection,
+  registrationTemplates,
+  eventRegistrationForm,
+  registrationFormLocked,
+  provisionRegistration,
+  provisionSummary,
+  sheetNameProblem,
+  type RegistrationTemplate,
+  type RegistrationForm,
+} from '../lib/registration-setup.js';
+
+import {
   shell,
   pageHeader,
   panel,
@@ -216,11 +228,75 @@ async function start(): Promise<void> {
       'project',
     );
 
+  /*
+   * Opening the editor loads the registration context first: the shapes on
+   * offer, the form this event already has, and whether that form is settled
+   * by registrations that already exist. A failure here opens the editor
+   * without the registration block rather than refusing to open it — editing
+   * a title should not depend on Google.
+   */
+  async function openProjectEditor(
+    existing: Project | null,
+  ): Promise<void> {
+    try {
+      const templates =
+        await registrationTemplates();
+
+      const registration =
+        existing
+          ? await eventRegistrationForm(
+              existing.id,
+            )
+          : null;
+
+      const locked =
+        registration
+          ? await registrationFormLocked(
+              registration.event_key,
+            )
+          : false;
+
+      projectEditor(
+        existing,
+        templates,
+        registration,
+        locked,
+      );
+    } catch (error) {
+      console.warn(
+        'Registration setup is unavailable:',
+        error,
+      );
+
+      projectEditor(existing);
+    }
+  }
+
   /* ------------------------------------------------------------ project form */
 
   function projectEditor(
     existing: Project | null,
+    templates: RegistrationTemplate[] = [],
+    registration: RegistrationForm | null = null,
+    registrationLocked = false,
   ): void {
+    /*
+     * Registration belongs to events. A project can be turned into an event
+     * with the Kind select, so the block follows that choice rather than the
+     * value it happened to have when the dialog opened.
+     */
+    const registrationBlock =
+      templates.length
+        ? registrationSection({
+            templates,
+            existing: registration,
+            locked: registrationLocked,
+            title: existing?.title ?? '',
+            term: existing?.chapter_year,
+            projectId: existing?.id ?? null,
+          })
+        : null;
+
     const form = h(
       'form',
       {
@@ -367,7 +443,35 @@ async function start(): Promise<void> {
           },
         ],
       }),
+
+      registrationBlock
+        ?.element ??
+        null,
     ) as HTMLFormElement;
+
+    const kindControl =
+      form.elements.namedItem(
+        'kind',
+      ) as HTMLSelectElement | null;
+
+    function paintRegistration(): void {
+      if (
+        !registrationBlock
+      ) {
+        return;
+      }
+
+      registrationBlock.element.hidden =
+        (kindControl?.value ??
+          'event') !== 'event';
+    }
+
+    paintRegistration();
+
+    kindControl?.addEventListener(
+      'change',
+      paintRegistration,
+    );
 
     const modal =
       dialog(
@@ -577,12 +681,81 @@ async function start(): Promise<void> {
                   );
                 }
 
+                /*
+                 * The project is saved. Registration is a separate step
+                 * because it talks to Google, and a worksheet that could not
+                 * be created must never undo a project that was.
+                 */
+                const wanted =
+                  registrationBlock?.read();
+
+                const isEvent =
+                  (kindControl?.value ??
+                    'event') === 'event';
+
+                let registrationNote =
+                  '';
+
+                if (
+                  wanted &&
+                  isEvent &&
+                  (existing?.id ??
+                    selectedId) &&
+                  (wanted.enabled ||
+                    registration)
+                ) {
+                  const problem =
+                    wanted.enabled
+                      ? sheetNameProblem(
+                          wanted.sheet_name,
+                        )
+                      : null;
+
+                  if (problem) {
+                    registrationNote =
+                      problem;
+                  } else {
+                    try {
+                      registrationNote =
+                        provisionSummary(
+                          await provisionRegistration(
+                            {
+                              project_id:
+                                (existing?.id ??
+                                  selectedId) as string,
+                              enabled:
+                                wanted.enabled,
+                              template_key:
+                                wanted.template_key,
+                              sheet_name:
+                                wanted.sheet_name,
+                              label:
+                                title,
+                            },
+                          ),
+                        );
+                    } catch (registrationError) {
+                      registrationNote = `Saved, but registration setup failed: ${
+                        registrationError instanceof Error
+                          ? registrationError.message
+                          : String(registrationError)
+                      }`;
+                    }
+                  }
+                }
+
                 modal.close();
 
                 toast(
-                  existing
-                    ? 'Project updated.'
-                    : 'Project created.',
+                  registrationNote ||
+                    (existing
+                      ? 'Project updated.'
+                      : 'Project created.'),
+                  registrationNote.includes(
+                    'failed',
+                  )
+                    ? 'err'
+                    : 'ok',
                 );
 
                 void bestEffortFunctionSync(
@@ -1477,7 +1650,7 @@ async function start(): Promise<void> {
 
                   onclick:
                     () =>
-                      projectEditor(
+                      void openProjectEditor(
                         selected,
                       ),
                 },
@@ -1970,7 +2143,7 @@ async function start(): Promise<void> {
 
               onclick:
                 () =>
-                  projectEditor(
+                  void openProjectEditor(
                     null,
                   ),
             },
