@@ -389,12 +389,15 @@ async function start(): Promise<void> {
     }
   }
 
+  // Faculty lead the roster, above the student Executive Council.
   if (faculty.length) {
-    roster.appendChild(h('div', { class: 'section-label' },
-      h('h2', 'Faculty Advisors'),
-      h('span', { class: 'mono-meta' },
-        `LEVEL_00 // ${faculty.length} RECORD${faculty.length === 1 ? '' : 'S'}`)));
-    roster.appendChild(h('div', { class: 'members-grid' }, faculty.map(build)));
+    roster.prepend(
+      h('div', { class: 'section-label' },
+        h('h2', 'Faculty Advisors'),
+        h('span', { class: 'mono-meta' },
+          `LEVEL_00 // ${faculty.length} RECORD${faculty.length === 1 ? '' : 'S'}`)),
+      h('div', { class: 'members-grid' }, faculty.map(build)),
+    );
   }
 
   document.dispatchEvent(new CustomEvent('acm:rosterupdated'));

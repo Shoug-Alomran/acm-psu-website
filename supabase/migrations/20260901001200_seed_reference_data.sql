@@ -13,23 +13,25 @@
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
--- Positions. Ranks leave gaps so a future committee can slot new roles in
--- without renumbering the whole list.
+-- Positions. Rank is banded by organization level — executive 1-99, lead
+-- 101-199, committee 201-299, general 301-399 — and roles sit ten apart inside
+-- their band so a future committee can slot new roles in without renumbering
+-- the whole list. See 20260905130000_position_rank_bands.sql.
 -- ---------------------------------------------------------------------------
 insert into public.positions (slug, title, title_ar, category, rank, description) values
-    ('president',           'President',                'رئيس النادي',        'executive',  10, 'Leads the chapter and represents it to the university.'),
-    ('vice-president',      'Vice President',           'نائب الرئيس',        'executive',  20, 'Deputises for the president and coordinates initiatives.'),
-    ('secretary',           'Secretary',                'أمين السر',          'executive',  30, 'Keeps records, minutes and official correspondence.'),
-    ('treasurer',           'Treasurer',                'أمين الصندوق',       'executive',  40, 'Manages budget and reimbursements.'),
-    ('events-coordinator',  'Events Coordinator',       'منسق الفعاليات',     'lead',       50, 'Plans and runs chapter events.'),
-    ('cybersecurity-lead',  'Cybersecurity Lead',       'قائد الأمن السيبراني','lead',       60, 'Leads CTF and security programming.'),
-    ('web-development-lead','Web Development Lead',     'قائد تطوير الويب',   'lead',       70, 'Owns the website and digital archive.'),
-    ('media-lead',          'Media Lead',               'قائد الإعلام',       'lead',       80, 'Design, photography and communications.'),
-    ('workshop-lead',       'Workshop Lead',            'قائد الورش',         'lead',       90, 'Develops and delivers workshop material.'),
-    ('committee-member',    'Committee Member',         'عضو اللجنة',         'committee', 100, 'Serves on an organising committee.'),
-    ('member',              'Member',                   'عضو',                'general',   200, 'General assembly member.'),
-    ('volunteer',           'Volunteer',                'متطوع',              'general',   210, 'Helps on specific events.'),
-    ('faculty-advisor',     'Faculty Advisor',          'المشرف الأكاديمي',   'executive',   5, 'Faculty oversight of the chapter.')
+    ('faculty-advisor',     'Faculty Advisor',          'المشرف الأكاديمي',   'executive',  10, 'Faculty oversight of the chapter.'),
+    ('president',           'President',                'رئيس النادي',        'executive',  20, 'Leads the chapter and represents it to the university.'),
+    ('vice-president',      'Vice President',           'نائب الرئيس',        'executive',  30, 'Deputises for the president and coordinates initiatives.'),
+    ('secretary',           'Secretary',                'أمين السر',          'executive',  40, 'Keeps records, minutes and official correspondence.'),
+    ('treasurer',           'Treasurer',                'أمين الصندوق',       'executive',  50, 'Manages budget and reimbursements.'),
+    ('events-coordinator',  'Events Coordinator',       'منسق الفعاليات',     'lead',      110, 'Plans and runs chapter events.'),
+    ('cybersecurity-lead',  'Cybersecurity Lead',       'قائد الأمن السيبراني','lead',      120, 'Leads CTF and security programming.'),
+    ('web-development-lead','Web Development Lead',     'قائد تطوير الويب',   'lead',      130, 'Owns the website and digital archive.'),
+    ('media-lead',          'Media Lead',               'قائد الإعلام',       'lead',      140, 'Design, photography and communications.'),
+    ('workshop-lead',       'Workshop Lead',            'قائد الورش',         'lead',      150, 'Develops and delivers workshop material.'),
+    ('committee-member',    'Committee Member',         'عضو اللجنة',         'committee', 210, 'Serves on an organising committee.'),
+    ('member',              'Member',                   'عضو',                'general',   310, 'General assembly member.'),
+    ('volunteer',           'Volunteer',                'متطوع',              'general',   320, 'Helps on specific events.')
 on conflict (slug) do nothing;
 
 -- ---------------------------------------------------------------------------

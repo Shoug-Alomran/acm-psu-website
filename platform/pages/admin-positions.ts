@@ -28,6 +28,58 @@ const CATEGORIES = [
   { value: 'general', label: 'General club role' },
 ];
 
+/*
+ * Display rank is derived from the organization level rather than typed from
+ * nothing. Each level owns a hundred-wide band, so the stored number always
+ * agrees with the level shown next to it and the catalogue sorts into real
+ * hierarchy order. Roles are spaced ten apart inside a band, which leaves room
+ * to slot a new role between two existing ones without renumbering the list.
+ */
+const RANK_BANDS: Record<string, number> = {
+  executive: 0,
+  lead: 100,
+  committee: 200,
+  general: 300,
+};
+
+const RANK_BAND_SIZE = 100;
+const RANK_STEP = 10;
+
+function bandOf(category: string): number {
+  return RANK_BANDS[category] ?? RANK_BANDS.general!;
+}
+
+function inBand(rank: number, category: string): boolean {
+  const base = bandOf(category);
+  return rank > base && rank < base + RANK_BAND_SIZE;
+}
+
+function bandRange(category: string): string {
+  const base = bandOf(category);
+  return `${base + 1}–${base + RANK_BAND_SIZE - 1}`;
+}
+
+/**
+ * The rank a role should carry for a given level.
+ *
+ * An existing role that is not changing level keeps the number an admin
+ * already chose. Anything else — a new role, or one being moved to another
+ * level — lands at the end of its band, spaced a step past the last role
+ * there. This is what stops the column filling up with repeated defaults.
+ */
+function rankFor(category: string, all: Position[], existing: Position | null): number {
+  if (existing && existing.category === category && inBand(existing.rank, category)) {
+    return existing.rank;
+  }
+  const base = bandOf(category);
+  const taken = all
+    .filter((position) => position.id !== existing?.id && position.category === category)
+    .map((position) => position.rank)
+    .filter((rank) => inBand(rank, category));
+  const last = taken.length ? Math.max(...taken) : base;
+  return Math.min(last + RANK_STEP, base + RANK_BAND_SIZE - 1);
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null && 'message' in error &&
@@ -83,23 +135,42 @@ async function start(): Promise<void> {
   const viewer = await requireAdmin('club_admin');
   const content = shell(viewer, 'admin', 'Club Organization');
 
-  function editor(existing: Position | null): void {
+  function editor(existing: Position | null, all: Position[]): void {
+    const startCategory = existing?.category ?? 'general';
+
+    const categoryField = field({
+      label: 'Organization level', name: 'category', type: 'select',
+      value: startCategory, options: CATEGORIES,
+    });
+    const rankField = field({
+      label: 'Display rank', name: 'rank', type: 'number',
+      value: String(rankFor(startCategory, all, existing)),
+      hint: `Lower sorts first, within the level's band. ${bandRange(startCategory)} for this level.`,
+    });
+
+    /*
+     * The rank follows the level. Changing the level re-slots the role into
+     * that level's band, so the two controls can never be saved contradicting
+     * each other; the number stays editable for ordering inside the band.
+     */
+    const categoryInput = categoryField.querySelector('select') as HTMLSelectElement | null;
+    const rankInput = rankField.querySelector('input') as HTMLInputElement | null;
+    const rankHint = rankField.querySelector('.field-hint');
+    categoryInput?.addEventListener('change', () => {
+      const category = categoryInput.value;
+      if (rankInput) rankInput.value = String(rankFor(category, all, existing));
+      if (rankHint) {
+        rankHint.textContent =
+          `Lower sorts first, within the level's band. ${bandRange(category)} for this level.`;
+      }
+    });
+
     const form = h('form', { class: 'portal-form', novalidate: true },
       h('div', { class: 'field-pair' },
         field({ label: 'Title', name: 'title', required: true, maxlength: 80, value: existing?.title }),
         field({ label: 'Title (Arabic)', name: 'title_ar', maxlength: 80, value: existing?.title_ar }),
       ),
-      h('div', { class: 'field-pair' },
-        field({
-          label: 'Organization level', name: 'category', type: 'select',
-          value: existing?.category ?? 'general', options: CATEGORIES,
-        }),
-        field({
-          label: 'Display rank', name: 'rank', type: 'number',
-          value: String(existing?.rank ?? 100),
-          hint: 'Lower sorts first. Executive roles use small numbers.',
-        }),
-      ),
+      h('div', { class: 'field-pair' }, categoryField, rankField),
       field({
         label: 'Seat capacity', name: 'max_holders', type: 'number', min: '1',
         value: existing?.max_holders === null || existing?.max_holders === undefined
@@ -122,7 +193,15 @@ async function start(): Promise<void> {
           const values = formValues(form);
           const title = textOf(values, 'title').trim();
           if (!title) { toast('Enter a position title.', 'err'); return; }
+          const category = textOf(values, 'category');
           const rawRank = Number(textOf(values, 'rank'));
+          if (!Number.isInteger(rawRank) || !inBand(rawRank, category)) {
+            toast(
+              `Display rank must be a whole number in ${bandRange(category)} for this organization level.`,
+              'err',
+            );
+            return;
+          }
           const capacityText = textOf(values, 'max_holders').trim();
           const rawCapacity = capacityText ? Number(capacityText) : null;
           if (rawCapacity !== null && (!Number.isInteger(rawCapacity) || rawCapacity < 1)) {
@@ -132,8 +211,8 @@ async function start(): Promise<void> {
           const patch = {
             title,
             title_ar: textOf(values, 'title_ar') || null,
-            category: textOf(values, 'category'),
-            rank: Number.isFinite(rawRank) ? rawRank : 100,
+            category,
+            rank: rawRank,
             max_holders: rawCapacity,
             description: textOf(values, 'description') || null,
           };
@@ -465,7 +544,7 @@ async function start(): Promise<void> {
                 hasOpenSeat(position, held.length)
                   ? action('ASSIGN', async () => assignmentDialog(position, allUsers, held), 'primary')
                   : h('span', { class: 'position-actions__placeholder', 'aria-hidden': 'true' }),
-                h('button', { type: 'button', class: 'btn-ghost', onclick: () => editor(position) }, 'EDIT'),
+                h('button', { type: 'button', class: 'btn-ghost', onclick: () => editor(position, all) }, 'EDIT'),
                 action(position.is_active ? 'ARCHIVE' : 'RESTORE', async () => {
                   try {
                     const { error } = await requireClient().from('positions').update({
@@ -522,7 +601,7 @@ async function start(): Promise<void> {
         pageHeader('ADMIN / CLUB ORGANIZATION', 'Club organization roles',
           h('button', {
             type: 'button', class: 'btn-submit', style: { marginTop: '0' },
-            onclick: () => editor(null),
+            onclick: () => editor(null, all),
           }, 'New club role'),
         ),
         h('div', { class: 'position-summary' },
