@@ -85,16 +85,21 @@
             '.faculty-advisor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;}' +
             '.faculty-advisor-card{border:1px solid var(--border-color);background:rgba(10,10,13,.72);padding:1.1rem 1.2rem;}' +
             '.faculty-advisor-card h3{margin:0 0 .35rem;font-size:1rem;}' +
-            '.upcoming-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;}' +
-            '.upcoming-card{border:1px solid var(--border-color);background:rgba(10,10,13,.78);padding:1.35rem;display:flex;flex-direction:column;gap:.85rem;min-height:220px;}' +
-            '.upcoming-card:hover{border-color:rgba(59,130,246,.45);}' +
-            '.upcoming-card-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;}' +
-            '.upcoming-card h3{font-size:1.15rem;margin:0;}' +
-            '.upcoming-date{color:var(--accent-blue);white-space:nowrap;}' +
-            '.upcoming-card p{color:var(--text-muted);margin:0;line-height:1.65;}' +
-            '.upcoming-card .project-links{margin-top:auto;}' +
+            '.upcoming-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:stretch;}' +
+            '.upcoming-card{position:relative;overflow:hidden;border:1px solid var(--border-color);background:linear-gradient(180deg,rgba(16,22,34,.82),rgba(7,8,12,.94));padding:1.5rem 1.6rem;display:flex;flex-direction:column;min-height:0;transition:border-color .18s ease,transform .18s ease,background .18s ease;}' +
+            '.upcoming-card::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent-blue);opacity:.72;}' +
+            '.upcoming-card:hover{border-color:rgba(59,130,246,.5);background:linear-gradient(180deg,rgba(18,27,43,.9),rgba(7,8,12,.96));transform:translateY(-2px);}' +
+            '.upcoming-card-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1.25rem;align-items:start;}' +
+            '.upcoming-card-head>div{display:grid;gap:.7rem;align-content:start;}' +
+            '.upcoming-card .tag{justify-self:start;}' +
+            '.upcoming-card h3{font-size:clamp(1.25rem,1.65vw,1.65rem);line-height:1.15;margin:0;max-width:23ch;letter-spacing:-.02em;}' +
+            '.upcoming-date{color:var(--accent-blue);white-space:nowrap;font-size:.78rem;letter-spacing:.12em;padding-top:.18rem;}' +
+            '.upcoming-card p{color:var(--text-muted);margin:1.2rem 0 1.35rem;line-height:1.65;font-size:.98rem;max-width:58ch;}' +
+            '.upcoming-card .project-links{margin-top:0;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07);}' +
+            '.upcoming-card .link-arrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.78rem;letter-spacing:.08em;}' +
             '.join-benefit-link{color:var(--accent-blue);text-decoration:underline;text-underline-offset:3px;}' +
-            '@media(max-width:900px){.upcoming-grid{grid-template-columns:1fr}.faculty-advisor-grid{grid-template-columns:1fr}}';
+            '@media(max-width:900px){.upcoming-grid{grid-template-columns:1fr}.faculty-advisor-grid{grid-template-columns:1fr}}' +
+            '@media(max-width:560px){.upcoming-card{padding:1.25rem}.upcoming-card-head{grid-template-columns:1fr;gap:.75rem}.upcoming-date{grid-row:1}.upcoming-card h3{max-width:none}}';
         document.head.appendChild(style);
     }
 
@@ -520,7 +525,8 @@
             if (event.key === 'Escape') { event.preventDefault(); closeSearch(); }
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 event.preventDefault();
-                if (!filtered.length) { return; }
+                if (!filtered.length) { return;
+                }
                 activeIndex = (activeIndex + (event.key === 'ArrowDown' ? 1 : -1) + filtered.length) % filtered.length;
                 render();
             }
