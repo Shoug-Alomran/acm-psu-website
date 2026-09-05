@@ -1,4 +1,4 @@
-/* ACM PSU — shared behaviour: scroll reveals, mobile nav, footer clock. */
+/* ACM PSU — shared behaviour: scroll reveals, mobile nav, footer clock, public data. */
 
 (function () {
     'use strict';
@@ -69,6 +69,337 @@
     /* Current year in the footer copyright. */
     document.querySelectorAll('[data-current-year]').forEach(function (el) {
         el.textContent = String(new Date().getFullYear());
+    });
+
+    function isArabic() {
+        return document.documentElement.lang === 'ar';
+    }
+
+    function injectPublicEnhancementStyles() {
+        if (document.getElementById('acm-public-enhancements')) return;
+        var style = document.createElement('style');
+        style.id = 'acm-public-enhancements';
+        style.textContent = '' +
+            '.leadership-label{margin:0 0 1rem;color:var(--text-muted);}' +
+            '.faculty-advisors{margin-top:2rem;border-top:1px solid var(--border-color);padding-top:1.5rem;}' +
+            '.faculty-advisor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;}' +
+            '.faculty-advisor-card{border:1px solid var(--border-color);background:rgba(10,10,13,.72);padding:1.1rem 1.2rem;}' +
+            '.faculty-advisor-card h3{margin:0 0 .35rem;font-size:1rem;}' +
+            '.upcoming-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;}' +
+            '.upcoming-card{border:1px solid var(--border-color);background:rgba(10,10,13,.78);padding:1.35rem;display:flex;flex-direction:column;gap:.85rem;min-height:220px;}' +
+            '.upcoming-card:hover{border-color:rgba(59,130,246,.45);}' +
+            '.upcoming-card-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;}' +
+            '.upcoming-card h3{font-size:1.15rem;margin:0;}' +
+            '.upcoming-date{color:var(--accent-blue);white-space:nowrap;}' +
+            '.upcoming-card p{color:var(--text-muted);margin:0;line-height:1.65;}' +
+            '.upcoming-card .project-links{margin-top:auto;}' +
+            '.join-benefit-link{color:var(--accent-blue);text-decoration:underline;text-underline-offset:3px;}' +
+            '@media(max-width:900px){.upcoming-grid{grid-template-columns:1fr}.faculty-advisor-grid{grid-template-columns:1fr}}';
+        document.head.appendChild(style);
+    }
+
+    function applyHomeCopy() {
+        if (!document.body || !document.querySelector('#about')) return;
+        var ar = isArabic();
+        var focusItems = document.querySelectorAll('#about .focus-item');
+        var focusCopy = ar ? [
+            ['هندسة البرمجيات', 'ويب · فل ستاك · تطوير بمساعدة الذكاء الاصطناعي'],
+            ['البرمجة', 'حل المشكلات · الخوارزميات · المسابقات'],
+            ['الأمن السيبراني', 'ويب · تشفير · أدلة رقمية · OSINT'],
+            ['الورش والفعاليات', 'تعلّم · ابنِ · علّم · نافس']
+        ] : [
+            ['Software Engineering', 'WEB · FULL STACK · AI-ASSISTED DEVELOPMENT'],
+            ['Programming', 'PROBLEM SOLVING · ALGORITHMS · COMPETITIONS'],
+            ['Cybersecurity', 'WEB · CRYPTO · FORENSICS · OSINT'],
+            ['Workshops & Events', 'LEARN · BUILD · TEACH · COMPETE']
+        ];
+        focusItems.forEach(function (item, index) {
+            if (!focusCopy[index]) return;
+            var title = item.querySelector('.focus-title');
+            var meta = item.querySelector('.focus-meta');
+            if (title) title.textContent = focusCopy[index][0];
+            if (meta) meta.textContent = focusCopy[index][1];
+        });
+
+        var teamHeading = document.querySelector('#team .section-header h2');
+        if (teamHeading) teamHeading.textContent = ar ? 'القيادة الحالية' : 'Current Leadership';
+        var teamGrid = document.querySelector('#team .team-grid');
+        if (teamGrid && !document.querySelector('[data-student-leadership-label]')) {
+            var label = document.createElement('p');
+            label.className = 'mono-meta leadership-label';
+            label.dataset.studentLeadershipLabel = 'true';
+            teamGrid.parentNode.insertBefore(label, teamGrid);
+        }
+        var studentLabel = document.querySelector('[data-student-leadership-label]');
+        if (studentLabel) studentLabel.textContent = ar ? 'القيادة الطلابية' : 'STUDENT LEADERSHIP';
+
+        var endingButton = document.querySelector('#join .btn-primary');
+        if (endingButton) {
+            var svg = endingButton.querySelector('svg');
+            endingButton.childNodes[0].nodeValue = ar ? 'انضم إلى ACM ' : 'Join ACM PSU ';
+            if (svg) endingButton.appendChild(svg);
+        }
+    }
+
+    function applyJoinCopy() {
+        var hero = document.querySelector('.membership-hero');
+        if (!hero || !/join\.html$/.test(window.location.pathname)) return;
+        var ar = isArabic();
+        var title = hero.querySelector('.page-title');
+        var intro = hero.querySelector('.membership-intro');
+        if (title) title.textContent = ar ? 'انضم إلى ACM PSU' : 'Join ACM PSU';
+        if (intro) intro.textContent = ar
+            ? 'قدّم للانضمام إلى نادي ACM في جامعة الأمير سلطان. أنشئ حسابك، أرسل طلبك، وتابع حالته من بوابة الأعضاء.'
+            : 'Apply to join the ACM student chapter at Prince Sultan University. Create your account, submit your application, and track its status from the member portal.';
+
+        var benefits = hero.querySelector('.benefits-list');
+        if (benefits && benefits.closest('.sidebar-section') && benefits.closest('.sidebar-section').querySelector('h3')) {
+            var heading = benefits.closest('.sidebar-section').querySelector('h3');
+            heading.textContent = ar ? 'مزايا العضوية' : 'MEMBERSHIP_BENEFITS';
+            benefits.innerHTML = ar ?
+                '<li class="benefit-item"><span class="benefit-icon">01</span><span class="benefit-text">المشاركة في <b>ورش ACM والفعاليات والمسابقات التقنية</b>.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">02</span><span class="benefit-text">التقديم على <b>أدوار تنظيم الفعاليات والمشاريع</b> من خلال بوابة الأعضاء.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">03</span><span class="benefit-text">بناء سجل موثق لمساهماتك في <b>المشاريع والورش والفعاليات</b>.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">04</span><span class="benefit-text">تطوير خبرة عملية في <b>البرمجة والأمن السيبراني والعرض وتنظيم الفعاليات</b>.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">05</span><span class="benefit-text">إمكانية الحصول على <a class="join-benefit-link" href="https://www.acm.org/" target="_blank" rel="noopener">اشتراك ACM.org</a> مقدم عبر النادي.</span></li>' :
+                '<li class="benefit-item"><span class="benefit-icon">01</span><span class="benefit-text">Take part in <b>ACM workshops, events, and technical competitions</b>.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">02</span><span class="benefit-text">Apply for <b>event and project organizing roles</b> through the member portal.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">03</span><span class="benefit-text">Build a verified record of your <b>projects, workshops, and event contributions</b>.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">04</span><span class="benefit-text">Gain practical experience in <b>programming, cybersecurity, presenting, and event organization</b>.</span></li>' +
+                '<li class="benefit-item"><span class="benefit-icon">05</span><span class="benefit-text">Receive access to an <a class="join-benefit-link" href="https://www.acm.org/" target="_blank" rel="noopener">ACM.org membership subscription</a> provided through the club.</span></li>';
+        }
+
+        var faqItems = hero.querySelectorAll('.faq-item');
+        if (faqItems[1]) {
+            var q1 = faqItems[1].querySelector('.faq-trigger');
+            var a1 = faqItems[1].querySelector('.faq-content');
+            if (q1) {
+                var q1svg = q1.querySelector('svg');
+                q1.childNodes[0].nodeValue = ar ? 'كم يتطلب من الوقت؟ ' : 'What is the time commitment? ';
+                if (q1svg) q1.appendChild(q1svg);
+            }
+            if (a1) a1.textContent = ar
+                ? 'يعتمد الوقت على الفعاليات أو المشاريع أو الأدوار التي تختارينها، ويتم توضيح التوقعات لكل نشاط.'
+                : 'The time commitment depends on the events, projects, or roles you choose. Expectations are communicated for each activity.';
+        }
+        if (faqItems[2]) {
+            var q2 = faqItems[2].querySelector('.faq-trigger');
+            var a2 = faqItems[2].querySelector('.faq-content');
+            if (q2) {
+                var q2svg = q2.querySelector('svg');
+                q2.childNodes[0].nodeValue = ar ? 'متى يفتح التقديم؟ ' : 'When is recruitment open? ';
+                if (q2svg) q2.appendChild(q2svg);
+            }
+            if (a2) a2.textContent = ar
+                ? 'يفتح التقديم حسب دورة التجنيد الحالية. إذا كان التقديم مفتوحًا، استخدمي زر التقديم في هذه الصفحة؛ وإذا كان مغلقًا فتواصلي مع اللجنة.'
+                : 'Recruitment opens by cycle. If applications are open, use the application button on this page; otherwise contact the committee.';
+        }
+
+        var preflight = hero.querySelector('.preflight-list');
+        if (preflight) {
+            preflight.innerHTML = ar
+                ? '[✓] طالبة نشطة في PSU<br>[✓] بريد PSU<br>[✓] استعداد للتعلم والمشاركة<br>[ ] تم إرسال الطلب'
+                : '[✓] ACTIVE PSU STUDENT<br>[✓] PSU EMAIL ADDRESS<br>[✓] WILLINGNESS TO LEARN & CONTRIBUTE<br>[ ] APPLICATION SUBMITTED';
+        }
+    }
+
+    function ensureEnv(callback) {
+        if (window.ACM_ENV && window.ACM_ENV.supabaseUrl && window.ACM_ENV.supabaseAnonKey) {
+            callback(window.ACM_ENV);
+            return;
+        }
+        var existing = document.querySelector('script[data-acm-env-loader]');
+        if (existing) {
+            existing.addEventListener('load', function () { if (window.ACM_ENV) callback(window.ACM_ENV); }, { once: true });
+            return;
+        }
+        var script = document.createElement('script');
+        script.src = '/assets/js/app/env.js?v=20260905-1';
+        script.dataset.acmEnvLoader = 'true';
+        script.addEventListener('load', function () { if (window.ACM_ENV) callback(window.ACM_ENV); }, { once: true });
+        document.head.appendChild(script);
+    }
+
+    function apiGet(env, path) {
+        return fetch(env.supabaseUrl + '/rest/v1/' + path, {
+            headers: {
+                apikey: env.supabaseAnonKey,
+                Authorization: 'Bearer ' + env.supabaseAnonKey,
+                Accept: 'application/json'
+            }
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Public data request failed');
+            return response.json();
+        });
+    }
+
+    function formatEventDate(value) {
+        if (!value) return 'TBA';
+        var date = new Date(value + 'T12:00:00');
+        return date.toLocaleDateString(isArabic() ? 'ar-SA' : 'en-GB', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        }).toUpperCase();
+    }
+
+    function eventStatusLabel(status) {
+        if (isArabic()) return status === 'planning' ? 'قيد التخطيط' : 'نشط';
+        return status === 'planning' ? 'PLANNING' : 'ACTIVE';
+    }
+
+    function renderUpcomingEvents(events) {
+        var about = document.querySelector('#about');
+        if (!about) return;
+        var section = document.querySelector('#upcoming-events');
+        if (!section) {
+            section = document.createElement('section');
+            section.id = 'upcoming-events';
+            section.className = 'container reveal active';
+            section.innerHTML = '<div class="section-header"><h2></h2><span class="mono-meta"></span></div><div class="upcoming-grid" data-upcoming-grid></div>';
+            about.insertAdjacentElement('afterend', section);
+        }
+        section.querySelector('h2').textContent = isArabic() ? 'الفعاليات القادمة' : 'Upcoming Events';
+        section.querySelector('.section-header .mono-meta').textContent = isArabic() ? 'بيانات مباشرة من سجل ACM' : 'LIVE FROM ACM RECORDS';
+        var grid = section.querySelector('[data-upcoming-grid]');
+        var upcoming = events.filter(function (event) {
+            return event.starts_on && (event.status === 'active' || event.status === 'planning');
+        }).slice(0, 3);
+        if (!upcoming.length) {
+            grid.innerHTML = '<div class="note-card"><p>' + (isArabic() ? 'لا توجد فعاليات عامة قادمة مسجلة حاليًا.' : 'No upcoming public events are currently listed.') + '</p></div>';
+            return;
+        }
+        grid.innerHTML = upcoming.map(function (event) {
+            var href = event.external_url || event.site_path || 'projects.html';
+            var target = /^https?:\/\//.test(href) ? ' target="_blank" rel="noopener"' : '';
+            var title = isArabic() && event.title_ar ? event.title_ar : event.title;
+            return '<article class="upcoming-card">' +
+                '<div class="upcoming-card-head"><div><span class="mono-meta tag active">' + eventStatusLabel(event.status) + '</span><h3>' + escapeHtml(title || 'ACM Event') + '</h3></div><span class="mono-meta upcoming-date">' + formatEventDate(event.starts_on) + '</span></div>' +
+                '<p>' + escapeHtml(event.summary || (isArabic() ? 'فعالية عامة لنادي ACM في جامعة الأمير سلطان.' : 'A public ACM PSU event.')) + '</p>' +
+                '<div class="project-links"><a class="link-arrow" href="' + escapeAttribute(href) + '"' + target + '>' + (isArabic() ? 'عرض التفاصيل ↗' : 'View event ↗') + '</a></div>' +
+                '</article>';
+        }).join('');
+    }
+
+    function renderFacultyAdvisors(advisors) {
+        var team = document.querySelector('#team');
+        if (!team) return;
+        var block = team.querySelector('[data-faculty-advisors]');
+        if (!block) {
+            block = document.createElement('div');
+            block.className = 'faculty-advisors';
+            block.dataset.facultyAdvisors = 'true';
+            var teamGrid = team.querySelector('.team-grid');
+            if (teamGrid) teamGrid.insertAdjacentElement('afterend', block);
+        }
+        var publicAdvisors = advisors.filter(function (person) { return person.current_position === 'Faculty Advisor'; });
+        block.innerHTML = '<p class="mono-meta leadership-label">' + (isArabic() ? 'المستشارون الأكاديميون' : 'FACULTY ADVISORS') + '</p>' +
+            '<div class="faculty-advisor-grid">' + publicAdvisors.map(function (person) {
+                var detail = person.department || (isArabic() ? 'جامعة الأمير سلطان' : 'Prince Sultan University');
+                return '<div class="faculty-advisor-card"><h3>' + escapeHtml(person.name) + '</h3><div class="mono-meta"><span class="accent-text">' + (isArabic() ? 'مستشار أكاديمي' : 'Faculty Advisor') + '</span> // ' + escapeHtml(detail) + '</div></div>';
+            }).join('') + '</div>';
+    }
+
+    function syncSelectedWork(events) {
+        var cards = document.querySelectorAll('#projects .project-card');
+        cards.forEach(function (card) {
+            var titleEl = card.querySelector('.project-title');
+            if (!titleEl) return;
+            var event = events.find(function (row) { return row.title === titleEl.textContent.trim(); });
+            if (!event) return;
+            var dateMeta = card.querySelector('.meta-item:nth-child(2) .meta-value');
+            if (dateMeta && event.starts_on) dateMeta.textContent = formatEventDate(event.starts_on);
+            var eventLink = Array.prototype.find.call(card.querySelectorAll('a'), function (a) { return /Event Site/i.test(a.textContent); });
+            if (eventLink && event.external_url) eventLink.href = event.external_url;
+        });
+    }
+
+    function syncStructuredData(events) {
+        var script = document.querySelector('script[type="application/ld+json"]');
+        if (!script) return;
+        try {
+            var data = JSON.parse(script.textContent);
+            var graph = Array.isArray(data['@graph']) ? data['@graph'] : [];
+            graph = graph.filter(function (item) { return item['@type'] !== 'Event'; });
+            events.filter(function (event) {
+                return event.starts_on && (event.status === 'active' || event.status === 'planning');
+            }).forEach(function (event) {
+                var url = event.external_url || (event.site_path ? 'https://acm-psu.shoug-tech.com' + event.site_path : 'https://acm-psu.shoug-tech.com/projects.html');
+                graph.push({
+                    '@type': 'Event',
+                    name: event.title,
+                    description: event.summary || 'ACM PSU event.',
+                    startDate: event.starts_on,
+                    endDate: event.ends_on || event.starts_on,
+                    eventStatus: 'https://schema.org/EventScheduled',
+                    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+                    url: url,
+                    location: {
+                        '@type': 'Place',
+                        name: 'Prince Sultan University',
+                        address: {
+                            '@type': 'PostalAddress',
+                            addressLocality: 'Riyadh',
+                            addressCountry: 'SA'
+                        }
+                    },
+                    organizer: { '@id': 'https://acm-psu.shoug-tech.com/#chapter' }
+                });
+            });
+            data['@graph'] = graph;
+            script.textContent = JSON.stringify(data);
+        } catch (_) {
+            /* Leave the original structured data untouched if it cannot be parsed. */
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttribute(value) {
+        return escapeHtml(value).replace(/`/g, '&#096;');
+    }
+
+    var publicDataCache = { events: null, advisors: null };
+
+    function renderCachedPublicData() {
+        if (publicDataCache.events) {
+            renderUpcomingEvents(publicDataCache.events);
+            syncSelectedWork(publicDataCache.events);
+            syncStructuredData(publicDataCache.events);
+        }
+        if (publicDataCache.advisors) renderFacultyAdvisors(publicDataCache.advisors);
+    }
+
+    function loadHomePublicData() {
+        if (!document.querySelector('#about') || !document.querySelector('#team')) return;
+        ensureEnv(function (env) {
+            Promise.all([
+                apiGet(env, 'projects?select=title,title_ar,status,summary,starts_on,ends_on,site_path,external_url&visibility=eq.public&kind=eq.event&deleted_at=is.null&order=starts_on.asc'),
+                apiGet(env, 'public_member_directory?select=name,current_position,department,person_slug&current_position=eq.Faculty%20Advisor&order=name.asc')
+            ]).then(function (results) {
+                publicDataCache.events = results[0];
+                publicDataCache.advisors = results[1];
+                renderCachedPublicData();
+            }).catch(function () {
+                /* Public pages remain usable with their static content if live data is unavailable. */
+            });
+        });
+    }
+
+    injectPublicEnhancementStyles();
+    applyHomeCopy();
+    applyJoinCopy();
+    loadHomePublicData();
+
+    document.addEventListener('acm:languagechange', function () {
+        applyHomeCopy();
+        applyJoinCopy();
+        renderCachedPublicData();
     });
 
     /* Site-wide command-palette search. */
