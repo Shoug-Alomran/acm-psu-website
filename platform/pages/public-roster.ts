@@ -49,6 +49,20 @@ interface PublicRecord {
   [key: string]: unknown;
 }
 
+/**
+ * University roles that are faculty rather than chapter membership.
+ *
+ * The general assembly is the student body of the chapter. Instructors and
+ * staff appear in the public directory because they hold a chapter position
+ * (the directory view requires one of them), but they are not assembly
+ * members and must not be listed as though they were.
+ */
+const FACULTY_ROLES = new Set(['instructor', 'staff']);
+
+function isFaculty(member: PublicMember): boolean {
+  return FACULTY_ROLES.has(member.university_role ?? 'student');
+}
+
 function personSlug(value: string): string {
   return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -349,23 +363,40 @@ async function start(): Promise<void> {
 
   if (!fresh.length) return;
 
-  const grid = h('div', { class: 'members-grid' },
-    fresh.map((member) => card(
-      member, avatar(member), termsByUser.get(member.user_id) ?? [],
-      contributionsByUser.get(member.user_id) ?? [],
-      participationByUser.get(member.user_id) ?? [],
-    )));
+  const build = (member: PublicMember) => card(
+    member, avatar(member), termsByUser.get(member.user_id) ?? [],
+    contributionsByUser.get(member.user_id) ?? [],
+    participationByUser.get(member.user_id) ?? [],
+  );
 
-  // Replace the "roster pending" placeholder if it is still showing; otherwise
-  // append to whatever roster markup is already there.
-  const placeholder = roster.querySelector('.roster-empty');
-  if (placeholder) {
-    placeholder.replaceWith(grid);
-    const label = roster.querySelector('.section-label .mono-meta');
-    if (label) label.textContent = `LEVEL_02 // ${fresh.length} RECORDS`;
-  } else {
-    roster.appendChild(grid);
+  // Faculty are split out before anything is rendered. The assembly grid is
+  // the student roster; instructors and staff get their own section below it.
+  const students = fresh.filter((member) => !isFaculty(member));
+  const faculty = fresh.filter(isFaculty);
+
+  if (students.length) {
+    const grid = h('div', { class: 'members-grid' }, students.map(build));
+
+    // Replace the "roster pending" placeholder if it is still showing;
+    // otherwise append to whatever roster markup is already there.
+    const placeholder = roster.querySelector('.roster-empty');
+    if (placeholder) {
+      placeholder.replaceWith(grid);
+      const label = roster.querySelector('.section-label .mono-meta');
+      if (label) label.textContent = `LEVEL_02 // ${students.length} RECORDS`;
+    } else {
+      roster.appendChild(grid);
+    }
   }
+
+  if (faculty.length) {
+    roster.appendChild(h('div', { class: 'section-label' },
+      h('h2', 'Faculty Advisors'),
+      h('span', { class: 'mono-meta' },
+        `LEVEL_00 // ${faculty.length} RECORD${faculty.length === 1 ? '' : 'S'}`)));
+    roster.appendChild(h('div', { class: 'members-grid' }, faculty.map(build)));
+  }
+
   document.dispatchEvent(new CustomEvent('acm:rosterupdated'));
 }
 

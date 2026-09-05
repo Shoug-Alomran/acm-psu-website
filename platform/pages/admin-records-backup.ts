@@ -48,6 +48,33 @@ interface TreeFolder {
 }
 
 /**
+ * Which folders this browser has closed.
+ *
+ * Remembered across visits on purpose: the workbook grows an entry per event
+ * and per audit period, so whatever someone closes to make this page usable
+ * should stay closed the next time they open it.
+ */
+const CLOSED_FOLDERS_KEY = 'acm-records-closed-folders';
+
+function loadClosedFolders(): Set<string> {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CLOSED_FOLDERS_KEY) ?? '[]');
+    return new Set(Array.isArray(stored) ? stored.map(String) : []);
+  } catch {
+    return new Set();  // private windows and blocked storage both land here
+  }
+}
+
+function saveClosedFolders(closed: Set<string>): void {
+  try { localStorage.setItem(CLOSED_FOLDERS_KEY, JSON.stringify([...closed])); } catch { /* storage unavailable */ }
+}
+
+/** Every folder path in the tree, for collapse-all. */
+function allFolderPaths(folder: TreeFolder): string[] {
+  return folder.folders.flatMap((child) => [child.path, ...allFolderPaths(child)]);
+}
+
+/**
  * Groups the worksheets into their folders, preserving the order the Edge
  * Function returned them in so the tree reads in the same sequence as the
  * workbook itself.
@@ -109,8 +136,9 @@ async function start(): Promise<void> {
   let query = '';
   let page = 0;
   // Folders are open unless the viewer closed them. Their state lives here
-  // rather than in the DOM because every keystroke re-renders the page.
-  const collapsed = new Set<string>();
+  // rather than in the DOM because every keystroke re-renders the page, and
+  // it outlives the visit so a tidied tree stays tidy.
+  const collapsed = loadClosedFolders();
   let importNote: Child = null;
 
   // The whole workbook arrives in one call, so filtering, searching and paging
@@ -199,7 +227,8 @@ async function start(): Promise<void> {
           class: `tree-sheet${sheet.name === active ? ' tree-sheet--active' : ''}`,
           'aria-current': sheet.name === active ? 'true' : undefined,
           onclick: openSheet(sheet.name),
-        }, h('span', { class: 'tree-name' }, sheet.name),
+        }, h('span', { class: 'tree-chevron', 'aria-hidden': 'true' }),
+          h('span', { class: 'tree-name' }, sheet.name),
           h('span', { class: 'tree-count' }, String(sheet.rows)));
       }
 
@@ -213,6 +242,10 @@ async function start(): Promise<void> {
           open: holdsActive || !collapsed.has(folder.path),
         },
           h('summary', { class: 'tree-folder' },
+            // A real element, not ::marker: the summary is a flex row, which
+            // removes the browser's own disclosure triangle and with it any
+            // sign that the folder opens at all.
+            h('span', { class: 'tree-chevron', 'aria-hidden': 'true' }, '\u25B8'),
             h('span', { class: 'tree-name' }, folder.name),
             h('span', { class: 'tree-count' }, String(contained.length))),
           h('div', { class: 'tree-children' },
@@ -221,6 +254,7 @@ async function start(): Promise<void> {
         details.addEventListener('toggle', () => {
           if (details.open) collapsed.delete(folder.path);
           else collapsed.add(folder.path);
+          saveClosedFolders(collapsed);
         });
         return details;
       }
@@ -228,6 +262,19 @@ async function start(): Promise<void> {
       const tree = buildTree(result);
       const browser = h('div', { class: 'record-tree', role: 'navigation', 'aria-label': 'Records' },
         tree.folders.map(branch), tree.sheets.map(leaf));
+
+      // One control for the whole tree. As events and audit periods accumulate
+      // this is the difference between a page you scan and a page you scroll.
+      const paths = allFolderPaths(tree);
+      const anyOpen = paths.some((path) => !collapsed.has(path));
+      const collapseAll = paths.length ? action(
+        anyOpen ? 'COLLAPSE ALL' : 'EXPAND ALL',
+        async () => {
+          if (anyOpen) for (const path of paths) collapsed.add(path);
+          else collapsed.clear();
+          saveClosedFolders(collapsed);
+          await draw();
+        }) : null;
 
       const crumbs = h('p', { class: 'mono-meta dim-text' },
         [...(pathTo(tree, active) ?? []), active].join(' / ').toUpperCase());
@@ -304,7 +351,11 @@ async function start(): Promise<void> {
             'club-records-sheet-sync (npm run functions:deploy) to enable both — see docs/SETUP.md step 5b.')
           : null,
         importNote,
-        panel('Records', browser, importControls),
+        panel('Records',
+          collapseAll ? h('div', { class: 'button-row record-tree-controls' }, collapseAll,
+            h('span', { class: 'mono-meta dim-text' },
+              `${names.length} WORKSHEETS`)) : null,
+          browser, importControls),
         panel(active || 'Records',
           crumbs,
           h('div', { class: 'browser-toolbar' }, search, eventPicker, semester, exportButton),

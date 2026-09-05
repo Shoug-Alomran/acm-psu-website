@@ -2501,3 +2501,38 @@
 @media (max-width: 880px) {
     .portal-collapse { display: none; }
 }
+
+/* Records tree — disclosure and scrolling.
+
+   The summary rows are flex containers, which removes the browser's own
+   disclosure triangle, so the chevron is a real element. Leaves carry an empty
+   one of the same width purely so their names line up under the folders'.
+
+   The tree also scrolls inside itself. This workbook gains a worksheet per
+   event and per audit period, and a navigation panel that grows without limit
+   pushes the table it navigates off the screen. */
+
+.record-tree {
+    max-height: min(60vh, 34rem);
+    overflow-y: auto;
+}
+
+.record-tree summary { list-style: none; }
+.record-tree summary::-webkit-details-marker { display: none; }
+.record-tree summary::marker { content: ''; }
+
+.record-tree .tree-chevron {
+    flex: none;
+    width: 0.8rem;
+    color: var(--text-dark);
+    font-size: 0.65rem;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.record-tree details[open] > summary .tree-chevron { transform: rotate(90deg); }
+.record-tree summary:hover .tree-chevron { color: var(--accent-blue); }
+.record-tree .tree-sheet--active .tree-chevron { color: #08182d; }
+
+.record-tree-controls { padding: 0 0 0.75rem; }
+.record-tree-controls .btn-ghost { font-size: 0.7rem; padding: 0.4rem 0.7rem; }
