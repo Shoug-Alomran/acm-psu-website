@@ -8,6 +8,22 @@
     <meta name="description"
         content="Apply to join the ACM student chapter at Prince Sultan University for the 2026 cohort.">
 
+    <script>
+        (function () {
+            try {
+                var raw = localStorage.getItem('acm-psu-auth');
+                if (!raw) return;
+                var stored = JSON.parse(raw);
+                var session = stored && (stored.currentSession || stored.session || stored);
+                if (session && session.access_token && session.refresh_token) {
+                    window.location.replace('/portal/index.html');
+                }
+            } catch (_) {
+                /* Invalid or unavailable storage: treat the visitor as signed out. */
+            }
+        }());
+    </script>
+
     <link rel="canonical" href="https://acm-psu.shoug-tech.com/join.html">
     <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
