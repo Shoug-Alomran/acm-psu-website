@@ -59,6 +59,14 @@ function progressionValue(terms: PublicTerm[]): string {
     .map((entry) => `${termLabel(entry.started_on, entry.ended_on)} — ${entry.title}`).join('|');
 }
 
+function publicLinks(member: PublicMember): Array<{ label: string; url: string }> {
+  const links = [...(member.extra_links ?? [])];
+  if (member.faculty_page_url && !links.some((link) => link.url === member.faculty_page_url)) {
+    links.push({ label: 'PSU faculty page', url: member.faculty_page_url });
+  }
+  return links;
+}
+
 function card(
   member: PublicMember,
   avatarUrl: string | null,
@@ -92,6 +100,14 @@ function card(
       personSlug: member.person_slug ?? personSlug(member.name),
       personRole: member.current_position ?? 'Member',
       personMajor: member.major ?? '',
+      personCollege: member.department ?? '',
+      personAcademicTitle: member.academic_title ?? '',
+      personDepartment: member.department ?? '',
+      personCourses: JSON.stringify(member.courses_taught ?? []),
+      personExpertise: JSON.stringify(member.expertise ?? []),
+      personResearch: JSON.stringify(member.research_interests ?? []),
+      personOffice: member.office_location ?? '',
+      personOfficeHours: member.office_hours ?? '',
       personId: member.member_no ?? shortId(member.user_id),
       personYear: member.chapter_year ?? '',
       personAcademicYear: member.academic_year ?? '',
@@ -103,7 +119,7 @@ function card(
       personGithub: member.github_url ?? '',
       personLinkedin: member.linkedin_url ?? '',
       personWebsite: member.website_url ?? '',
-      personExtraLinks: JSON.stringify(member.extra_links ?? []),
+      personExtraLinks: JSON.stringify(publicLinks(member)),
       personContributions: JSON.stringify(contributions),
       personParticipation: JSON.stringify(participation),
     },
@@ -165,6 +181,14 @@ function adopt(
   overlay(existingCard, 'personRole', member.current_position);
   overlay(existingCard, 'personName', member.name);
   overlay(existingCard, 'personMajor', member.major);
+  overlay(existingCard, 'personCollege', member.department);
+  overlay(existingCard, 'personAcademicTitle', member.academic_title);
+  overlay(existingCard, 'personDepartment', member.department);
+  if (member.courses_taught?.length) existingCard.dataset.personCourses = JSON.stringify(member.courses_taught);
+  if (member.expertise?.length) existingCard.dataset.personExpertise = JSON.stringify(member.expertise);
+  if (member.research_interests?.length) existingCard.dataset.personResearch = JSON.stringify(member.research_interests);
+  overlay(existingCard, 'personOffice', member.office_location);
+  overlay(existingCard, 'personOfficeHours', member.office_hours);
   overlay(existingCard, 'personId', member.member_no);
   overlay(existingCard, 'personYear', member.chapter_year);
   overlay(existingCard, 'personAcademicYear', member.academic_year);
@@ -172,9 +196,8 @@ function adopt(
   overlay(existingCard, 'personGithub', member.github_url);
   overlay(existingCard, 'personLinkedin', member.linkedin_url);
   overlay(existingCard, 'personWebsite', member.website_url);
-  if (member.extra_links?.length) {
-    existingCard.dataset.personExtraLinks = JSON.stringify(member.extra_links);
-  }
+  const links = publicLinks(member);
+  if (links.length) existingCard.dataset.personExtraLinks = JSON.stringify(links);
   existingCard.dataset.personContributions = JSON.stringify(contributions);
   existingCard.dataset.personParticipation = JSON.stringify(participation);
 

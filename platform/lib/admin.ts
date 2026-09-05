@@ -86,6 +86,7 @@ export async function markForInterview(
     application: applicationId, reason,
   });
   if (error) throw new Error(error.message);
+  void refreshApplicationSheet();
 }
 
 export async function approveApplication(
@@ -100,6 +101,7 @@ export async function approveApplication(
     internal,
   });
   if (error) throw new Error(error.message);
+  void refreshApplicationSheet();
   void refreshMembersSheet();
 }
 
@@ -111,6 +113,7 @@ export async function rejectApplication(
     application: applicationId, reason, internal,
   });
   if (error) throw new Error(error.message);
+  void refreshApplicationSheet();
 }
 
 /* ----------------------------------------------------------------- members */
@@ -120,6 +123,20 @@ async function refreshMembersSheet(): Promise<void> {
     body: { sheets: ['people', 'members'] },
   });
   if (error) console.error('Could not refresh the Members worksheet:', error);
+}
+
+async function refreshApplicationSheet(): Promise<void> {
+  const { error } = await requireClient().functions.invoke('club-records-sheet-sync', {
+    body: { sheets: ['membership_applications'] },
+  });
+  if (error) console.error('Could not refresh the Membership Applications worksheet:', error);
+}
+
+async function refreshPeopleSheet(): Promise<void> {
+  const { error } = await requireClient().functions.invoke('club-records-sheet-sync', {
+    body: { sheets: ['people'] },
+  });
+  if (error) console.error('Could not refresh the People worksheet:', error);
 }
 
 export interface MemberRow {
@@ -594,6 +611,7 @@ export async function grantRole(
     target_user: userId, new_role: role, reason,
   });
   if (error) throw new Error(error.message);
+  void refreshPeopleSheet();
 }
 
 export async function revokeRole(assignmentId: string, reason: string): Promise<void> {
@@ -601,6 +619,7 @@ export async function revokeRole(assignmentId: string, reason: string): Promise<
     assignment_id: assignmentId, reason,
   });
   if (error) throw new Error(error.message);
+  void refreshPeopleSheet();
 }
 
 export type AdminRevocationDisposition =
@@ -617,6 +636,7 @@ export async function revokeAdminWithDisposition(
     reason,
   });
   if (error) throw new Error(error.message);
+  void refreshPeopleSheet();
 }
 
 /* ------------------------------------------------------------------- audit */

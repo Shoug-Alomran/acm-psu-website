@@ -132,9 +132,27 @@ async function sheetsRequest(
  * snapshot that still contained last month's departed members would be worse
  * than no snapshot at all.
  */
+/**
+ * Row highlights.
+ *
+ * The workbook is read by people scanning for what needs doing, so a couple of
+ * states earn a background colour: an applicant nobody has contacted yet, and
+ * one who has been marked for interview. These are deliberately pale — the
+ * Status column still says the same thing in words, so the colour is a second
+ * signal and never the only one.
+ */
+export type RowTint = 'new' | 'interview';
+
+const TINTS: Record<RowTint, { red: number; green: number; blue: number }> = {
+  new: { red: 0.85, green: 0.92, blue: 1 },
+  interview: { red: 1, green: 0.95, blue: 0.83 },
+};
+
 export async function pushToGoogleSheet(
   tabName: string,
   matrix: Array<Array<unknown>>,
+  /** One entry per data row of `matrix` (so index 0 is matrix[1]). */
+  tints: Array<RowTint | null> = [],
 ): Promise<string> {
   const spreadsheetId = Deno.env.get('GOOGLE_SHEETS_SPREADSHEET_ID');
   if (!spreadsheetId) {
@@ -191,6 +209,33 @@ export async function pushToGoogleSheet(
       { autoResizeDimensions: { dimensions: { sheetId: existing.properties.sheetId,
         dimension: 'COLUMNS', startIndex: 0, endIndex: matrix[0].length } } },
     ];
+
+    // Clear any previous highlighting first: the rows are rewritten every
+    // sync, so a colour left over from the last snapshot would point at
+    // whoever now happens to occupy that row.
+    requests.push({ repeatCell: {
+      range: { sheetId: existing.properties.sheetId, startRowIndex: 1,
+        startColumnIndex: 0, endColumnIndex: matrix[0].length },
+      cell: { userEnteredFormat: { backgroundColor: { red: 1, green: 1, blue: 1 } } },
+      fields: 'userEnteredFormat.backgroundColor',
+    } });
+
+    // Contiguous runs of the same tint go out as one request rather than one
+    // per row, which keeps a few hundred applicants to a handful of requests.
+    for (let i = 0; i < tints.length;) {
+      const tint = tints[i];
+      if (!tint) { i += 1; continue; }
+      let end = i;
+      while (end + 1 < tints.length && tints[end + 1] === tint) end += 1;
+      requests.push({ repeatCell: {
+        range: { sheetId: existing.properties.sheetId,
+          startRowIndex: i + 1, endRowIndex: end + 2,
+          startColumnIndex: 0, endColumnIndex: matrix[0].length },
+        cell: { userEnteredFormat: { backgroundColor: TINTS[tint] } },
+        fields: 'userEnteredFormat.backgroundColor',
+      } });
+      i = end + 1;
+    }
 
     // A header-only snapshot has no data rows to filter. Applying a basic
     // filter to an artificially extended two-row range can partially intersect

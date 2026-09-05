@@ -19,6 +19,7 @@ import {
   panel,
   statusPill,
   dataTable,
+  filterableTable,
   loading,
   dialog,
   field,
@@ -1977,16 +1978,11 @@ async function start(): Promise<void> {
           ),
         ),
 
-        notice(
-          'info',
-          'A project is the unit everything else hangs off: opportunities, participation, contributions and the archive all point at one. Create the project first.',
-        ),
-
         panel(
           'All projects and events',
 
           list.length
-            ? dataTable(
+            ? filterableTable(
               [
                 'Title',
                 'Kind',

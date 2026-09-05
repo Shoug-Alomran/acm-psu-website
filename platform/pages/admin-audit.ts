@@ -50,6 +50,14 @@ import {
 import { projects } from '../lib/api.js';
 
 import {
+  pageSlice,
+  paginationControls,
+} from '../lib/pagination.js';
+
+/** Entries shown per page of the history table. */
+const HISTORY_PAGE_SIZE = 25;
+
+import {
   archiveDateTime,
   relativeTime,
   enumLabel,
@@ -168,6 +176,9 @@ async function start(): Promise<void> {
   };
 
   let loaded: AuditEntry[] = [];
+
+  /** Reset whenever the filters change, since draw() refetches from the top. */
+  let historyPage = 1;
 
   function openEntry(
     entry: AuditEntry,
@@ -597,6 +608,8 @@ async function start(): Promise<void> {
   }
 
   async function draw(): Promise<void> {
+    historyPage = 1;
+
     render(
       content,
       loading('LOADING AUDIT HISTORY'),
@@ -608,6 +621,7 @@ async function start(): Promise<void> {
       const [
         entries,
         summaryResult,
+        actorResult,
       ] = await Promise.all([
         auditEntries(filters),
 
@@ -621,9 +635,13 @@ async function start(): Promise<void> {
             return null;
           },
         ),
+        auditActors(),
       ]);
 
       summary = summaryResult;
+      // Role assignments can change while this page is open. Rebuild the
+      // selector on every data refresh so it never stays behind Administration.
+      actors = actorResult;
       loaded = entries;
 
       const searchInput = h(
@@ -751,6 +769,250 @@ async function start(): Promise<void> {
           void draw();
         },
       );
+
+      const fromField = h('label', { class: 'audit-date-filter' },
+        h('span', { class: 'mono-meta' }, 'FROM DATE'), fromInput);
+      const toField = h('label', { class: 'audit-date-filter' },
+        h('span', { class: 'mono-meta' }, 'THROUGH DATE'), toInput);
+
+      const historyBody = h('div');
+
+      /**
+       * The history is paged in place. Everything above it — the filters and the
+       * counts — stays put while paging, and the page keeps a fixed height no
+       * matter how many years of entries the club has accumulated.
+       */
+      function drawHistory(): void {
+        const slice = pageSlice(entries, historyPage, HISTORY_PAGE_SIZE);
+        historyPage = slice.page;
+
+        render(
+          historyBody,
+
+          slice.rows.length
+            ? dataTable(
+              [
+                'When',
+                'Admin',
+                'Action',
+                'Target',
+                'Decision',
+                'Reason',
+              ],
+
+              slice.rows.map(
+                (entry) => [
+                  h(
+                    'div',
+                    {
+                      class:
+                        'audit-actor',
+                    },
+
+                    h(
+                      'span',
+                      {
+                        class:
+                          'mono-meta',
+                      },
+                      archiveDateTime(
+                        entry.created_at,
+                      ),
+                    ),
+
+                    h(
+                      'span',
+                      {
+                        class:
+                          'mono-meta',
+                      },
+                      relativeTime(
+                        entry.created_at,
+                      ),
+                    ),
+                  ),
+
+                  h(
+                    'div',
+                    {
+                      class:
+                        'audit-actor',
+                    },
+
+                    h(
+                      'strong',
+                      entry.actor_name ??
+                      enumLabel(
+                        entry.actor_kind,
+                      ),
+                    ),
+
+                    h(
+                      'span',
+                      {
+                        class:
+                          'mono-meta',
+                      },
+
+                      [
+                        entry.actor_position,
+
+                        entry.actor_role
+                          ? enumLabel(
+                            entry.actor_role,
+                          )
+                          : null,
+                      ]
+                        .filter(
+                          Boolean,
+                        )
+                        .join(
+                          ' · ',
+                        ) ||
+                      enumLabel(
+                        entry.actor_kind,
+                      ),
+                    ),
+                  ),
+
+                  h(
+                    'div',
+                    {},
+
+                    h(
+                      'span',
+                      {
+                        class:
+                          'mono-meta accent-text',
+                      },
+                      entry.action,
+                    ),
+
+                    h(
+                      'p',
+                      {
+                        class:
+                          'mono-meta dim-text',
+                      },
+                      CATEGORY_LABELS[
+                      entry.category
+                      ] ??
+                      entry.category,
+                    ),
+                  ),
+
+                  h(
+                    'div',
+                    {},
+
+                    h(
+                      'strong',
+                      entry.entity_label ??
+                      '—',
+                    ),
+
+                    h(
+                      'p',
+                      {
+                        class:
+                          'mono-meta dim-text',
+                      },
+                      (
+                        entry.summary ??
+                        ''
+                      ).slice(
+                        0,
+                        90,
+                      ),
+                    ),
+                  ),
+
+                  entry.decision
+                    ? statusPill(
+                      entry.decision,
+                    )
+                    : h(
+                      'span',
+                      {
+                        class:
+                          'mono-meta dim-text',
+                      },
+                      '—',
+                    ),
+
+                  h(
+                    'div',
+                    {},
+
+                    entry.reason
+                      ? h(
+                        'span',
+                        entry.reason.slice(
+                          0,
+                          80,
+                        ) +
+                        (
+                          entry.reason
+                            .length >
+                            80
+                            ? '…'
+                            : ''
+                        ),
+                      )
+                      : h(
+                        'span',
+                        {
+                          class:
+                            'mono-meta dim-text',
+                        },
+                        'NONE',
+                      ),
+
+                    h(
+                      'p',
+                      {},
+
+                      h(
+                        'button',
+                        {
+                          type:
+                            'button',
+                          class:
+                            'link-button',
+
+                          onclick:
+                            () =>
+                              openEntry(
+                                entry,
+                              ),
+                        },
+                        'DETAILS',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+            : emptyState(
+              'No entries match these filters.',
+              'Try widening the date range or clearing the category filter.',
+            ),
+
+          paginationControls(
+            entries.length,
+            historyPage,
+            (page) => {
+              historyPage = page;
+              drawHistory();
+            },
+            HISTORY_PAGE_SIZE,
+          ),
+        );
+      }
+
+      const historyPanel = panel('History', historyBody);
+
+      drawHistory();
 
       render(
         content,
@@ -962,9 +1224,9 @@ async function start(): Promise<void> {
             },
           ),
 
-          fromInput,
+          fromField,
 
-          toInput,
+          toField,
 
           h(
             'button',
@@ -1010,218 +1272,7 @@ async function start(): Promise<void> {
           ),
         ),
 
-        panel(
-          'History',
-
-          entries.length
-            ? dataTable(
-              [
-                'When',
-                'Admin',
-                'Action',
-                'Target',
-                'Decision',
-                'Reason',
-              ],
-
-              entries.map(
-                (entry) => [
-                  h(
-                    'div',
-                    {
-                      class:
-                        'audit-actor',
-                    },
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      archiveDateTime(
-                        entry.created_at,
-                      ),
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      relativeTime(
-                        entry.created_at,
-                      ),
-                    ),
-                  ),
-
-                  h(
-                    'div',
-                    {
-                      class:
-                        'audit-actor',
-                    },
-
-                    h(
-                      'strong',
-                      entry.actor_name ??
-                      enumLabel(
-                        entry.actor_kind,
-                      ),
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-
-                      [
-                        entry.actor_position,
-
-                        entry.actor_role
-                          ? enumLabel(
-                            entry.actor_role,
-                          )
-                          : null,
-                      ]
-                        .filter(
-                          Boolean,
-                        )
-                        .join(
-                          ' · ',
-                        ) ||
-                      enumLabel(
-                        entry.actor_kind,
-                      ),
-                    ),
-                  ),
-
-                  h(
-                    'div',
-                    {},
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta accent-text',
-                      },
-                      entry.action,
-                    ),
-
-                    h(
-                      'p',
-                      {
-                        class:
-                          'mono-meta dim-text',
-                      },
-                      CATEGORY_LABELS[
-                      entry.category
-                      ] ??
-                      entry.category,
-                    ),
-                  ),
-
-                  h(
-                    'div',
-                    {},
-
-                    h(
-                      'strong',
-                      entry.entity_label ??
-                      '—',
-                    ),
-
-                    h(
-                      'p',
-                      {
-                        class:
-                          'mono-meta dim-text',
-                      },
-                      (
-                        entry.summary ??
-                        ''
-                      ).slice(
-                        0,
-                        90,
-                      ),
-                    ),
-                  ),
-
-                  entry.decision
-                    ? statusPill(
-                      entry.decision,
-                    )
-                    : h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta dim-text',
-                      },
-                      '—',
-                    ),
-
-                  h(
-                    'div',
-                    {},
-
-                    entry.reason
-                      ? h(
-                        'span',
-                        entry.reason.slice(
-                          0,
-                          80,
-                        ) +
-                        (
-                          entry.reason
-                            .length >
-                            80
-                            ? '…'
-                            : ''
-                        ),
-                      )
-                      : h(
-                        'span',
-                        {
-                          class:
-                            'mono-meta dim-text',
-                        },
-                        'NONE',
-                      ),
-
-                    h(
-                      'p',
-                      {},
-
-                      h(
-                        'button',
-                        {
-                          type:
-                            'button',
-                          class:
-                            'link-button',
-
-                          onclick:
-                            () =>
-                              openEntry(
-                                entry,
-                              ),
-                        },
-                        'DETAILS',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-            : emptyState(
-              'No entries match these filters.',
-              'Try widening the date range or clearing the category filter.',
-            ),
-        ),
+        historyPanel,
 
         notice(
           'info',

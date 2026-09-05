@@ -25,6 +25,31 @@ function pageButton(label: string, active: boolean, disabled: boolean, onClick: 
   return button;
 }
 
+/**
+ * The page numbers to show, with `null` where a run is elided. A log that keeps
+ * growing would otherwise render a hundred buttons; this keeps the control one
+ * line wide no matter how long the history gets.
+ */
+function pageNumbers(current: number, pages: number): Array<number | null> {
+  if (pages <= 7) return Array.from({ length: pages }, (_unused, index) => index + 1);
+
+  const shown = new Set([1, pages, current, current - 1, current + 1]);
+  const out: Array<number | null> = [];
+  let gap = false;
+
+  for (let n = 1; n <= pages; n += 1) {
+    if (shown.has(n)) {
+      out.push(n);
+      gap = false;
+    } else if (!gap) {
+      out.push(null);
+      gap = true;
+    }
+  }
+
+  return out;
+}
+
 export function paginationControls(
   totalRows: number,
   page: number,
@@ -41,11 +66,15 @@ export function paginationControls(
     style: { justifyContent: 'center', marginTop: '1.25rem', flexWrap: 'wrap' },
   });
 
-  controls.append(pageButton('‹ Previous', false, current === 1, () => setPage(current - 1)));
-  for (let n = 1; n <= pages; n += 1) {
+  controls.append(pageButton('‹', false, current === 1, () => setPage(current - 1)));
+  for (const n of pageNumbers(current, pages)) {
+    if (n === null) {
+      controls.append(h('span', { class: 'mono-meta dim-text', style: { alignSelf: 'center' } }, '…'));
+      continue;
+    }
     controls.append(pageButton(String(n), n === current, false, () => setPage(n)));
   }
-  controls.append(pageButton('Next ›', false, current === pages, () => setPage(current + 1)));
+  controls.append(pageButton('›', false, current === pages, () => setPage(current + 1)));
   controls.append(h('span', { class: 'mono-meta dim-text', style: { alignSelf: 'center' } },
     `${start + 1}–${Math.min(start + pageSize, totalRows)} OF ${totalRows}`));
 

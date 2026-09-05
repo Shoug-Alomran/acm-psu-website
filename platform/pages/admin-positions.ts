@@ -525,13 +525,11 @@ async function start(): Promise<void> {
             onclick: () => editor(null),
           }, 'New club role'),
         ),
-        notice('info',
-          'This page is only for standing ACM organization roles such as President, Vice President, committee leads and club officers. Event jobs such as CTF organizer, Programming Jam volunteer, registration, judging or workshop support belong under Projects & Events as event positions that members can sign up for.'),
         h('div', { class: 'position-summary' },
           h('p', { class: 'queue-summary' },
             vacantLeadership.length
-              ? `${vacantLeadership.length} leadership ${vacantLeadership.length === 1 ? 'seat is' : 'seats are'} empty — ${vacantLeadership.map((p) => p.title).join(', ')}. Use ASSIGN beside any vacant role.`
-              : 'Every active leadership seat is filled.',
+              ? `${vacantLeadership.length} vacant leadership roles`
+              : 'All leadership roles filled',
           ),
           attentionLegend(
             ['now', 'Empty leadership seat'], ['review', 'Empty committee seat'],

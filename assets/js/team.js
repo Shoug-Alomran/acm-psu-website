@@ -303,6 +303,27 @@
             return '<li><span>' + esc(parts.shift()) + '</span><strong>' + esc(parts.join(' — ')) + '</strong></li>';
         }).join('');
 
+        function profileList(key) {
+            try {
+                var value = JSON.parse(card.dataset[key] || '[]');
+                return Array.isArray(value) ? value.filter(Boolean) : [];
+            } catch (_) { return []; }
+        }
+        var academicRows = [
+            ['Academic title', card.dataset.personAcademicTitle],
+            ['Department', card.dataset.personDepartment],
+            ['Courses taught', profileList('personCourses').join(', ')],
+            ['Areas of expertise', profileList('personExpertise').join(', ')],
+            ['Research interests', profileList('personResearch').join(', ')],
+            ['Office / room', card.dataset.personOffice],
+            ['Office hours', card.dataset.personOfficeHours]
+        ].filter(function (row) { return row[1]; });
+        var academicSection = profileDialog.querySelector('[data-profile-academic-section]');
+        academicSection.hidden = !academicRows.length;
+        profileDialog.querySelector('[data-profile-academic-details]').innerHTML = academicRows.map(function (row) {
+            return '<div><dt>' + esc(row[0]) + '</dt><dd>' + esc(row[1]) + '</dd></div>';
+        }).join('');
+
         var linkData = [
             ['LinkedIn', card.dataset.personLinkedin],
             ['GitHub', card.dataset.personGithub],

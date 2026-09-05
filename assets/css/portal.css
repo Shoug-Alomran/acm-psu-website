@@ -381,9 +381,46 @@
 .button-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .button-row .btn-submit { margin-top: 0; }
 
+/* --------------------------------------------------------------------------
+   Settings grid — one card per configurable setting
+   -------------------------------------------------------------------------- */
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 0.75rem;
+}
+
+.setting-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.setting-card__label { color: var(--text-dark); }
+
+.setting-card__control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.setting-card__control input { flex: 1 1 9rem; width: auto; min-width: 0; }
+.setting-card__control .btn-ghost { padding: 0.55rem 0.9rem; white-space: nowrap; }
+.setting-card__hint { margin: 0; line-height: 1.5; }
+
 /* Pager controls for a log that keeps growing: page size, steps, position. */
 .pager label { display: inline-flex; align-items: center; gap: 0.5rem; }
 .pager select { width: auto; padding: 0.35rem 0.5rem; font-size: 0.72rem; }
+
+.audit-date-filter { display: grid; gap: 0.35rem; min-width: 12rem; }
+.audit-date-filter > span { color: var(--text-dark); }
 
 .btn-ghost {
     background: transparent;
@@ -2266,7 +2303,7 @@
 .data-table td { line-height: 1.65; }
 .btn-ghost { background: #1a2e48; border-color: #4e6a8e; color: #dcecff; border-radius: 5px; }
 .btn-ghost:hover { background: #25456a; color: #fff; }
-.portal-body .btn-submit, .auth-body .btn-submit { background: #8ac4ff; color: #08182d; border-radius: 5px; }
+.portal-body .btn-submit, .auth-body .btn-submit { background: var(--accent-blue); color: #08182d; border-radius: 5px; }
 .btn-danger { color: #ffaaaa; border-color: #ac616b; background: #3b232e; }
 .form-field input, .form-field select, .form-field textarea { background-color: #0b1627; border-color: #526987; }
 .form-field label { color: #d8e7fa; }
@@ -2342,3 +2379,14 @@
 .event-request-card__actions { display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem; }
 .event-request-card__notice { color: var(--pill-warn); font-size: 0.9rem; line-height: 1.6; }
 @media (max-width: 560px) { .event-request-card__actions { justify-content: flex-start; } }
+
+.list-filters { margin-bottom: 1rem; }
+.list-filters__controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem; }
+.list-filters label { display: flex; flex: 1 1 9rem; flex-direction: column; gap: 0.4rem; color: var(--text-muted); font-size: 0.8rem; }
+.list-filters input, .list-filters select { width: 100%; min-width: 0; padding: 0.75rem; color: var(--text-main); background: #0b1627; border: 1px solid var(--border-strong); border-radius: 5px; font: inherit; }
+.list-filter-count { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.75rem; }
+.list-filter-empty { padding: 1rem; color: var(--text-muted); }
+[hidden] { display: none !important; }
+.dashboard-destination { text-decoration: none; }
+.dashboard-destination:hover { border-color: var(--accent-blue); background: var(--bg-surface-hover); }
+.dashboard-destination h3 { color: var(--text-main); font-size: 1.1rem; }

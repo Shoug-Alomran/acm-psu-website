@@ -12,17 +12,32 @@
 import { h, render, type Child } from './dom.js';
 import { daysSince, enumLabel, initials } from './format.js';
 import { signOut, isClubAdmin, isReviewer, isSuperAdmin, isStaff, isMember,
-         isAdvisoryInstructor, displayName, type Viewer } from './session.js';
+         isAdvisoryInstructor, isInstructor, displayName, type Viewer } from './session.js';
 
 /* ------------------------------------------------------------------- chrome */
 
 interface NavLink { href: string; label: string; badge?: number }
 
+function instructorLinks(viewer: Viewer): NavLink[] {
+  const links: NavLink[] = [
+    { href: '/portal/index.html', label: 'Dashboard' },
+    { href: '/portal/profile.html', label: 'My Profile' },
+    { href: '/portal/record.html', label: 'My Record' },
+  ];
+  if (isAdvisoryInstructor(viewer)) {
+    links.push(
+      { href: '/admin/advisor.html', label: 'Assigned Activities' },
+      { href: '/admin/records-backup.html', label: 'Club Records' },
+    );
+  }
+  return links;
+}
+
 function memberLinks(viewer: Viewer): NavLink[] {
   const links: NavLink[] = [{ href: '/portal/index.html', label: 'Dashboard' }];
-  if (isMember(viewer)) {
+  if (isMember(viewer) || isStaff(viewer)) {
     links.push(
-      { href: '/portal/profile.html', label: 'Profile' },
+      { href: '/portal/profile.html', label: 'My Profile' },
       { href: '/portal/record.html', label: 'My Record' },
       { href: '/portal/opportunities.html?view=responsibilities', label: 'My responsibilities' },
       { href: '/portal/opportunities.html', label: 'Opportunities' },
@@ -30,6 +45,12 @@ function memberLinks(viewer: Viewer): NavLink[] {
       { href: '/portal/submissions.html', label: 'Archive Submissions' },
       { href: '/portal/requests.html', label: 'Requests' },
     );
+    if (isAdvisoryInstructor(viewer)) {
+      links.push(
+        { href: '/admin/advisor.html', label: 'Instructor Workspace' },
+        { href: '/admin/records-backup.html', label: 'Club Records' },
+      );
+    }
   } else {
     links.push({ href: '/portal/status.html', label: 'Application' });
   }
@@ -79,7 +100,9 @@ function adminLinks(viewer: Viewer): NavLink[] {
  * page content should be rendered into.
  */
 export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): HTMLElement {
-  const links = area === 'admin' ? adminLinks(viewer) : memberLinks(viewer);
+  const instructorOnly = isInstructor(viewer) && !isReviewer(viewer);
+  const links = instructorOnly ? instructorLinks(viewer)
+    : area === 'admin' ? adminLinks(viewer) : memberLinks(viewer);
   const here = window.location.pathname + (new URLSearchParams(window.location.search).get('view') === 'responsibilities' ? '?view=responsibilities' : '');
   const content = h('div', { class: 'portal-content', id: 'portal-content' });
 
@@ -89,7 +112,8 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
       h('span', 'ACM'), h('span', { class: 'divider' }, '/'), h('span', 'PSU'),
     ),
     h('div', { class: 'portal-area mono-meta' },
-      area === 'admin' ? 'ADMIN CONSOLE' : 'MEMBER PORTAL'),
+      instructorOnly ? 'INSTRUCTOR WORKSPACE'
+        : area === 'admin' ? 'ADMIN CONSOLE' : 'MEMBER PORTAL'),
     h('nav', { class: 'portal-nav' },
       links.map((link) => h('a', {
         href: link.href,
@@ -98,12 +122,17 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
       }, link.label)),
     ),
     // Staff move between the two areas constantly; keep the hop one click away.
-    (isStaff(viewer) || isAdvisoryInstructor(viewer))
+    instructorOnly
+      ? h('nav', { class: 'portal-nav portal-nav--secondary' },
+          h('a', { href: '/index.html' }, 'Public website'))
+      : (isStaff(viewer) || isAdvisoryInstructor(viewer))
       ? h('nav', { class: 'portal-nav portal-nav--secondary' },
           h('a', { href: area === 'admin' ? '/portal/index.html'
             : isAdvisoryInstructor(viewer) && !isReviewer(viewer)
               ? '/admin/advisor.html' : '/admin/index.html' },
-            area === 'admin' ? '← Member portal' : 'Admin console →'),
+            area === 'admin' ? '← Personal portal'
+              : isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+                ? 'Instructor workspace →' : 'Admin console →'),
           h('a', { href: '/index.html' }, 'Public website'))
       : h('nav', { class: 'portal-nav portal-nav--secondary' },
           h('a', { href: '/index.html' }, 'Public website')),
@@ -217,6 +246,50 @@ export function dataTable(
         h('tr', { class: options.rowClass?.(index) ?? '' },
           cells.map((cell, column) =>
             h('td', { class: options.cellClass?.(column) ?? '' }, cell)))))));
+}
+
+/** Filters a complete, unpaginated list without refetching or losing focus. */
+export function listFilters(items: Array<{ element: HTMLElement; text: string; facets: Record<string, string> }>, labels: string[]): HTMLElement {
+  const search = h('input', { type: 'search', placeholder: 'Search…', 'aria-label': 'Search list' });
+  const count = h('p', { class: 'list-filter-count', role: 'status', 'aria-live': 'polite' });
+  const selects = labels.filter(label => new Set(items.map(item => item.facets[label]).filter(Boolean)).size > 1).map(label => {
+    const values = [...new Set(items.map(item => item.facets[label]).filter((v): v is string => Boolean(v)))].sort();
+    return { label, input: h('select', { 'aria-label': label },
+      h('option', { value: '' }, `Any ${label.toLowerCase()}`), values.map(value => h('option', { value }, value))) };
+  });
+  const empty = h('p', { class: 'list-filter-empty', hidden: true }, 'No results match these filters. Clear filters to see everything.');
+  const update = () => {
+    const needle = search.value.trim().toLocaleLowerCase();
+    let visible = 0;
+    for (const item of items) {
+      const matches = item.text.toLocaleLowerCase().includes(needle) && selects.every(({label, input}) => !input.value || item.facets[label] === input.value);
+      item.element.hidden = !matches;
+      if (matches) visible++;
+    }
+    count.textContent = `${visible} of ${items.length} shown`;
+    empty.hidden = visible !== 0;
+  };
+  search.addEventListener('input', update);
+  selects.forEach(({input}) => input.addEventListener('change', update));
+  const clear = h('button', { type: 'button', class: 'btn-ghost', onclick: () => {
+    search.value = ''; selects.forEach(({input}) => { input.value = ''; }); update(); search.focus();
+  } }, 'Clear filters');
+  update();
+  return h('div', { class: 'list-filters' },
+    h('div', { class: 'list-filters__controls' }, h('label', {}, 'Search', search),
+      selects.map(({label, input}) => h('label', {}, label, input)), clear), count, empty);
+}
+
+export function filterableTable(headers: string[], rows: Child[][], options: Parameters<typeof dataTable>[2] = {}): HTMLElement {
+  const table = dataTable(headers, rows, options);
+  if (!rows.length) return table;
+  const labels = headers.filter(label => ['Kind', 'Status', 'Chapter', 'Visibility', 'Project', 'Category', 'Type'].includes(label));
+  const items = Array.from(table.querySelectorAll('tbody tr')).map(element => ({
+    element: element as HTMLElement,
+    text: element.textContent ?? '',
+    facets: Object.fromEntries(labels.map(label => [label, element.children[headers.indexOf(label)]?.textContent?.trim() ?? ''])),
+  }));
+  return h('div', {}, listFilters(items, labels), table);
 }
 
 function classOf(value: string | null | undefined): string {

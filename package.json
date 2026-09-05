@@ -15,7 +15,7 @@
     "types:pull": "supabase gen types typescript --linked > platform/lib/database.types.ts",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
-    "functions:deploy": "supabase functions deploy ai-review && supabase functions deploy application-summary && supabase functions deploy records-export && supabase functions deploy club-records-sheet-sync && supabase functions deploy prospective-member-assistant --no-verify-jwt"
+    "functions:deploy": "supabase functions deploy ai-review && supabase functions deploy application-summary && supabase functions deploy profile-bio-format && supabase functions deploy records-export && supabase functions deploy club-records-sheet-sync && supabase functions deploy prospective-member-assistant --no-verify-jwt"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

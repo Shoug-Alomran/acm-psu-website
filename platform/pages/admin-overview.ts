@@ -354,12 +354,7 @@ async function start(): Promise<void> {
           ),
         ),
 
-        notice(
-          'info',
-          'Roles are hierarchical: a reviewer works the review queues, a club admin runs ' +
-          'everything operational, and a super admin can also manage admins. See ' +
-          'docs/HANDOVER.md for transferring control to next year’s committee.',
-        ),
+
       );
     } catch (error) {
       console.error(

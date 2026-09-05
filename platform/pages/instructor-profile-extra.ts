@@ -85,6 +85,40 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
 
   removeStudentOnlyFields(about);
 
+  const bio = about.querySelector<HTMLTextAreaElement>('textarea[name="bio"]');
+  const bioField = bio?.closest<HTMLElement>('.form-field');
+  if (bio && bioField) {
+    const formatterStatus = h('div');
+    const formatter = h('button', { class: 'btn-ghost', type: 'button' },
+      'FORMAT BIO WITH AI') as HTMLButtonElement;
+    formatter.addEventListener('click', async () => {
+      formatter.disabled = true;
+      formatter.textContent = 'FORMATTING…';
+      formatterStatus.replaceChildren(notice('info',
+        'The assistant will only reorganize facts already in your profile. Review the result before saving.'));
+      try {
+        const { data, error } = await requireClient().functions.invoke('profile-bio-format', {
+          body: { draft: bio.value },
+        });
+        if (error) throw new Error(error.message);
+        const formatted = String(data?.bio ?? '').trim();
+        if (!formatted) throw new Error('The formatter returned no bio.');
+        bio.value = formatted;
+        bio.dispatchEvent(new Event('input', { bubbles: true }));
+        formatterStatus.replaceChildren(notice('ok',
+          'DRAFT READY. Review it, make any changes you want, then select Save profile.'));
+      } catch (error) {
+        formatterStatus.replaceChildren(notice('err',
+          error instanceof Error ? error.message : String(error)));
+      } finally {
+        formatter.disabled = false;
+        formatter.textContent = 'FORMAT BIO WITH AI';
+      }
+    });
+    bioField.insertAdjacentElement('afterend', h('div', { class: 'button-row' }, formatter));
+    formatter.parentElement?.insertAdjacentElement('afterend', formatterStatus);
+  }
+
   const status = h('div');
   const form = h('form', { class: 'portal-form', novalidate: true },
     notice('info',

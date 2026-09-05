@@ -91,11 +91,16 @@ export function isReviewer(v: Viewer | null): boolean {
 }
 
 export function isStaff(v: Viewer | null): boolean {
-  return isReviewer(v) || isAdvisoryInstructor(v);
+  return isReviewer(v) || isInstructor(v);
 }
 
 export function isAdvisoryInstructor(v: Viewer | null): boolean {
   return !!v?.roles.includes('advisory_instructor');
+}
+
+/** Faculty identity is independent from the optional advisory permission. */
+export function isInstructor(v: Viewer | null): boolean {
+  return v?.user.university_role === 'instructor' || isAdvisoryInstructor(v);
 }
 
 /** Active members and alumni can use the member portal. */
@@ -139,6 +144,17 @@ export async function requireMember(): Promise<Viewer> {
   const viewer = await requireSignedIn();
   if (!isMember(viewer) && !isStaff(viewer)) {
     window.location.replace('/portal/status.html');
+    return new Promise<Viewer>(() => {});
+  }
+  return viewer;
+}
+
+/** Member participation workflows are intentionally outside faculty access. */
+export async function requireParticipant(): Promise<Viewer> {
+  const viewer = await requireMember();
+  if (isInstructor(viewer)) {
+    window.location.replace(isAdvisoryInstructor(viewer)
+      ? '/admin/advisor.html' : '/portal/index.html');
     return new Promise<Viewer>(() => {});
   }
   return viewer;

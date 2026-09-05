@@ -402,6 +402,15 @@ export interface PublicMember {
   extra_links: Array<{ label: string; url: string }>;
   avatar_path: string | null;
   major: string | null;
+  university_role?: string;
+  academic_title?: string | null;
+  department?: string | null;
+  courses_taught?: string[];
+  expertise?: string[];
+  research_interests?: string[];
+  office_location?: string | null;
+  office_hours?: string | null;
+  faculty_page_url?: string | null;
   current_position: string | null;
   position_rank: number | null;
   position_category: string | null;

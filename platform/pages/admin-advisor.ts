@@ -221,7 +221,7 @@ async function start(): Promise<void> {
             h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE RECORDS'),
             h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP'),
             h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Member portal'))),
-        notice('info', 'You can manage events and verify attendance/contributions for activities assigned to you. You can also refresh the shared Google workbook from Supabase; Supabase remains the source of truth.'),
+        notice('info', 'Manage your assigned activities and verify attendance and contributions.'),
         statRow([
           [activities.length, 'Assigned activities'], [participants.length, 'Participants'],
           [contributions.filter((row: any) => row.status === 'submitted').length, 'Awaiting verification'],

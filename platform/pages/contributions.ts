@@ -18,7 +18,7 @@ import {
   pageHeader,
   panel,
   statusPill,
-  dataTable,
+  filterableTable,
   loading,
   dialog,
   field,
@@ -29,7 +29,7 @@ import {
 } from '../lib/ui.js';
 
 import {
-  requireMember,
+  requireParticipant,
   canSubmit,
 } from '../lib/session.js';
 
@@ -129,7 +129,7 @@ function fileExtension(
 
 async function start(): Promise<void> {
   const viewer =
-    await requireMember();
+    await requireParticipant();
 
   const content =
     shell(
@@ -805,7 +805,7 @@ async function start(): Promise<void> {
           'Your submissions',
 
           rows.length
-            ? dataTable(
+            ? filterableTable(
               [
                 'Title',
                 'Type',

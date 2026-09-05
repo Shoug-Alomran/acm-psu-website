@@ -239,6 +239,14 @@ async function start(): Promise<void> {
       });
       if (error) throw new Error(error.message);
 
+      // Keep the external workbook current at intake time. The website backup
+      // already reads this application live from Supabase, so a Google outage
+      // never makes a successful application disappear from the admin view.
+      const sync = await requireClient().functions.invoke('club-records-sheet-sync', {
+        body: { mode: 'application_submitted' },
+      });
+      if (sync.error) console.error('Application saved, but Google Sheets did not refresh:', sync.error);
+
       window.location.replace('/portal/status.html');
     } catch (error) {
       if (button) button.disabled = false;

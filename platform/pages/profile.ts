@@ -27,6 +27,7 @@ import {
   requireMember,
   loadViewer,
   displayName,
+  isInstructor,
 } from '../lib/session.js';
 
 import {
@@ -39,6 +40,7 @@ import { requireClient } from '../lib/supabase.js';
 
 import {
   archiveDate,
+  enumLabel,
   term,
 } from '../lib/format.js';
 
@@ -72,6 +74,7 @@ async function start(): Promise<void> {
     const history = await positionHistory(viewer.userId);
 
     const profile = viewer.profile;
+    const instructor = isInstructor(viewer);
     const status = h('div');
     const extraLinks = profile?.extra_links ?? [];
 
@@ -392,7 +395,7 @@ async function start(): Promise<void> {
       content,
 
       pageHeader(
-        'MEMBER / PROFILE',
+        instructor ? 'FACULTY / PROFILE' : 'MEMBER / PROFILE',
         displayName(viewer),
 
         h(
@@ -407,8 +410,10 @@ async function start(): Promise<void> {
 
       notice(
         'info',
-        'Members control who they are. ACM verifies what they did. ' +
-        'Everything on this page is yours to edit; the record below is maintained by admins.',
+        instructor
+          ? 'You control your public faculty profile. ACM maintains your verified chapter role and service record.'
+          : 'Members control who they are. ACM verifies what they did. ' +
+            'Everything on this page is yours to edit; the record below is maintained by admins.',
       ),
 
       h(
@@ -451,7 +456,24 @@ async function start(): Promise<void> {
           panel(
             'Verified by ACM',
 
-            metaList([
+            metaList(instructor ? [
+              [
+                'Account type',
+                enumLabel(viewer.user.university_role),
+              ],
+              [
+                'Current position',
+                viewer.currentPosition ?? 'Instructor',
+              ],
+              [
+                'ACM role since',
+                archiveDate(history.find((row) => !row.ended_on)?.started_on ?? history[0]?.started_on),
+              ],
+              [
+                'PSU email',
+                viewer.email,
+              ],
+            ] : [
               [
                 'Membership',
                 statusPill(viewer.membership?.status),

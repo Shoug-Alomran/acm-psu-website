@@ -61,6 +61,9 @@ interface ExportHistoryRow {
   } | null;
 }
 
+const CLUB_RECORDS_WORKBOOK =
+  'https://docs.google.com/spreadsheets/d/1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s/edit';
+
 const DATASETS: Array<{
   key: Dataset;
   title: string;
@@ -325,8 +328,14 @@ async function start(): Promise<void> {
 
         panel(
           'Private Google workbook',
-          h('p', 'Update Google Sheet exports the current Supabase club records to every supported tab in the configured private “ACM PSU — Club Records” workbook. Supabase remains the source of truth.'),
-          h('p', {}, h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP')),
+          h('p', 'Update the private Google workbook with the latest club records.'),
+          h('div', { class: 'button-row' },
+            h('a', {
+              class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK,
+              target: '_blank', rel: 'noopener',
+            }, 'OPEN GOOGLE SHEET'),
+            h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' },
+              'OPEN WEBSITE BACKUP')),
           isSuperAdmin(viewer)
             ? action('Update Google Sheet', async () => {
                 if (!window.confirm('This exports names, PSU emails, student IDs where applicable, roles, memberships, and operational club records to the configured private Google workbook. Continue?')) return;
@@ -660,8 +669,7 @@ async function start(): Promise<void> {
               class:
                 'mono-meta dim-text',
             },
-            'Every export is recorded, so a future committee can account for where ' +
-            'student data went.',
+            'Export history',
           ),
         ),
       );

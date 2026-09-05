@@ -179,16 +179,24 @@ export async function myDecisions(limit = 40): Promise<MemberDecision[]> {
     .order('created_at', { ascending: false }).limit(limit)) ?? [];
 }
 
-/** Distinct admins who appear in the log, for the actor filter. */
+/** Active admins plus historical actors, joined by app-user ID. */
 export async function auditActors(): Promise<Array<{ id: string; name: string }>> {
-  const { data } = await requireClient().from('audit_log')
-    .select('actor_id, actor_name')
-    .not('actor_id', 'is', null)
-    .order('created_at', { ascending: false })
-    .limit(500);
+  const client = requireClient();
+  const [history, assignments] = await Promise.all([
+    client.from('audit_log').select('actor_id, actor_name')
+      .not('actor_id', 'is', null).order('created_at', { ascending: false }).limit(500),
+    client.from('admin_assignments')
+      .select('user_id, member:app_users!admin_assignments_user_id_fkey(full_name)')
+      .is('revoked_at', null),
+  ]);
 
   const seen = new Map<string, string>();
-  for (const row of (data ?? []) as Array<{ actor_id: string; actor_name: string | null }>) {
+  for (const row of (assignments.data ?? []) as unknown as Array<{
+    user_id: string; member: { full_name: string } | null;
+  }>) {
+    if (!seen.has(row.user_id)) seen.set(row.user_id, row.member?.full_name ?? row.user_id);
+  }
+  for (const row of (history.data ?? []) as Array<{ actor_id: string; actor_name: string | null }>) {
     if (!seen.has(row.actor_id)) seen.set(row.actor_id, row.actor_name ?? row.actor_id);
   }
   return [...seen].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));

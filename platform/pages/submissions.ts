@@ -8,10 +8,10 @@
  */
 import { h, render, formValues, textOf } from '../lib/dom.js';
 import {
-  shell, pageHeader, panel, statusPill, dataTable, loading, dialog, field,
+  shell, pageHeader, panel, statusPill, filterableTable, loading, dialog, field,
   notice, toast, action, emptyState,
 } from '../lib/ui.js';
-import { requireMember, canSubmit } from '../lib/session.js';
+import { requireParticipant, canSubmit } from '../lib/session.js';
 import {
   mySubmissions, archiveCategories, projects, archiveFolders, uploadPrivate,
 } from '../lib/api.js';
@@ -20,7 +20,7 @@ import { archiveDate, fileSize } from '../lib/format.js';
 import type { ArchiveCategory, ArchiveFolder, ArchiveSubmission, Project } from '../lib/types.js';
 
 async function start(): Promise<void> {
-  const viewer = await requireMember();
+  const viewer = await requireParticipant();
   const content = shell(viewer, 'member', 'Archive submissions');
   render(content, loading());
 
@@ -189,7 +189,7 @@ async function start(): Promise<void> {
 
       panel('Your submissions',
         rows.length
-          ? dataTable(
+          ? filterableTable(
               ['Title', 'Project', 'Category', 'Size', 'Submitted', 'Status', 'Actions'],
               rows.map((s) => [
                 h('div', {},

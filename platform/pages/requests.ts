@@ -16,7 +16,7 @@ import {
   shell, pageHeader, panel, statusPill, loading, dialog, field, notice, toast,
   action, emptyState, metaList,
 } from '../lib/ui.js';
-import { requireMember, canSubmit } from '../lib/session.js';
+import { requireParticipant, canSubmit } from '../lib/session.js';
 import {
   myRequests, createRequest, cancelRequest, myPositionRequest, requestPositionChange,
   saveProfile,
@@ -38,7 +38,7 @@ interface MemberPositionChoice {
 }
 
 async function start(): Promise<void> {
-  const viewer = await requireMember();
+  const viewer = await requireParticipant();
   const content = shell(viewer, 'member', 'Requests');
   render(content, loading());
 
@@ -230,7 +230,7 @@ async function start(): Promise<void> {
             ? (positionRequest.requested_title ?? 'Pending') : '—'],
         ]),
         h('p', { class: 'mono-meta dim-text' },
-          'Standing club roles are separate from event positions. General members can still sign up for event roles from Opportunities whenever those openings are published.'),
+          'For event roles, visit Opportunities.'),
         positionRequest?.admin_note
           ? h('p', { class: 'mono-meta dim-text' }, `ADMIN: ${positionRequest.admin_note}`)
           : null,

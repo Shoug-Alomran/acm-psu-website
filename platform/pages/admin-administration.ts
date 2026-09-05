@@ -9,6 +9,11 @@
 import { h, render, formValues, textOf } from '../lib/dom.js';
 
 import {
+  pageSlice,
+  paginationControls,
+} from '../lib/pagination.js';
+
+import {
   shell,
   pageHeader,
   panel,
@@ -138,6 +143,9 @@ const EDITABLE: Array<{
     },
   ];
 
+/** Rows of audit history shown per page on this summary. */
+const AUDIT_PAGE_SIZE = 8;
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -167,6 +175,9 @@ async function start(): Promise<void> {
   render(content, loading());
 
   const superAdmin = isSuperAdmin(viewer);
+
+  /** Kept across redraws, so saving a setting does not throw away the page. */
+  let auditPage = 1;
 
   async function grantDialog(): Promise<void> {
     let memberList;
@@ -401,80 +412,59 @@ async function start(): Promise<void> {
     );
   }
 
-  function settingRow(
+  /**
+   * One setting as a card: label, the control, and the hint underneath. The
+   * cards sit in a grid rather than a stacked list so the whole of the club's
+   * configuration fits on one screen instead of scrolling for a page.
+   */
+  function settingCard(
     key: string,
     value: unknown,
     spec: typeof EDITABLE[number],
   ): HTMLElement {
+    const hint = spec.hint
+      ? h('p', { class: 'mono-meta dim-text setting-card__hint' }, spec.hint)
+      : null;
+
     if (spec.kind === 'bool') {
       const on = value === true;
 
       return h(
         'div',
-        { class: 'history-row' },
+        { class: 'setting-card' },
 
-        h(
-          'span',
-          { class: 'mono-meta' },
-          spec.label.toUpperCase(),
-        ),
+        h('span', { class: 'mono-meta setting-card__label' }, spec.label.toUpperCase()),
 
         h(
           'div',
-          {},
+          { class: 'setting-card__control' },
 
-          statusPill(
-            on ? 'active' : 'inactive',
-          ),
+          statusPill(on ? 'active' : 'inactive'),
 
-          spec.hint
-            ? h(
-              'p',
-              {
-                class:
-                  'mono-meta dim-text',
-              },
-              spec.hint,
-            )
-            : null,
+          action(
+            on ? 'Turn off' : 'Turn on',
 
-          h(
-            'div',
-            { class: 'button-row' },
+            async () => {
+              try {
+                await saveSetting(
+                  key,
+                  !on,
+                  `Switched ${on ? 'off' : 'on'} from the admin console`,
+                );
 
-            action(
-              on
-                ? 'Turn off'
-                : 'Turn on',
+                toast('Setting updated.');
 
-              async () => {
-                try {
-                  await saveSetting(
-                    key,
-                    !on,
-                    `Switched ${on ? 'off' : 'on'
-                    } from the admin console`,
-                  );
+                await draw();
+              } catch (error) {
+                console.error(`Could not update setting ${key}:`, error);
 
-                  toast(
-                    'Setting updated.',
-                  );
-
-                  await draw();
-                } catch (error) {
-                  console.error(
-                    `Could not update setting ${key}:`,
-                    error,
-                  );
-
-                  toast(
-                    `Could not update setting: ${errorMessage(error)}`,
-                  );
-                }
-              },
-            ),
+                toast(`Could not update setting: ${errorMessage(error)}`);
+              }
+            },
           ),
         ),
+
+        hint,
       );
     }
 
@@ -490,86 +480,51 @@ async function start(): Promise<void> {
       {
         type: 'text',
         value: current,
+        'aria-label': spec.label,
       },
     ) as HTMLInputElement;
 
     return h(
       'div',
-      { class: 'history-row' },
+      { class: 'setting-card' },
 
-      h(
-        'span',
-        { class: 'mono-meta' },
-        spec.label.toUpperCase(),
-      ),
+      h('span', { class: 'mono-meta setting-card__label' }, spec.label.toUpperCase()),
 
       h(
         'div',
-        {},
+        { class: 'setting-card__control form-field' },
 
-        h(
-          'div',
-          { class: 'form-field' },
-          input,
-        ),
+        input,
 
-        spec.hint
-          ? h(
-            'p',
-            {
-              class:
-                'mono-meta dim-text',
-            },
-            spec.hint,
-          )
-          : null,
+        action(
+          'Save',
 
-        h(
-          'div',
-          { class: 'button-row' },
+          async () => {
+            const raw = input.value.trim();
 
-          action(
-            'Save',
-            async () => {
-              const raw =
-                input.value.trim();
+            const next: unknown =
+              spec.kind === 'list'
+                ? raw.split(',').map((entry) => entry.trim()).filter(Boolean)
+                : /^\d+$/.test(raw)
+                  ? Number(raw)
+                  : raw;
 
-              const next: unknown =
-                spec.kind === 'list'
-                  ? raw
-                    .split(',')
-                    .map((value) =>
-                      value.trim(),
-                    )
-                    .filter(Boolean)
-                  : /^\d+$/.test(raw)
-                    ? Number(raw)
-                    : raw;
+            try {
+              await saveSetting(key, next, 'Changed from the admin console');
 
-              try {
-                await saveSetting(
-                  key,
-                  next,
-                  'Changed from the admin console',
-                );
+              toast('Setting saved.');
 
-                toast('Setting saved.');
+              await draw();
+            } catch (error) {
+              console.error(`Could not save setting ${key}:`, error);
 
-                await draw();
-              } catch (error) {
-                console.error(
-                  `Could not save setting ${key}:`,
-                  error,
-                );
-
-                toast(
-                  `Could not save setting: ${errorMessage(error)}`,
-                );
-              }
-            },
-          ),
+              toast(`Could not save setting: ${errorMessage(error)}`);
+            }
+          },
         ),
       ),
+
+      hint,
     );
   }
 
@@ -593,6 +548,81 @@ async function start(): Promise<void> {
         (row: AdminRow) =>
           row.revoked_at !== null,
       );
+
+      const auditBody = h('div', { class: 'panel-body' });
+
+      /**
+       * The audit history is the longest thing on this page and it only grows,
+       * so it is paged in place: the buttons redraw this panel and nothing
+       * else, and the page keeps a fixed height.
+       */
+      function drawAudit(): void {
+        const slice = pageSlice(activity, auditPage, AUDIT_PAGE_SIZE);
+        auditPage = slice.page;
+
+        render(
+          auditBody,
+
+          h(
+            'p',
+            { class: 'mono-meta dim-text' },
+            'Append-only. No role, including super admin, can edit or delete an ' +
+            'entry — the database rejects both.',
+          ),
+
+          h(
+            'div',
+            { class: 'button-row' },
+
+            h(
+              'a',
+              { class: 'btn-ghost', href: '/admin/audit.html' },
+              'Open the full audit history',
+            ),
+          ),
+
+          slice.rows.length
+            ? dataTable(
+              ['When', 'Who', 'Action', 'Detail', 'Target'],
+
+              slice.rows.map((entry) => [
+                h('span', { class: 'mono-meta' }, archiveDateTime(entry.created_at)),
+
+                h('span', { class: 'mono-meta' }, entry.actor_email ?? 'system'),
+
+                h('span', { class: 'mono-meta accent-text' }, entry.action),
+
+                entry.summary,
+
+                h(
+                  'span',
+                  { class: 'mono-meta dim-text' },
+                  entry.entity_type ? entry.entity_type : '—',
+                ),
+              ]),
+            )
+            : emptyState('No recorded actions yet.'),
+
+          paginationControls(
+            activity.length,
+            auditPage,
+            (page) => {
+              auditPage = page;
+              drawAudit();
+            },
+            AUDIT_PAGE_SIZE,
+          ),
+        );
+      }
+
+      const auditPanel = h(
+        'section',
+        { class: 'panel', id: 'audit' },
+        h('div', { class: 'panel-head' }, h('h2', 'Audit history')),
+        auditBody,
+      );
+
+      drawAudit();
 
       render(
         content,
@@ -801,142 +831,20 @@ async function start(): Promise<void> {
 
           h(
             'div',
-            {
-              class:
-                'history-list',
-            },
+            { class: 'settings-grid' },
 
             EDITABLE.map(
               (spec) =>
-                settingRow(
+                settingCard(
                   spec.key,
-                  config.get(
-                    spec.key,
-                  ),
+                  config.get(spec.key),
                   spec,
                 ),
             ),
           ),
         ),
 
-        h(
-          'section',
-          {
-            class: 'panel',
-            id: 'audit',
-          },
-
-          h(
-            'div',
-            {
-              class:
-                'panel-head',
-            },
-
-            h(
-              'h2',
-              'Audit history',
-            ),
-          ),
-
-          h(
-            'div',
-            {
-              class:
-                'panel-body',
-            },
-
-            h(
-              'p',
-              {
-                class:
-                  'mono-meta dim-text',
-              },
-              'Append-only. No role, including super admin, can edit or delete an ' +
-              'entry — the database rejects both.',
-            ),
-
-            h(
-              'div',
-              {
-                class:
-                  'button-row',
-              },
-
-              h(
-                'a',
-                {
-                  class:
-                    'btn-ghost',
-                  href:
-                    '/admin/audit.html',
-                },
-                'Open the full audit history',
-              ),
-            ),
-
-            activity.length
-              ? dataTable(
-                [
-                  'When',
-                  'Who',
-                  'Action',
-                  'Detail',
-                  'Target',
-                ],
-
-                activity.map(
-                  (entry) => [
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      archiveDateTime(
-                        entry.created_at,
-                      ),
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      entry.actor_email ??
-                      'system',
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta accent-text',
-                      },
-                      entry.action,
-                    ),
-
-                    entry.summary,
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta dim-text',
-                      },
-                      entry.entity_type
-                        ? entry.entity_type
-                        : '—',
-                    ),
-                  ],
-                ),
-              )
-              : emptyState(
-                'No recorded actions yet.',
-              ),
-          ),
-        ),
+        auditPanel,
       );
     } catch (error) {
       console.error(

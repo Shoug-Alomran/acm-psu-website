@@ -2,9 +2,9 @@
 import { h, render, formValues, textOf } from '../lib/dom.js';
 import {
   shell, pageHeader, panel, statusPill, emptyState, loading, dialog, field,
-  notice, toast, action, metaList,
+  notice, toast, action, metaList, listFilters,
 } from '../lib/ui.js';
-import { requireMember, canSubmit } from '../lib/session.js';
+import { requireParticipant, canSubmit } from '../lib/session.js';
 import { openOpportunities, myEventApplications } from '../lib/api.js';
 import { registerEventApplication, unregisterEventApplication } from '../lib/event-applications.js';
 import type { MyEventApplication } from '../lib/types.js';
@@ -51,7 +51,7 @@ function legend(): HTMLElement {
 }
 
 async function start(): Promise<void> {
-  const viewer = await requireMember();
+  const viewer = await requireParticipant();
   const responsibilitiesView = new URLSearchParams(location.search).get('view') === 'responsibilities';
   const content = shell(viewer, 'member', responsibilitiesView ? 'My responsibilities' : 'Opportunities');
 
@@ -235,6 +235,8 @@ async function start(): Promise<void> {
         h('div', { class: 'dashboard-card__heading' },
           h('h3', row.position_title), statusPill(row.status)),
         h('p', { class: 'dashboard-card__event' }, row.project_title),
+        opportunities.find(item => item.event_position_id === row.event_position_id)?.description
+          ? h('p', { class: 'dashboard-card__description' }, opportunities.find(item => item.event_position_id === row.event_position_id)!.description) : null,
         metaList([
           ['Requested on', archiveDate(row.created_at)],
           ['Event starts', row.project_starts_on ? archiveDate(row.project_starts_on) : 'To be announced'],
@@ -249,25 +251,15 @@ async function start(): Promise<void> {
       );
     }
 
-    function requestsPanel(): HTMLElement {
-      if (requests.error) {
-        return panel('Your requests',
-          notice('err', `Your own requests could not load: ${requests.error}. Nothing has been lost — this is a display problem only.`),
-          h('div', { class: 'button-row' }, h('button', { type: 'button', class: 'btn-ghost', onclick: () => void draw() }, 'TRY AGAIN')),
-        );
-      }
-      if (!mine.length) {
-        return panel('Your requests', emptyState(
-          'You have not registered for an event position yet.',
-          'Requests you send stay listed here, including approved and cancelled ones.',
-        ));
-      }
-      return panel('Your requests',
-        h('p', { class: 'event-request-intro' }, 'Pending and approved registrations can be withdrawn online until 72 hours before the event starts.'),
-        h('div', { class: 'dashboard-cards' }, mine.map(requestRow)),
-      );
+    function registrationCards(rows: MyEventApplication[]): HTMLElement {
+      const items = rows.map(row => ({ element: requestRow(row), text: `${row.position_title} ${row.project_title} ${row.admin_note ?? ''}`,
+        facets: { Event: row.project_title, Status: row.status } }));
+      return h('div', {}, listFilters(items, ['Event', 'Status']), h('div', { class: 'dashboard-cards' }, items.map(item => item.element)));
     }
-
+    const projectPanels = boardPanels();
+    const boardElements = Array.isArray(projectPanels) ? projectPanels : [projectPanels];
+    const boardFilter = listFilters(boardElements.map(element => ({ element,
+      text: element.textContent ?? '', facets: {} })), []);
     const active = mine.filter(row => row.status === 'approved' && row.has_active_assignment);
     const other = mine.filter(row => !(row.status === 'approved' && row.has_active_assignment));
     render(content,
@@ -275,17 +267,17 @@ async function start(): Promise<void> {
         h('a', { class: 'btn-ghost', href: responsibilitiesView ? '/portal/opportunities.html' : '/portal/opportunities.html?view=responsibilities' },
           responsibilitiesView ? 'Find an opportunity' : 'My responsibilities')),
       responsibilitiesView ? [
-        h('p', { class: 'event-request-intro' }, 'Your accepted event roles appear first. Use these cards to check dates, organiser feedback and withdrawal options.'),
+        h('p', { class: 'event-request-intro' }, 'View your accepted roles and manage registrations.'),
         requests.error ? notice('err', `Could not load responsibilities: ${requests.error}`) :
           panel('Accepted responsibilities', active.length
-            ? h('div', { class: 'dashboard-cards' }, active.map(requestRow))
+            ? registrationCards(active)
             : emptyState('No active assignments yet.', 'Accepted event roles will appear here once you are assigned.')),
         !requests.error && other.length ? panel('Other registrations',
           h('p', { class: 'event-request-intro' }, 'Pending, cancelled and previous registrations.'),
-          h('div', { class: 'dashboard-cards' }, other.map(requestRow))) : null,
+          registrationCards(other)) : null,
       ] : [
-        notice('info', 'Browse event roles and register interest. Track accepted responsibilities and your registrations on My responsibilities.'),
-        legend(), boardPanels(),
+        notice('info', 'Find a role and register your interest.'),
+        legend(), boardFilter, ...boardElements,
       ],
     );
   }
