@@ -3,6 +3,19 @@
   var manifest = window.PROJECT_ARCHIVE;
   var list = document.querySelector('[data-file-list]');
   if (!manifest || !list) return;
+  /* Only http(s) may reach an href — escaping does nothing to a
+     "javascript:" scheme. Mirrors safeHref() in platform/lib/format.ts; kept
+     local because this file is a standalone script with no imports, and a
+     missing dependency must not silently turn the guard off. */
+  function safeHref(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw) return '#';
+    var bare = raw.replace(/[\u0000-\u0020]/g, '');
+    if (bare.indexOf('//') === 0) return '#';
+    if (/^[a-z][a-z0-9+.-]*:/i.test(bare)) return /^https?:/i.test(bare) ? raw : '#';
+    return raw;
+  }
+
   var items = manifest.items || [], byId = {};
   items.forEach(function (item) { byId[item.id] = item; });
   var current = manifest.rootId || 'root', section = 'all', type = 'all', selected = null;
@@ -80,7 +93,7 @@
     list.querySelectorAll('.file-row').forEach(function (row) { row.classList.toggle('selected', row.dataset.id === item.id); });
     setText('name', item.name); setText('kind', item.kind); setText('bytes', item.description || item.size); setText('uploaded', item.updated); setText('path', pathFor(item)); setText('sha', item.state); showStage(item); preview.hidden = false;
     if (item.type === 'folder') { openLink.textContent = 'Open folder'; openLink.href = '#folder=' + item.id; openLink.dataset.folderTarget = item.id; downloadLink.hidden = true; }
-    else { openLink.textContent = 'Open'; openLink.href = item.url; delete openLink.dataset.folderTarget; downloadLink.hidden = item.type === 'link'; downloadLink.href = item.url; if (item.type === 'link') downloadLink.removeAttribute('download'); else downloadLink.setAttribute('download', ''); }
+    else { openLink.textContent = 'Open'; openLink.href = safeHref(item.url); delete openLink.dataset.folderTarget; downloadLink.hidden = item.type === 'link'; downloadLink.href = safeHref(item.url); if (item.type === 'link') downloadLink.removeAttribute('download'); else downloadLink.setAttribute('download', ''); }
   }
   function enter(id) { if (id !== manifest.rootId && (!byId[id] || byId[id].type !== 'folder')) return; current = id; selected = null; if (search) search.value = ''; render(); history.replaceState(null, '', '#folder=' + encodeURIComponent(id)); }
   list.addEventListener('click', function (event) { var row = event.target.closest('.file-row'); if (row) select(byId[row.dataset.id]); });

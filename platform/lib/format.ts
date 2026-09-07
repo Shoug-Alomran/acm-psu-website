@@ -88,3 +88,34 @@ export function initials(name: string): string {
 export function shortId(uuid: string): string {
   return '0x' + uuid.replace(/-/g, '').slice(0, 4).toUpperCase();
 }
+
+/**
+ * A URL that is safe to place in an href.
+ *
+ * Escaping does nothing to a `javascript:` scheme — entity-encoding the
+ * string still leaves the browser a working script URL. Stored links come from
+ * member profiles, archive submissions and project records, all of which are
+ * writable through PostgREST by their owner, so every one of them is
+ * attacker-controlled text until proven otherwise.
+ *
+ * Only http and https are allowed through. Site-relative paths ("/x", "x.html",
+ * "#frag") are kept because the portal legitimately stores those, but a
+ * protocol-relative "//host" is not: it leaves the origin while looking local.
+ * Anything else — javascript:, data:, vbscript:, blob: — becomes '#'.
+ *
+ * Database `check` constraints enforce the same rule at the source. Both layers
+ * are needed: the constraints stop new rows, this stops rows already stored.
+ */
+export function safeHref(value: string | null | undefined): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '#';
+  // Control characters are ignored by URL parsers but not by a naive prefix
+  // test, so "java\tscript:alert(1)" would otherwise slip past as relative.
+  const bare = raw.replace(/[\u0000-\u0020]/g, '');
+  if (bare.startsWith('//')) return '#';
+  if (/^[a-z][a-z0-9+.-]*:/i.test(bare)) {
+    return /^https?:/i.test(bare) ? raw : '#';
+  }
+  // No scheme at all: a relative reference, which cannot leave the origin.
+  return raw;
+}

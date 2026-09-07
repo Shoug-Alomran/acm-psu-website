@@ -32,7 +32,7 @@
  */
 import { isConfigured, supabase } from '../lib/supabase.js';
 import { h } from '../lib/dom.js';
-import { initials, shortId } from '../lib/format.js';
+import { initials, safeHref, shortId } from '../lib/format.js';
 import type { PublicMember } from '../lib/types.js';
 
 /** One entry of a person's role progression, as the profile dialog reads it. */
@@ -73,12 +73,22 @@ function progressionValue(terms: PublicTerm[]): string {
     .map((entry) => `${termLabel(entry.started_on, entry.ended_on)} — ${entry.title}`).join('|');
 }
 
+/**
+ * The links shown on a public profile card.
+ *
+ * extra_links is member-writable free-form JSON and faculty_page_url is typed
+ * by an instructor, so both are run through safeHref before they are written
+ * into the card's dataset. team.js renders that dataset straight into an href;
+ * a link that cannot survive safeHref is dropped rather than shown as a dead '#'.
+ */
 function publicLinks(member: PublicMember): Array<{ label: string; url: string }> {
   const links = [...(member.extra_links ?? [])];
   if (member.faculty_page_url && !links.some((link) => link.url === member.faculty_page_url)) {
     links.push({ label: 'PSU faculty page', url: member.faculty_page_url });
   }
-  return links;
+  return links
+    .map((link) => ({ label: link.label, url: safeHref(link.url) }))
+    .filter((link) => link.url !== '#');
 }
 
 function card(

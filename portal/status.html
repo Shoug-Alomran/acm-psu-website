@@ -4,6 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Content-Security-Policy.
+         GitHub Pages cannot set response headers, so the policy is stated here.
+         The load-bearing directive is script-src 'self': every script on this
+         page is a file in this repository, so a "javascript:" URL or an
+         injected <script> that reaches the DOM through stored content simply
+         does not run. That is the second line of defence behind safeHref()
+         and the database URL constraints, and the one that holds if either is
+         ever bypassed.
+
+         style-src keeps 'unsafe-inline' because the pages and the portal set
+         style attributes directly; inline CSS is not an execution path, and
+         removing it would buy nothing here.
+
+         *.supabase.co rather than the project ref, so moving projects does not
+         mean editing every page; the ref is public in assets/js/app/env.js
+         either way. -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://*.supabase.co;
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+        frame-src 'none';
+    ">
     <title>Application status — ACM PSU</title>
     <meta name="description" content="Your ACM PSU membership application.">
     <meta name="robots" content="noindex, nofollow">

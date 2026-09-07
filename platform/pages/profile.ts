@@ -41,6 +41,7 @@ import { requireClient } from '../lib/supabase.js';
 import {
   archiveDate,
   enumLabel,
+  safeHref,
   term,
 } from '../lib/format.js';
 
@@ -265,6 +266,33 @@ async function start(): Promise<void> {
           url: (row.querySelector<HTMLInputElement>('[name="extra_link_url"]')?.value ?? '').trim(),
         }))
         .filter((link) => link.label && link.url);
+
+      /*
+       * Say which link is wrong, here, rather than letting the database say it.
+       *
+       * The named URL fields and extra_links both carry an http(s)-only check
+       * constraint (20260907130000_url_scheme_constraints.sql), because these
+       * end up in an href on a public profile. This form is novalidate, so the
+       * browser's own type="url" check never fires; without this, a mistyped
+       * link comes back as a Postgres constraint name.
+       */
+      const namedLinks: Array<[string, string]> = [
+        ['LinkedIn', textOf(values, 'linkedin_url')],
+        ['GitHub', textOf(values, 'github_url')],
+        ['Website', textOf(values, 'website_url')],
+      ];
+      const badLink = [...namedLinks, ...links.map((link): [string, string] => [link.label, link.url])]
+        .find(([, url]) => url && safeHref(url) === '#');
+
+      if (badLink) {
+        status.replaceChildren(notice(
+          'err',
+          `The ${badLink[0]} link must start with http:// or https://. ` +
+          'Links on a public profile can only point at ordinary web pages.',
+        ));
+        button.disabled = false;
+        return;
+      }
 
       try {
         await saveName(

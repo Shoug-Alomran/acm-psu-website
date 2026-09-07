@@ -2,11 +2,18 @@
 import { h, formValues, textOf } from '../lib/dom.js';
 import { field, metaList, notice, panel, statusPill, submitButton, toast } from '../lib/ui.js';
 import { requireMember } from '../lib/session.js';
-import { advisorActivities, positionHistory } from '../lib/api.js';
+import { advisorActivities, positionHistory, privateSetting } from '../lib/api.js';
 import { archiveDate, enumLabel } from '../lib/format.js';
 import { requireClient } from '../lib/supabase.js';
 
-const CLUB_RECORDS_WORKBOOK = 'https://docs.google.com/spreadsheets/d/1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s/edit';
+/**
+ * The private club records workbook, read at runtime.
+ *
+ * A literal here ships inside assets/js/app/instructor-profile-extra.js on a
+ * public site. The workbook holds student IDs, so its id lives in app_settings
+ * behind can_read_private_settings() instead of in the bundle.
+ */
+let clubRecordsWorkbook: string | null = null;
 
 interface InstructorProfile {
   user_id: string;
@@ -213,7 +220,7 @@ async function enhanceProfilePage(userId: string, current: InstructorProfile | n
 }
 
 async function enhanceDashboard(current: InstructorProfile | null, viewer: Awaited<ReturnType<typeof requireMember>>): Promise<void> {
-  const [profilePanel, recordPanel, activities, history] = await Promise.all([
+  const [profilePanel, recordPanel, activities, history, workbook] = await Promise.all([
     waitForPanel('Your profile'),
     waitForPanel('ACM record'),
     advisorActivities(viewer.userId).catch((error) => {
@@ -224,7 +231,9 @@ async function enhanceDashboard(current: InstructorProfile | null, viewer: Await
       console.error('Could not load position history for dashboard:', error);
       return [];
     }),
+    privateSetting('club_records_workbook_url'),
   ]);
+  clubRecordsWorkbook = workbook;
 
   const profile = viewer.profile;
   if (profilePanel) {
@@ -245,7 +254,9 @@ async function enhanceDashboard(current: InstructorProfile | null, viewer: Await
         ]),
         h('div', { class: 'button-row' },
           h('a', { class: 'btn-ghost', href: '/portal/profile.html' }, 'Edit faculty profile'),
-          h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'Google club records'),
+          clubRecordsWorkbook
+            ? h('a', { class: 'btn-ghost', href: clubRecordsWorkbook, target: '_blank', rel: 'noopener' }, 'Google club records')
+            : null,
           h('a', { class: 'btn-ghost', href: '/portal/requests.html' }, 'Privacy & membership'),
         ),
       );

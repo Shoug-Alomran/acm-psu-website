@@ -95,6 +95,7 @@
         'An AI-assisted web engineering competition. Every team receives the same application brief, then plans it in Excalidraw, designs it, builds it with AI assistants and Firebase, ships it to Vercel behind a real domain, absorbs a mid-competition change request, and presents the result. Three preparation workshop days run 15–17 September; the brief stays locked until competition day.':
             'مسابقة في هندسة الويب بمساعدة الذكاء الاصطناعي. يستلم كل فريق الوصف نفسه للتطبيق المطلوب، ثم يخطّط له في Excalidraw، ويصمّمه، ويبنيه بأدوات الذكاء الاصطناعي وFirebase، وينشره على Vercel تحت نطاق حقيقي، ويستوعب طلب تغيير في منتصف المسابقة، ثم يقدّم النتيجة. تسبقها ثلاثة أيام من الورش التحضيرية من 15 إلى 17 سبتمبر، ويبقى وصف المشروع سريًا حتى يوم المسابقة.',
         'Case Study': 'دراسة الحالة',
+        'Event Guide': 'دليل الفعالية',
         'Event Site': 'موقع الفعالية',
         'ACM/CyberTech CTF 3.0': 'مسابقة ACM/CyberTech CTF 3.0',
         'A three-hour jeopardy-style Capture The Flag run jointly with the CyberTech Club. Four attack vectors — cryptography, web, forensics and OSINT — scaled from Very Easy to Insane. Teams of two to three submit flags in':
@@ -281,6 +282,7 @@
         'WORKSHOP': 'ورشة عمل',
         'ARCHIVE': 'أرشيف',
         'View Case Study': 'عرض دراسة الحالة',
+        'View Event Guide': 'عرض دليل الفعالية',
         'Open Event Site': 'افتح موقع الفعالية',
         'View Results': 'عرض النتائج',
         'Open Resource Archive': 'افتح أرشيف الموارد',

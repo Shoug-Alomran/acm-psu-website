@@ -3,7 +3,7 @@ import { shell, pageHeader, panel, statRow, dataTable, loading, emptyState,
   statusPill, toast, action, notice, dialog, field } from '../lib/ui.js';
 import { requireAdvisor, displayName } from '../lib/session.js';
 import { advisorActivities, advisorParticipants, advisorContributions,
-  advisorSetParticipationStatus, advisorVerifyContribution } from '../lib/api.js';
+  advisorSetParticipationStatus, advisorVerifyContribution, privateSetting } from '../lib/api.js';
 import { requireClient, readableError } from '../lib/supabase.js';
 import {
   registrationSection, registrationTemplates, eventRegistrationForm, registrationFormLocked,
@@ -15,7 +15,20 @@ import type { ParticipationStatus, Project, ProjectStatus, ContentVisibility } f
 
 const PAGE_SIZE = 7;
 const EVENT_STATUSES = ['planning', 'active', 'completed', 'archived'] as const;
-const CLUB_RECORDS_WORKBOOK = 'https://docs.google.com/spreadsheets/d/1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s/edit';
+/**
+ * The private club records workbook, fetched rather than compiled in.
+ *
+ * A literal here is copied verbatim into assets/js/app/admin-advisor.js, which
+ * GitHub Pages serves to the public. The id is not a credential, but it names
+ * the one file holding every student ID the club keeps, so it lives in
+ * app_settings behind can_read_private_settings() instead.
+ */
+let clubRecordsWorkbook: string | null = null;
+
+function workbookLink(label: string): HTMLElement | null {
+  if (!clubRecordsWorkbook) return null;
+  return h('a', { class: 'btn-ghost', href: clubRecordsWorkbook, target: '_blank', rel: 'noopener' }, label);
+}
 
 type PageKey = 'activities' | 'participants' | 'contributions';
 
@@ -228,9 +241,11 @@ async function start(): Promise<void> {
     try {
       const activities = await advisorActivities(viewer.userId);
       const ids = activities.map((item) => item.id);
-      const [participants, contributions] = await Promise.all([
+      const [participants, contributions, workbook] = await Promise.all([
         advisorParticipants(ids), advisorContributions(ids),
+        privateSetting('club_records_workbook_url'),
       ]);
+      clubRecordsWorkbook = workbook;
       const titles = new Map(activities.map((item) => [item.id, item.title]));
       const redrawPage = (key: PageKey, value: number) => { pages[key] = value; void draw(); };
       const attendanceAction = (row: any, status: ParticipationStatus, label: string) =>
@@ -272,7 +287,7 @@ async function start(): Promise<void> {
               try { await syncGoogleWorkbook(); }
               catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }
             }),
-            h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE RECORDS'),
+            workbookLink('OPEN GOOGLE RECORDS'),
             h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP'),
             h('a', { class: 'btn-ghost', href: '/portal/index.html' }, 'Member portal'))),
         notice('info', 'Manage your assigned activities and verify attendance and contributions.'),
@@ -287,7 +302,7 @@ async function start(): Promise<void> {
               try { await syncGoogleWorkbook(); }
               catch (error) { toast(`Could not synchronize workbook: ${message(error)}`, 'err'); }
             }, 'primary'),
-            h('a', { class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK, target: '_blank', rel: 'noopener' }, 'OPEN GOOGLE WORKBOOK'),
+            workbookLink('OPEN GOOGLE WORKBOOK'),
             h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' }, 'OPEN WEBSITE BACKUP'))),
         panel('Assigned events and workshops', activityRows.length
           ? paginatedTable(['Activity', 'Kind', 'Role', 'Status', 'Dates', 'Actions'], activityRows,

@@ -40,6 +40,16 @@ import {
 
 /**
  * Only same-origin paths, so ?next= cannot be used as an open redirect.
+ *
+ * Prefix tests are not enough here. The WHATWG URL parser treats a backslash
+ * as a slash for special schemes, so "/\evil.com" starts with '/' and does
+ * not start with '//', yet resolves to https://evil.com/ — which is exactly
+ * what location.replace() would then do. Rather than enumerate the separators
+ * a parser might fold, resolve the value against our own origin and let the
+ * parser answer the only question that matters: does it still point here?
+ *
+ * The resolved path is returned, not the raw input, so whatever the caller
+ * navigates to is the same string that was checked.
  */
 function safeNext(): string | null {
   const next =
@@ -49,15 +59,22 @@ function safeNext(): string | null {
       'next',
     );
 
-  if (
-    !next ||
-    !next.startsWith('/') ||
-    next.startsWith('//')
-  ) {
+  if (!next || !next.startsWith('/')) {
     return null;
   }
 
-  return next;
+  let resolved: URL;
+  try {
+    resolved = new URL(next, window.location.origin);
+  } catch {
+    return null;
+  }
+
+  if (resolved.origin !== window.location.origin) {
+    return null;
+  }
+
+  return `${resolved.pathname}${resolved.search}${resolved.hash}`;
 }
 
 function errorMessage(

@@ -167,6 +167,8 @@ export interface Project {
   visibility: ContentVisibility;
   category: string | null;
   sort_index: number;
+  /** Set when an admin has removed the project. Null for everything listed. */
+  deleted_at?: string | null;
 }
 
 export interface EventPositionAvailability {

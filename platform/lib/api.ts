@@ -6,6 +6,7 @@
  * functions grant anything: row level security decides what comes back.
  */
 import { requireClient, readableError } from './supabase.js';
+import { safeHref } from './format.js';
 import type {
   Application, ArchiveCategory, ArchiveFolder, ArchiveItem, ArchiveSubmission,
   ArchiveSubmissionAi, ContentVisibility, Contribution, ContributionType,
@@ -71,6 +72,31 @@ export async function setting<T>(key: string, fallback: T): Promise<T> {
 }
 
 /**
+ * Reads a setting that is deliberately not public.
+ *
+ * settings() selects app_settings directly, so it is bounded by that table's
+ * policies — and those do not cover advisory instructors, who need the club
+ * records workbook link on their own workspace. setting_text() answers for
+ * exactly the audience can_read_private_settings() names, so private keys go
+ * through it and return null rather than a stale fallback when the caller is
+ * not entitled to them.
+ *
+ * Values like this are read at runtime rather than compiled in: a literal in
+ * platform/pages/ ends up in assets/js/app/*.js, which is served publicly.
+ */
+export async function privateSetting(key: string): Promise<string | null> {
+  const { data, error } = await requireClient().rpc('setting_text', {
+    setting_key: key,
+    fallback: null,
+  });
+  if (error) {
+    console.error(`Could not read the ${key} setting:`, error.message);
+    return null;
+  }
+  return typeof data === 'string' && data.trim() ? data : null;
+}
+
+/**
  * Settings go through an RPC so the change and its audit entry are one
  * transaction. Some keys — the feature switches and the accepted PSU email
  * domains — require a reason; the database enforces which.
@@ -106,6 +132,29 @@ export async function archiveCategories(): Promise<ArchiveCategory[]> {
 export async function projects(): Promise<Project[]> {
   return unwrap(await requireClient().from('projects').select('*')
     .is('deleted_at', null).order('sort_index').order('starts_on', { ascending: false })) ?? [];
+}
+
+/**
+ * Projects an admin has removed. They are hidden everywhere else, so this is
+ * the only place they can be found and brought back.
+ */
+export async function deletedProjects(): Promise<Project[]> {
+  return unwrap(await requireClient().from('projects').select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })) ?? [];
+}
+
+/** Soft-removes a project and closes any registration form attached to it. */
+export async function deleteProject(projectId: string, reason: string): Promise<void> {
+  const { error } = await requireClient()
+    .rpc('admin_delete_project', { project_id: projectId, reason });
+  if (error) throw new Error(error.message);
+}
+
+/** Reverses deleteProject(). The project returns archived. */
+export async function restoreProject(projectId: string): Promise<void> {
+  const { error } = await requireClient().rpc('admin_restore_project', { project_id: projectId });
+  if (error) throw new Error(error.message);
 }
 
 export interface AdvisorActivity {
@@ -456,10 +505,15 @@ export async function signedUrl(
   return error ? null : data.signedUrl;
 }
 
-/** Resolves any archive item to something a browser can open. */
+/**
+ * Resolves any archive item to something a browser can open.
+ *
+ * external_url and site_path are stored text, so they pass through safeHref
+ * here rather than at each of the three call sites that open the result.
+ */
 export async function itemUrl(item: ArchiveItem): Promise<string | null> {
-  if (item.external_url) return item.external_url;
-  if (item.site_path) return item.site_path;
+  if (item.external_url) return safeHref(item.external_url);
+  if (item.site_path) return safeHref(item.site_path);
   if (!item.storage_path || !item.storage_bucket) return null;
   if (item.storage_bucket === 'public-archive') {
     const { data } = requireClient().storage.from(item.storage_bucket)

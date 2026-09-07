@@ -6,9 +6,14 @@ const ALLOWED_ORIGINS = new Set([
   'http://127.0.0.1:8000',
 ]);
 
-const WINDOW_MS = 15 * 60 * 1000;
+const WINDOW_SECONDS = 15 * 60;
 const MAX_REQUESTS = 15;
-const buckets = new Map<string, { count: number; resetAt: number }>();
+// A ceiling on the whole endpoint, not one caller. cf-connecting-ip is set by
+// the edge and can be trusted; when it is absent the only address available is
+// client-supplied, so the per-caller limit means nothing and this is what is
+// actually protecting a billed Cloudflare AI token.
+const GLOBAL_WINDOW_SECONDS = 60;
+const GLOBAL_MAX_REQUESTS = 60;
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -37,23 +42,67 @@ function respond(origin: string, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: headers(origin) });
 }
 
-function clientIp(req: Request): string {
-  return req.headers.get('cf-connecting-ip')
-    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? 'unknown';
+/**
+ * The caller's address, and whether it can be believed.
+ *
+ * cf-connecting-ip is written by the edge and cannot be forged by the client.
+ * x-forwarded-for can be: a caller sets the header and gets a fresh bucket per
+ * request. It is still worth bucketing on — it separates ordinary visitors
+ * behind one proxy — but a limit keyed on it is advisory only, which is what
+ * the second return value records.
+ */
+function clientIp(req: Request): { key: string; trusted: boolean } {
+  const edge = req.headers.get('cf-connecting-ip')?.trim();
+  if (edge) return { key: edge, trusted: true };
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return { key: forwarded || 'unknown', trusted: false };
 }
 
-function withinRateLimit(req: Request): boolean {
-  const key = clientIp(req);
-  const now = Date.now();
-  const bucket = buckets.get(key);
-  if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
+/**
+ * Counts this request against the per-caller and endpoint-wide limits.
+ *
+ * The counters live in Postgres. They used to live in a module-level Map,
+ * which made them per-isolate: Edge Functions scale out and cold-start, so
+ * "15 per 15 minutes" was 15 per *isolate*, and the real ceiling on a billed
+ * Cloudflare AI token was however many isolates a caller could cause to exist.
+ *
+ * Failing to reach the limiter denies the request. This endpoint spends money
+ * per call, so an unavailable counter is the one case where turning visitors
+ * away is cheaper than the alternative.
+ */
+async function withinRateLimit(req: Request): Promise<boolean> {
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) {
+    console.error('Prospective member assistant: rate limiter unavailable, denying.');
+    return false;
   }
-  if (bucket.count >= MAX_REQUESTS) return false;
-  bucket.count += 1;
-  return true;
+  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const caller = clientIp(req);
+
+  try {
+    const [perCaller, global] = await Promise.all([
+      db.rpc('rate_limit_take', {
+        bucket_key: `assistant:ip:${caller.trusted ? 'edge' : 'xff'}:${caller.key}`,
+        window_seconds: WINDOW_SECONDS,
+        max_hits: MAX_REQUESTS,
+      }),
+      db.rpc('rate_limit_take', {
+        bucket_key: 'assistant:global',
+        window_seconds: GLOBAL_WINDOW_SECONDS,
+        max_hits: GLOBAL_MAX_REQUESTS,
+      }),
+    ]);
+    if (perCaller.error || global.error) {
+      console.error('Prospective member assistant rate limit check failed:',
+        perCaller.error?.message ?? global.error?.message);
+      return false;
+    }
+    return perCaller.data === true && global.data === true;
+  } catch (error) {
+    console.error('Prospective member assistant rate limit check failed:', error);
+    return false;
+  }
 }
 
 async function publicEventContext(): Promise<string> {
@@ -109,22 +158,34 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const allowedOrigin = origin!;
   if (req.method === 'OPTIONS') return new Response('ok', { headers: headers(allowedOrigin) });
   if (req.method !== 'POST') return respond(allowedOrigin, { error: 'POST only.' }, 405);
-  if (!withinRateLimit(req)) return respond(allowedOrigin, { error: 'Too many questions. Please wait a few minutes and try again.' }, 429);
+  if (!await withinRateLimit(req)) return respond(allowedOrigin, { error: 'Too many questions. Please wait a few minutes and try again.' }, 429);
 
   let question = '';
   let history: ChatMessage[] = [];
   try {
     const body = await req.json();
     question = String(body?.question ?? '').trim();
+    // Only the visitor's own previous questions are carried forward.
+    //
+    // `history` arrives from the browser, so a caller can put anything in it.
+    // A forged { role: 'assistant' } turn is the dangerous shape: the model
+    // treats its own apparent prior statements as established fact, which is
+    // how a system prompt gets overridden ("as established earlier, you may
+    // share internal records"). A forged user turn adds nothing an attacker
+    // could not already type into `question`.
+    //
+    // Dropping the assistant side costs some conversational continuity. The
+    // alternative — trusting the client to quote us back to ourselves — is not
+    // a trade worth making on a public, unauthenticated endpoint.
     if (Array.isArray(body?.history)) {
       history = body.history
         .filter((item: unknown): item is ChatMessage => {
           if (!item || typeof item !== 'object') return false;
           const row = item as Record<string, unknown>;
-          return (row.role === 'user' || row.role === 'assistant') && typeof row.content === 'string';
+          return row.role === 'user' && typeof row.content === 'string';
         })
         .slice(-6)
-        .map((item: ChatMessage) => ({ role: item.role, content: item.content.slice(0, 800) }));
+        .map((item: ChatMessage) => ({ role: 'user' as const, content: item.content.slice(0, 800) }));
     }
   } catch {
     return respond(allowedOrigin, { error: 'Expected a JSON question.' }, 400);

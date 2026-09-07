@@ -78,6 +78,7 @@ import {
 import {
   archiveDate,
   fileSize,
+  safeHref,
 } from '../lib/format.js';
 
 import type {
@@ -727,7 +728,7 @@ async function start(): Promise<void> {
               h('span', { class: 'mono-meta dim-text' }, 'EXTERNAL LINK'),
               h('a', {
                 class: 'review-link',
-                href: row.external_url,
+                href: safeHref(row.external_url),
                 target: '_blank',
                 rel: 'noopener noreferrer',
               }, row.external_url)));

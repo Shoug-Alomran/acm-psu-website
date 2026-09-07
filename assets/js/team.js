@@ -59,6 +59,21 @@
         if (select.value === CURRENT) { currentMarkup = roster.innerHTML; }
     });
 
+    /* Only http(s) may reach an href. Escaping does nothing to a
+       "javascript:" scheme, and extra_links is member-writable JSON that a
+       member can PATCH straight into PostgREST, so the value arriving here is
+       attacker-controlled text. Mirrors safeHref() in platform/lib/format.ts;
+       kept local because this file is a standalone script with no imports, and
+       a missing dependency must not silently turn the guard off. */
+    function safeHref(value) {
+        var raw = String(value == null ? '' : value).trim();
+        if (!raw) return '#';
+        var bare = raw.replace(/[\u0000-\u0020]/g, '');
+        if (bare.indexOf('//') === 0) return '#';
+        if (/^[a-z][a-z0-9+.-]*:/i.test(bare)) return /^https?:/i.test(bare) ? raw : '#';
+        return raw;
+    }
+
     function esc(value) {
         return String(value == null ? '' : value)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -345,7 +360,7 @@
         var linksSection = profileDialog.querySelector('[data-profile-links-section]');
         linksSection.hidden = !linkData.length;
         profileDialog.querySelector('[data-profile-links]').innerHTML = linkData.map(function (entry) {
-            return '<a href="' + esc(entry[1]) + '" rel="noopener">' + esc(entry[0]) + '<span>↗</span></a>';
+            return '<a href="' + esc(safeHref(entry[1])) + '" rel="noopener">' + esc(entry[0]) + '<span>↗</span></a>';
         }).join('');
 
         function publicRecords(key) {

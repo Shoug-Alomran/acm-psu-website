@@ -2,1992 +2,379 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PSU AI Hackathon 2.0 — ACM PSU</title>
-  <meta name="description"
-    content="PSU AI Hackathon 2.0: Students &amp; Alumni United — the ACM Student Chapter at Prince Sultan University hackathon held 12 April to 2 May 2026 (term 252). Four AI themes, the four-stage competition format, judging rubric and SAR 9,000+ prize list.">
-
-  <link rel="canonical" href="https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/">
-  <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
-  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/assets/img/favicon-32.png" type="image/png" sizes="32x32">
-  <link rel="icon" href="/assets/img/favicon-16.png" type="image/png" sizes="16x16">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#030b1a">
-
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="ACM PSU">
-  <meta property="og:title" content="PSU AI Hackathon 2.0 — ACM PSU">
-  <meta property="og:description"
-    content="Students, Alumni and COOP teams building AI for education, healthcare, security and sustainability. The full format, rules, rubric and prizes for the April 2026 edition.">
-  <meta property="og:url" content="https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/">
-  <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
-  <meta name="twitter:card" content="summary_large_image">
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "ACM PSU", "item": "https://acm-psu.shoug-tech.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Projects", "item": "https://acm-psu.shoug-tech.com/projects.html" },
-          { "@type": "ListItem", "position": 3, "name": "PSU AI Hackathon 2.0", "item": "https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/" }
-        ]
-      },
-      {
-        "@type": "Event",
-        "name": "PSU AI Hackathon 2.0: Students & Alumni United",
-        "description": "An AI hackathon uniting current Prince Sultan University students with Alumni and COOP students. Teams of up to five submit a proposal against one of four themes \u2014 AI in education, AI in healthcare, AI for security, AI for sustainability \u2014 then advance through screening, a poster round and a jury pitch.",
-        "startDate": "2026-04-12",
-        "endDate": "2026-05-02",
-        "eventStatus": "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "url": "https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/",
-        "image": "https://acm-psu.shoug-tech.com/assets/img/acm-banner.png",
-        "isAccessibleForFree": true,
-        "location": {
-          "@type": "Place",
-          "name": "Building 105, Prince Sultan University",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Building 105, Prince Sultan University",
-            "addressLocality": "Riyadh",
-            "addressCountry": "SA"
+    <meta charset="UTF-8">
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSU AI Hackathon 2.0 — ACM PSU</title>
+    <meta name="description"
+        content="The complete PSU AI Hackathon 2.0 event guide: four AI themes, the four-stage competition format, team rules, the judging rubric and more than SAR 9,000 in prizes. Term 252, 12 April – 2 May 2026.">
+    <link rel="canonical" href="https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/">
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#050507">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ACM PSU">
+    <meta property="og:title" content="PSU AI Hackathon 2.0 — ACM PSU">
+    <meta property="og:description"
+        content="Students, Alumni and COOP teams under one call. Themes, format, team rules, judging rubric and prizes for the term 252 edition.">
+    <meta property="og:url" content="https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/">
+    <meta property="og:image" content="https://acm-psu.shoug-tech.com/assets/img/acm-banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="assets/css/main.css?v=20260829-3">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "ACM PSU", "item": "https://acm-psu.shoug-tech.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Projects", "item": "https://acm-psu.shoug-tech.com/projects.html" },
+            { "@type": "ListItem", "position": 3, "name": "PSU AI Hackathon 2.0", "item": "https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/" }
+          ]
+        },
+        {
+          "@type": "Event",
+          "name": "PSU AI Hackathon 2.0: Students & Alumni United",
+          "description": "An AI hackathon uniting current Prince Sultan University students with Alumni and COOP students. Teams of up to five submit a proposal against one of four themes — AI in education, AI in healthcare, AI for security, AI for sustainability — then advance through screening, a poster round and a jury pitch.",
+          "startDate": "2026-04-12",
+          "endDate": "2026-05-02",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+          "url": "https://acm-psu.shoug-tech.com/projects/hackathons/psu-ai-hackathon-2.0/",
+          "image": "https://acm-psu.shoug-tech.com/assets/img/acm-banner.png",
+          "isAccessibleForFree": true,
+          "location": {
+            "@type": "Place",
+            "name": "Building 105, Prince Sultan University",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Building 105, Prince Sultan University",
+              "addressLocality": "Riyadh",
+              "addressCountry": "SA"
+            }
+          },
+          "organizer": {
+            "@type": "Organization",
+            "name": "ACM Student Chapter — Prince Sultan University",
+            "url": "https://acm-psu.shoug-tech.com/"
+          },
+          "superEvent": {
+            "@type": "Organization",
+            "name": "College of Computer and Information Sciences, Prince Sultan University"
           }
-        },
-        "organizer": {
-          "@type": "Organization",
-          "name": "ACM Student Chapter \u2014 Prince Sultan University",
-          "url": "https://acm-psu.shoug-tech.com/"
-        },
-        "superEvent": {
-          "@type": "Organization",
-          "name": "College of Computer and Information Sciences, Prince Sultan University"
         }
-      }
-    ]
-  }
-  </script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
-    rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #030b1a;
-      --surface: #071226;
-      --card: #0c1d38;
-      --border: rgba(0, 180, 255, 0.15);
-      --accent: #00b4ff;
-      --accent2: #00e5a0;
-      --text: #e8f4ff;
-      --muted: #7a9bb5;
-      --gold: #ffc940;
-      --radius: 16px;
+      ]
     }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      overflow-x: hidden;
-    }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      line-height: 1.6;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      opacity: .45;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    }
-
-    /* NAV */
-    nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: clamp(12px, 2.5vw, 28px);
-      padding: 14px clamp(14px, 4vw, 72px);
-      padding-top: max(14px, env(safe-area-inset-top, 0px));
-      min-height: 58px;
-      background: rgba(3, 11, 26, .88);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-logo {
-      font-family: 'Syne', sans-serif;
-      text-decoration: none;
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      font-size: clamp(12px, 1.15vw + 0.35rem, 18px);
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      flex: 0 1 auto;
-      min-width: 0;
-    }
-
-    .nav-links {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      align-items: center;
-      gap: clamp(6px, 0.8vw, 10px) clamp(8px, 1.1vw, 18px);
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-
-    .nav-links li {
-      flex-shrink: 0;
-    }
-
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: clamp(11px, 0.85vw + 0.45rem, 14px);
-      font-weight: 500;
-      transition: color .2s;
-      white-space: nowrap;
-      padding: 4px 0;
-    }
-
-    .nav-links a:hover {
-      color: var(--accent);
-    }
-
-    .nav-cta {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #000 !important;
-      font-weight: 700 !important;
-      padding: 7px clamp(12px, 1.5vw, 18px);
-      border-radius: 50px;
-      font-size: clamp(11px, 0.85vw + 0.45rem, 14px) !important;
-    }
-
-    .nav-cta:hover {
-      opacity: .82 !important;
-    }
-
-    .hamburger {
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      gap: 5px;
-      cursor: pointer;
-      flex-shrink: 0;
-      padding: 8px;
-      margin: -8px -8px -8px 0;
-      background: none;
-      border: none;
-    }
-
-    .hamburger span {
-      display: block;
-      width: 22px;
-      height: 2px;
-      background: var(--text);
-      border-radius: 2px;
-    }
-
-    .mobile-menu {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: calc(58px + env(safe-area-inset-top, 0px) + 16px) 24px 24px;
-      background: rgba(7, 18, 38, .98);
-      backdrop-filter: blur(20px);
-      z-index: 99;
-      flex-direction: column;
-      gap: 14px;
-      border-bottom: 1px solid var(--border);
-      max-height: min(100vh, 100dvh);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .mobile-menu a {
-      color: var(--text);
-      text-decoration: none;
-      font-size: 16px;
-      font-weight: 500;
-      padding: 6px 0;
-    }
-
-    .mobile-menu.open {
-      display: flex;
-    }
-
-    /* Many nav items: switch to hamburger before links collide with logo */
-    @media (max-width: 1100px) {
-      .nav-links {
-        display: none;
-      }
-
-      .hamburger {
-        display: flex;
-      }
-
-      .nav-logo {
-        max-width: calc(100% - 52px);
-      }
-    }
-
-    /* HERO */
-    #hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: clamp(90px, 12vh, 140px) clamp(20px, 6vw, 100px) clamp(60px, 8vh, 100px);
-      overflow: hidden;
-    }
-
-    .hero-grid {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      background-image: linear-gradient(rgba(0, 180, 255, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 180, 255, .06) 1px, transparent 1px);
-      background-size: 60px 60px;
-      animation: gridDrift 20s linear infinite;
-    }
-
-    @keyframes gridDrift {
-      from {
-        background-position: 0 0
-      }
-
-      to {
-        background-position: 60px 60px
-      }
-    }
-
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .orb1 {
-      width: clamp(300px, 50vw, 600px);
-      height: clamp(300px, 50vw, 600px);
-      background: rgba(0, 180, 255, .12);
-      top: -10%;
-      left: -15%;
-      animation: float1 12s ease-in-out infinite;
-    }
-
-    .orb2 {
-      width: clamp(200px, 40vw, 500px);
-      height: clamp(200px, 40vw, 500px);
-      background: rgba(0, 229, 160, .10);
-      bottom: -5%;
-      right: -10%;
-      animation: float2 14s ease-in-out infinite;
-    }
-
-    .orb3 {
-      width: clamp(150px, 25vw, 300px);
-      height: clamp(150px, 25vw, 300px);
-      background: rgba(255, 201, 64, .08);
-      top: 40%;
-      left: 60%;
-      animation: float1 10s ease-in-out infinite reverse;
-    }
-
-    @keyframes float1 {
-
-      0%,
-      100% {
-        transform: translate(0, 0)
-      }
-
-      50% {
-        transform: translate(30px, -40px)
-      }
-    }
-
-    @keyframes float2 {
-
-      0%,
-      100% {
-        transform: translate(0, 0)
-      }
-
-      50% {
-        transform: translate(-25px, 35px)
-      }
-    }
-
-    .hero-badge {
-      position: relative;
-      z-index: 1;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--border);
-      background: rgba(0, 180, 255, .08);
-      padding: 7px clamp(12px, 3vw, 18px);
-      border-radius: 50px;
-      font-size: clamp(10px, 2.8vw, 13px);
-      font-weight: 500;
-      color: var(--accent);
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      margin-bottom: 28px;
-      max-width: 100%;
-      text-align: center;
-      flex-wrap: wrap;
-      justify-content: center;
-      animation: fadeUp .8s ease both;
-    }
-
-    .hero-badge--archived {
-      color: var(--muted);
-      background: rgba(122, 155, 181, .08);
-    }
-
-    .hero-badge .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--accent2);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-        transform: scale(1)
-      }
-
-      50% {
-        opacity: .4;
-        transform: scale(.6)
-      }
-    }
-
-    h1 {
-      position: relative;
-      z-index: 1;
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(38px, 7vw, 88px);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -1.5px;
-      animation: fadeUp .8s .15s ease both;
-    }
-
-    h1 .line2 {
-      display: block;
-      background: linear-gradient(90deg, var(--accent), var(--accent2) 60%, var(--gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-sub {
-      position: relative;
-      z-index: 1;
-      max-width: 620px;
-      font-size: clamp(15px, 2vw, 18px);
-      color: var(--muted);
-      margin: 24px auto 0;
-      animation: fadeUp .8s .3s ease both;
-    }
-
-    .hero-dates {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      gap: clamp(16px, 3vw, 32px);
-      flex-wrap: wrap;
-      justify-content: center;
-      margin: 36px auto 0;
-      animation: fadeUp .8s .45s ease both;
-    }
-
-    .date-pill {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px clamp(12px, 3vw, 24px);
-      text-align: center;
-      min-width: min(100%, 160px);
-      max-width: 100%;
-      flex: 1 1 140px;
-      box-sizing: border-box;
-    }
-
-    .date-pill .label {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .date-pill .val {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(16px, 2.5vw, 22px);
-      font-weight: 700;
-      color: var(--gold);
-      margin-top: 4px;
-    }
-
-    .hero-buttons {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 44px;
-      animation: fadeUp .8s .6s ease both;
-    }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #000;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: clamp(14px, 1.8vw, 16px);
-      padding: clamp(12px, 2vw, 16px) clamp(24px, 4vw, 40px);
-      border-radius: 50px;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 0 40px rgba(0, 180, 255, .35);
-      transition: transform .2s, box-shadow .2s;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 60px rgba(0, 180, 255, .5);
-    }
-
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: transparent;
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      font-size: clamp(14px, 1.8vw, 16px);
-      padding: clamp(12px, 2vw, 16px) clamp(24px, 4vw, 40px);
-      border-radius: 50px;
-      text-decoration: none;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: border-color .2s, background .2s;
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--accent);
-      background: rgba(0, 180, 255, .06);
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(24px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    /* SECTIONS */
-    section {
-      position: relative;
-      z-index: 1;
-      padding: clamp(60px, 10vw, 100px) clamp(16px, 5vw, 100px);
-      overflow-x: hidden;
-    }
-
-    img,
-    video {
-      max-width: 100%;
-      height: auto;
-    }
-
-    .section-label {
-      font-size: 12px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent);
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(28px, 4.5vw, 52px);
-      font-weight: 800;
-      letter-spacing: -1px;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
-
-    .section-desc {
-      color: var(--muted);
-      font-size: clamp(14px, 1.8vw, 17px);
-      max-width: 600px;
-      line-height: 1.7;
-      overflow-wrap: break-word;
-      word-wrap: break-word;
-    }
-
-    .center {
-      text-align: center;
-    }
-
-    .center .section-desc {
-      margin: 0 auto;
-    }
-
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border), transparent);
-    }
-
-    /* STATS */
-    #stats {
-      background: var(--bg);
-      padding: clamp(40px, 6vw, 60px) clamp(20px, 6vw, 100px);
-    }
-
-    .stats-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .stat-item {
-      text-align: center;
-      flex: 1;
-      min-width: 140px;
-    }
-
-    .stat-num {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(36px, 5vw, 60px);
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: clamp(12px, 1.5vw, 14px);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-top: 4px;
-    }
-
-    /* ABOUT */
-    #about {
-      background: var(--surface);
-    }
-
-    .about-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-      gap: 24px;
-      margin-top: 48px;
-    }
-
-    .about-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(20px, 3vw, 32px);
-      transition: transform .25s, border-color .25s;
-    }
-
-    .about-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--accent);
-    }
-
-    .about-icon {
-      font-size: 32px;
-      margin-bottom: 14px;
-    }
-
-    .about-card h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(16px, 2vw, 20px);
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .about-card p {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.65;
-    }
-
-    /* SLIDER */
-    #organizers {
-      overflow: hidden;
-      padding: clamp(50px, 8vw, 80px) 0;
-      background: var(--bg);
-      position: relative;
-      z-index: 1;
-    }
-
-    .organizers-inner {
-      padding: 0 clamp(20px, 6vw, 100px);
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .slider-track-wrap {
-      overflow: hidden;
-      width: 100%;
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-      mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-    }
-
-    .slider-track {
-      display: flex;
-      gap: 28px;
-      width: max-content;
-      animation: slide 22s linear infinite;
-    }
-
-    .slider-track:hover {
-      animation-play-state: paused;
-    }
-
-    @keyframes slide {
-      from {
-        transform: translateX(0)
-      }
-
-      to {
-        transform: translateX(-50%)
-      }
-    }
-
-    .org-logo-card {
-      flex-shrink: 0;
-      width: clamp(200px, 24vw, 280px);
-      aspect-ratio: 8/5;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: clamp(12px, 2vw, 20px) clamp(14px, 2.2vw, 24px);
-      transition: border-color .25s;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-
-    .org-logo-card:hover {
-      border-color: var(--accent);
-    }
-
-    .org-logo-inner {
-      width: 100%;
-      height: 100%;
-      min-height: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .org-logo-img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center;
-      display: block;
-    }
-
-    /* THEMES */
-    #themes {
-      background: var(--surface);
-    }
-
-    .themes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-      gap: clamp(16px, 2.5vw, 28px);
-      margin-top: 48px;
-    }
-
-    .theme-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(24px, 3.5vw, 40px);
-      position: relative;
-      overflow: hidden;
-      transition: transform .3s, border-color .3s;
-    }
-
-    .theme-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--card-glow, transparent);
-      opacity: 0;
-      transition: opacity .3s;
-    }
-
-    .theme-card:hover {
-      transform: translateY(-6px);
-    }
-
-    .theme-card:hover::before {
-      opacity: 1;
-    }
-
-    .theme-card:nth-child(1) {
-      --card-glow: radial-gradient(ellipse at top left, rgba(0, 180, 255, .08), transparent 70%);
-    }
-
-    .theme-card:nth-child(1):hover {
-      border-color: var(--accent);
-    }
-
-    .theme-card:nth-child(2) {
-      --card-glow: radial-gradient(ellipse at top left, rgba(0, 229, 160, .08), transparent 70%);
-    }
-
-    .theme-card:nth-child(2):hover {
-      border-color: var(--accent2);
-    }
-
-    .theme-card:nth-child(3) {
-      --card-glow: radial-gradient(ellipse at top left, rgba(255, 201, 64, .08), transparent 70%);
-    }
-
-    .theme-card:nth-child(3):hover {
-      border-color: var(--gold);
-    }
-
-    .theme-num {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(48px, 6vw, 72px);
-      font-weight: 800;
-      color: var(--border);
-      line-height: 1;
-      margin-bottom: 12px;
-    }
-
-    .theme-icon {
-      font-size: clamp(32px, 4vw, 44px);
-      margin-bottom: 16px;
-    }
-
-    .theme-card h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(18px, 2.2vw, 24px);
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .theme-card p {
-      color: var(--muted);
-      font-size: clamp(13px, 1.5vw, 15px);
-      line-height: 1.65;
-    }
-
-    .theme-tag {
-      display: inline-block;
-      margin-top: 16px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      padding: 5px 12px;
-      border-radius: 50px;
-    }
-
-    .tag-blue {
-      background: rgba(0, 180, 255, .12);
-      color: var(--accent);
-    }
-
-    .tag-green {
-      background: rgba(0, 229, 160, .12);
-      color: var(--accent2);
-    }
-
-    .tag-gold {
-      background: rgba(255, 201, 64, .12);
-      color: var(--gold);
-    }
-
-    .themes-note {
-      margin: 40px auto 0;
-      text-align: center;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(20px, 3vw, 32px);
-      max-width: 700px;
-    }
-
-    .themes-note p {
-      color: var(--muted);
-      font-size: clamp(14px, 1.7vw, 16px);
-    }
-
-    .themes-note strong {
-      color: var(--accent2);
-    }
-
-    .theme-card:nth-child(4) {
-      --card-glow: radial-gradient(ellipse at top left, rgba(0, 180, 255, .06), rgba(0, 229, 160, .06), transparent 70%);
-    }
-
-    .theme-card:nth-child(4):hover {
-      border-color: var(--accent2);
-    }
-
-    /* DATA TABLES (structure, judging, team rules) */
-    .info-table-wrap {
-      margin-top: 40px;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-      overflow-x: auto;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--card);
-    }
-
-    .info-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: clamp(13px, 1.5vw, 15px);
-    }
-
-    .info-table th,
-    .info-table td {
-      padding: 14px 18px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-
-    .info-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .info-table th {
-      font-family: 'Syne', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--accent);
-      background: rgba(0, 180, 255, .06);
-    }
-
-    .info-table td {
-      color: var(--muted);
-      overflow-wrap: break-word;
-      hyphens: auto;
-    }
-
-    .info-table td:first-child {
-      color: var(--text);
-      font-weight: 600;
-      max-width: 38%;
-    }
-
-    #structure {
-      background: var(--surface);
-    }
-
-    #judging {
-      background: var(--bg);
-    }
-
-    .awards-block {
-      margin-top: 40px;
-      max-width: 720px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-    }
-
-    .awards-block h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(17px, 2vw, 20px);
-      font-weight: 700;
-      margin-bottom: 16px;
-      color: var(--text);
-    }
-
-    .awards-block ul {
-      list-style: none;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.75;
-    }
-
-    .awards-block li {
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .awards-block li:last-child {
-      border-bottom: none;
-    }
-
-    .extra-info-box {
-      margin-top: 36px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(20px, 3vw, 28px);
-      text-align: left;
-    }
-
-    .extra-info-box h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(17px, 2vw, 20px);
-      font-weight: 700;
-      margin-bottom: 14px;
-      color: var(--text);
-    }
-
-    .extra-info-box ul {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.75;
-      padding-left: 20px;
-    }
-
-    .extra-info-box li {
-      margin-bottom: 10px;
-    }
-
-    /* TIMELINE */
-    #timeline {
-      background: var(--bg);
-    }
-
-    .timeline-wrap {
-      max-width: 700px;
-      margin: 48px auto 0;
-      position: relative;
-    }
-
-    .timeline-line {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(to bottom, var(--accent), var(--accent2));
-      transform: translateX(-50%);
-    }
-
-    .tl-item {
-      display: flex;
-      gap: 32px;
-      margin-bottom: 48px;
-      position: relative;
-      align-items: flex-start;
-    }
-
-    .tl-item:nth-child(odd) {
-      flex-direction: row;
-    }
-
-    .tl-item:nth-child(even) {
-      flex-direction: row-reverse;
-    }
-
-    .tl-content {
-      flex: 1;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 24px;
-      transition: border-color .2s;
-    }
-
-    .tl-content:hover {
-      border-color: var(--accent);
-    }
-
-    .tl-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: 3px solid var(--bg);
-      position: absolute;
-      left: 50%;
-      top: 20px;
-      transform: translateX(-50%);
-      box-shadow: 0 0 12px var(--accent);
-    }
-
-    .tl-date {
-      font-size: 11px;
-      color: var(--accent);
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .tl-title {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(15px, 2vw, 18px);
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .tl-desc {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .spacer-half {
-      flex: 1;
-    }
-
-    @media(max-width:600px) {
-      .timeline-line {
-        left: 16px;
-      }
-
-      .tl-item,
-      .tl-item:nth-child(even) {
-        flex-direction: row;
-        padding-left: 40px;
-      }
-
-      .tl-dot {
-        left: 16px;
-      }
-
-      .spacer-half {
-        display: none;
-      }
-    }
-
-    /* ELIGIBILITY */
-    #eligibility {
-      background: var(--surface);
-    }
-
-    .elig-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-      gap: 20px;
-      margin-top: 44px;
-    }
-
-    .elig-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .elig-check {
-      color: var(--accent2);
-      font-size: 20px;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .elig-item h4 {
-      font-family: 'Syne', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .elig-item p {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    /* PRIZES */
-    #prizes {
-      background: var(--bg);
-    }
-
-    .prizes-grid {
-      display: flex;
-      gap: clamp(16px, 2.5vw, 28px);
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 48px;
-    }
-
-    .prize-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(24px, 3.5vw, 40px);
-      text-align: center;
-      flex: 1;
-      min-width: min(100%, 220px);
-      max-width: 280px;
-      position: relative;
-      overflow: hidden;
-      transition: transform .3s;
-    }
-
-    .prize-card:hover {
-      transform: translateY(-6px);
-    }
-
-    .prize-card.first {
-      border-color: var(--gold);
-      box-shadow: 0 0 40px rgba(255, 201, 64, .12);
-    }
-
-    .prize-card.first::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--gold), #ffaa00);
-    }
-
-    .prize-medal {
-      font-size: clamp(36px, 5vw, 52px);
-      margin-bottom: 12px;
-    }
-
-    .prize-place {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(13px, 1.5vw, 15px);
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }
-
-    .prize-award {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(14px, 2vw, 18px);
-      font-weight: 800;
-      color: var(--text);
-      margin: 10px 0 6px;
-    }
-
-    .prize-desc {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    /* REGISTER */
-    #register {
-      background: var(--surface);
-    }
-
-    .register-box {
-      max-width: 720px;
-      margin: 48px auto 0;
-      background: linear-gradient(135deg, rgba(0, 180, 255, .06), rgba(0, 229, 160, .04));
-      border: 1px solid rgba(0, 180, 255, .25);
-      border-radius: 24px;
-      padding: clamp(32px, 5vw, 64px);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .register-box::before {
-      content: '';
-      position: absolute;
-      top: -60px;
-      right: -60px;
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 229, 160, .12), transparent 70%);
-    }
-
-    .register-box h2 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(24px, 4vw, 42px);
-      font-weight: 800;
-      margin-bottom: 16px;
-    }
-
-    .register-box p {
-      color: var(--muted);
-      font-size: clamp(14px, 1.8vw, 17px);
-      margin-bottom: 32px;
-      line-height: 1.7;
-      overflow-wrap: break-word;
-    }
-
-    .register-deadline {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 201, 64, .1);
-      border: 1px solid rgba(255, 201, 64, .3);
-      color: var(--gold);
-      padding: 8px 18px;
-      border-radius: 50px;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 28px;
-    }
-
-    /* FOOTER */
-    footer {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: clamp(40px, 6vw, 60px) clamp(20px, 6vw, 100px) clamp(24px, 4vw, 40px);
-    }
-
-    .footer-top {
-      display: flex;
-      gap: 40px;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      margin-bottom: 40px;
-    }
-
-    .footer-brand p {
-      color: var(--muted);
-      font-size: 14px;
-      max-width: 260px;
-      line-height: 1.65;
-      margin-top: 8px;
-    }
-
-    .footer-links h4 {
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-
-    .footer-links ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .footer-links a {
-      color: var(--text);
-      text-decoration: none;
-      font-size: 14px;
-      transition: color .2s;
-      overflow-wrap: break-word;
-    }
-
-    .footer-links a:hover {
-      color: var(--accent);
-    }
-
-    .footer-bottom {
-      border-top: 1px solid var(--border);
-      padding-top: 24px;
-      display: flex;
-      gap: 16px;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .footer-bottom p {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .footer-psu {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    /* SCROLL REVEAL */
-    .reveal {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity .7s ease, transform .7s ease;
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
-  </style>
+    </script>
 </head>
 
 <body>
-
-  <!-- NAV -->
-  <nav>
-    <a class="nav-logo" href="/projects.html">PSU AI Hackathon 2.0</a>
-    <ul class="nav-links">
-      <li><a href="#about">About</a></li>
-      <li><a href="#themes">Themes</a></li>
-      <li><a href="#timeline">Timeline</a></li>
-      <li><a href="#structure">Structure</a></li>
-      <li><a href="#eligibility">Teams</a></li>
-      <li><a href="#judging">Judging</a></li>
-      <li><a href="#prizes">Prizes</a></li>
-      <li><a href="#contact">Contact</a></li>
-      <li><a href="/projects.html" class="nav-cta">ACM PSU &#x2197;</a></li>
-    </ul>
-    <div class="hamburger" onclick="toggleMenu()">
-      <span></span><span></span><span></span>
-    </div>
-  </nav>
-
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="#about" onclick="toggleMenu()">About</a>
-    <a href="#themes" onclick="toggleMenu()">Themes</a>
-    <a href="#timeline" onclick="toggleMenu()">Timeline</a>
-    <a href="#structure" onclick="toggleMenu()">Structure</a>
-    <a href="#eligibility" onclick="toggleMenu()">Teams</a>
-    <a href="#judging" onclick="toggleMenu()">Judging</a>
-    <a href="#prizes" onclick="toggleMenu()">Prizes</a>
-    <a href="#contact" onclick="toggleMenu()">Contact</a>
-    <a href="/projects.html">ACM PSU &#x2197;</a>
-  </div>
-
-  <!-- HERO -->
-  <section id="hero">
-    <div class="hero-grid"></div>
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-    <div class="orb orb3"></div>
-
-    <div class="hero-badge hero-badge--archived">Archived event &middot; Term 252 &middot; 12 April &ndash; 2 May 2026
-    </div>
-
-    <h1>PSU AI Hackathon 2.0<br><span class="line2">Students &amp; Alumni United</span></h1>
-
-    <p class="hero-sub">Under the patronage of <strong>Dean of CCIS, Dr. Mohammed Ali Alshara</strong>. The <strong>ACM
-        Student Chapter at Prince Sultan University</strong> invites innovators to solve real-world problems with AI
-      &mdash; whether you care about healthcare, education, security, or <strong>sustainability</strong>, this hackathon
-      is for you.</p>
-
-    <div class="hero-dates">
-      <div class="date-pill">
-        <div class="label">Call Opens</div>
-        <div class="val">April 12, 2026</div>
-      </div>
-      <div class="date-pill">
-        <div class="label">Submission Deadline</div>
-        <div class="val">Apr 25 &middot; 11:59 PM</div>
-      </div>
-      <div class="date-pill">
-        <div class="label">Competition &amp; Pitch</div>
-        <div class="val">May 2, 2026 &middot; 11 AM</div>
-      </div>
-    </div>
-
-
-  </section>
-
-  <!-- STATS -->
-  <section id="stats">
-    <div class="stats-row reveal">
-      <div class="stat-item">
-        <div class="stat-num">4</div>
-        <div class="stat-label">AI Themes</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">&#x221E;</div>
-        <div class="stat-label">Build Connections</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">1</div>
-        <div class="stat-label">Day Competition</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">&#x221E;</div>
-        <div class="stat-label">Innovation</div>
-      </div>
-    </div>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- ABOUT -->
-  <section id="about">
-    <div class="reveal">
-      <p class="section-label">Official Announcement</p>
-      <h2 class="section-title">PSU AI Hackathon 2.0: Students &amp; Alumni United</h2>
-      <p class="section-desc" style="margin-bottom:16px"><strong>Under the patronage of Dean of CCIS, Dr. Mohammed Ali
-          Alshara.</strong></p>
-      <p class="section-desc" style="margin-bottom:16px">The <strong>ACM Student Chapter at Prince Sultan
-          University</strong> is excited to announce <strong>PSU AI Hackathon 2.0: Students &amp; Alumni United</strong>
-        &mdash; a platform for innovators to unleash creativity and solve real-world problems using Artificial
-        Intelligence.</p>
-      <p class="section-desc">Building on the success of <strong>ACM PSU AI Hackathon 2025</strong>, which attracted
-        <strong>19 dynamic teams</strong> and produced award-winning work in healthcare, education, assistive
-        technology, and smart cities, this edition opens its doors to <strong>Alumni and COOP students</strong> to
-        collaborate with <strong>current students</strong>.
-      </p>
-    </div>
-    <div class="about-grid">
-      <div class="about-card reveal">
-        <div class="about-icon">&#x1F3DB;</div>
-        <h3>Patronage &amp; leadership</h3>
-        <p>Held under the patronage of the <strong>Dean of CCIS, Dr. Mohammed Ali Alshara</strong>, with strong support
-          from ACM and the PSU community.</p>
-      </div>
-      <div class="about-card reveal">
-        <div class="about-icon">&#x1F91D;</div>
-        <h3>Students, Alumni &amp; COOP</h3>
-        <p>Current students team up with <strong>PSU Alumni</strong> and <strong>COOP students</strong> so experience
-          and fresh ideas work together on every project.</p>
-      </div>
-      <div class="about-card reveal">
-        <div class="about-icon">&#x1F3C6;</div>
-        <h3>Built on 2025</h3>
-        <p>Last year&rsquo;s hackathon brought <strong>19 teams</strong> and standout solutions. Edition 2.0 grows that
-          momentum with a wider, united participant base.</p>
-      </div>
-      <div class="about-card reveal">
-        <div class="about-icon">&#x1F30D;</div>
-        <h3>Themes that matter</h3>
-        <p>From healthcare and education to security and <strong>sustainability</strong> &mdash; build AI that aligns
-          with real needs and lasting impact.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ORGANIZERS SLIDER -->
-  <section id="organizers">
-    <div class="organizers-inner reveal">
-      <p class="section-label">Organized By</p>
-      <h2 class="section-title">Our Organizers</h2>
-      <p class="section-desc" style="margin:0 auto">The PSU AI Hackathon is made possible by the collaboration of
-        outstanding organizations and departments.</p>
-    </div>
-    <div style="margin-top:40px">
-      <div class="slider-track-wrap">
-        <div class="slider-track">
-          <!-- Four organizer logos; the duplicate block below must match for infinite scroll -->
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img" src="assets/img/prince-sultan-university-logo.png"
-                width="240" height="120" loading="lazy" decoding="async" alt="Prince Sultan University"></div>
-          </div>
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img"
-                src="assets/img/ccis-college-of-computer-and-information-sciences-logo.png" width="240" height="120"
-                loading="lazy" decoding="async"
-                alt="College of Computer and Information Sciences, Prince Sultan University"></div>
-          </div>
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img" src="assets/img/acm-professional-chapter-ksa-logo.png"
-                width="240" height="120" loading="lazy" decoding="async" alt="ACM Professional Chapter, Saudi Arabia">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="ambient-glow ambient-glow--corner"></div>
+    <nav>
+        <div class="container nav-inner">
+            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+                <img src="assets/img/acm.png" alt=""><span>ACM</span><span class="divider">/</span><span>PSU</span>
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
+                aria-controls="nav-links">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="index.html#about">About</a><a href="positions.html">Positions</a><a
+                    href="projects.html">Projects</a><a href="projects.html#workshops">Archive</a><a
+                    href="team.html">Team</a><a href="join.html">Join</a>
             </div>
-          </div>
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img" src="assets/img/acm-student-club-psu-logo.png"
-                width="240" height="120" loading="lazy" decoding="async"
-                alt="ACM Student Club, Prince Sultan University"></div>
-          </div>
-          <!-- Duplicates for seamless loop -->
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img" src="assets/img/prince-sultan-university-logo.png"
-                width="240" height="120" loading="lazy" decoding="async" alt="" aria-hidden="true"></div>
-          </div>
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img"
-                src="assets/img/ccis-college-of-computer-and-information-sciences-logo.png" width="240" height="120"
-                loading="lazy" decoding="async" alt="" aria-hidden="true"></div>
-          </div>
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img" src="assets/img/acm-professional-chapter-ksa-logo.png"
-                width="240" height="120" loading="lazy" decoding="async" alt="" aria-hidden="true"></div>
-          </div>
-          <div class="org-logo-card">
-            <div class="org-logo-inner"><img class="org-logo-img" src="assets/img/acm-student-club-psu-logo.png"
-                width="240" height="120" loading="lazy" decoding="async" alt="" aria-hidden="true"></div>
-          </div>
+            <div class="nav-meta mono-meta">SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE</div>
         </div>
-      </div>
-    </div>
-  </section>
+    </nav>
 
-  <div class="divider"></div>
-
-  <!-- THEMES -->
-  <section id="themes">
-    <div class="center reveal">
-      <p class="section-label">Hackathon Themes</p>
-      <h2 class="section-title">Choose Your Challenge</h2>
-      <p class="section-desc">Participants can choose <strong>one or more</strong> of the listed themes to build
-        innovative solutions that address real-world challenges, aligned with the <strong>United Nations Sustainable
-          Development Goals (SDGs)</strong> and <strong>Saudi Vision 2030</strong>.</p>
-    </div>
-    <div class="themes-grid">
-      <div class="theme-card reveal">
-        <div class="theme-num">01</div>
-        <div class="theme-icon">&#x1F4DA;</div>
-        <h3>AI in Education</h3>
-        <p>Leverage AI to transform learning experiences, personalize education, enhance accessibility, and empower
-          students and educators with intelligent tools.</p>
-        <span class="theme-tag tag-blue">EdTech &middot; Learning &middot; Accessibility</span>
-      </div>
-      <div class="theme-card reveal">
-        <div class="theme-num">02</div>
-        <div class="theme-icon">&#x1F3E5;</div>
-        <h3>AI in Healthcare</h3>
-        <p>Use AI to revolutionize patient care, improve diagnostics, accelerate discovery, and make healthcare more
-          efficient, accurate, and accessible.</p>
-        <span class="theme-tag tag-green">MedTech &middot; Diagnostics &middot; Wellness</span>
-      </div>
-      <div class="theme-card reveal">
-        <div class="theme-num">03</div>
-        <div class="theme-icon">&#x1F510;</div>
-        <h3>AI for Security</h3>
-        <p>Apply AI to strengthen cybersecurity, detect threats in real time, prevent fraud, safeguard critical
-          infrastructure, and protect digital identities.</p>
-        <span class="theme-tag tag-gold">CyberSec &middot; Fraud Detection &middot; Defense</span>
-      </div>
-      <div class="theme-card reveal">
-        <div class="theme-num">04</div>
-        <div class="theme-icon">&#x1F331;</div>
-        <h3>AI for Sustainability</h3>
-        <p>Deploy AI for environmental stewardship, efficient resources, smarter cities, and long-term resilience
-          &mdash; building a better tomorrow.</p>
-        <span class="theme-tag tag-blue">ESG &middot; Climate &middot; Smart Cities</span>
-      </div>
-    </div>
-    <div class="themes-note reveal">
-      <p>You may also submit your <strong>working final year project</strong> if you wish.</p>
-    </div>
-  </section>
-
-  <!-- TIMELINE -->
-  <section id="timeline">
-    <div class="center reveal">
-      <p class="section-label">Key Dates</p>
-      <h2 class="section-title">Event Timeline</h2>
-    </div>
-    <div class="timeline-wrap">
-      <div class="timeline-line"></div>
-      <div class="tl-item reveal">
-        <div class="tl-content">
-          <div class="tl-date">April 12, 2026</div>
-          <div class="tl-title">Call for Competition Opens</div>
-          <div class="tl-desc">Registration and submissions open for student&ndash;alumni&ndash;COOP teams.</div>
+    <header class="page-header container">
+        <div class="breadcrumb mono-meta"><span>PROJECTS</span><span class="dim-text">/</span><span>HACKATHON</span><span
+                class="dim-text">/</span><span class="accent-text">AI 2.0</span></div>
+        <h1 class="page-title">PSU AI <br>Hackathon 2.0.</h1>
+        <p class="hero-desc" style="margin-top: 2rem;">Students &amp; Alumni United. Run in term 252 under the patronage
+            of the Dean of CCIS, Dr. Mohammed Ali Alshara, this edition opened the ACM Student Chapter's AI hackathon to
+            Alumni and COOP students alongside current students. Teams built against one of four themes &mdash; AI in
+            education, healthcare, security and sustainability &mdash; and advanced through proposal screening, a poster
+            round and a jury pitch.</p>
+        <div class="hero-ctas" style="margin-top: 2.5rem;">
+            <a href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html" class="btn btn-primary">Open Event
+                Site</a>
+            <a href="https://chat.whatsapp.com/FcV1mNj6ntzBKr3vP3gBAx" class="btn btn-secondary" rel="noopener">Contact
+                on WhatsApp</a>
         </div>
-        <div class="spacer-half"></div>
-        <div class="tl-dot"></div>
-      </div>
-      <div class="tl-item reveal">
-        <div class="spacer-half"></div>
-        <div class="tl-dot" style="background:var(--gold);box-shadow:0 0 12px var(--gold)"></div>
-        <div class="tl-content">
-          <div class="tl-date">April 25, 2026</div>
-          <div class="tl-title">Submission Deadline</div>
-          <div class="tl-desc"><strong>April 25, 2026 &mdash; 11:59 PM</strong>. Final time to submit your proposal and
-            materials.</div>
-        </div>
-      </div>
-      <div class="tl-item reveal">
-        <div class="tl-content">
-          <div class="tl-date">May 2, 2026</div>
-          <div class="tl-title">Final Competition &amp; Pitch</div>
-          <div class="tl-desc"><strong>11:00 AM</strong> &middot; <strong>Building 105, Prince Sultan
-              University</strong>. Live presentations, jury, and awards.</div>
-        </div>
-        <div class="spacer-half"></div>
-        <div class="tl-dot"></div>
-      </div>
-      <div class="tl-item reveal">
-        <div class="spacer-half"></div>
-        <div class="tl-dot" style="background:var(--accent2);box-shadow:0 0 12px var(--accent2)"></div>
-        <div class="tl-content">
-          <div class="tl-date">Prizes</div>
-          <div class="tl-title">Awards &amp; recognition</div>
-          <div class="tl-desc">Awards worth <strong>more than SAR 9,000</strong> across presentation, poster, and
-            special categories. See Prizes for details.</div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </header>
 
-  <div class="divider"></div>
+    <main id="main" class="container">
+        <section class="reveal" aria-labelledby="parameters-heading">
+            <div class="section-header">
+                <h2 id="parameters-heading">Event Parameters</h2><span class="mono-meta">TERM 252 // RIYADH</span>
+            </div>
+            <div class="stat-strip">
+                <div class="stat-cell"><span class="stat-value">12 APR</span><span class="stat-label">Call opens</span>
+                </div>
+                <div class="stat-cell"><span class="stat-value">25 APR</span><span class="stat-label">Submission
+                        deadline</span></div>
+                <div class="stat-cell stat-cell--accent"><span class="stat-value">02 MAY</span><span
+                        class="stat-label">Competition &amp; pitch</span></div>
+                <div class="stat-cell"><span class="stat-value">05</span><span class="stat-label">Members per team
+                        (max)</span></div>
+                <div class="stat-cell"><span class="stat-value">B105</span><span class="stat-label">Building, PSU
+                        Riyadh</span></div>
+            </div>
+        </section>
 
-  <!-- COMPETITION STRUCTURE -->
-  <section id="structure">
-    <div class="center reveal">
-      <p class="section-label">How it works</p>
-      <h2 class="section-title">Competition Structure</h2>
-      <p class="section-desc">Four stages from proposal review to the Dean&rsquo;s award ceremony.</p>
-    </div>
-    <div class="info-table-wrap reveal">
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Stage</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1. Initial Screening</td>
-            <td>Submitted proposals reviewed by <strong>ACM Professional Chapter Core Members</strong>.</td>
-          </tr>
-          <tr>
-            <td>2. Poster Competition</td>
-            <td>Selected teams present via freestanding posters; committee members visit each poster.</td>
-          </tr>
-          <tr>
-            <td>3. Shortlisted Presentations</td>
-            <td>Top teams pitch to the jury (<strong>up to 5 minutes</strong> per team).</td>
-          </tr>
-          <tr>
-            <td>4. Winners Announcement</td>
-            <td>Award ceremony with <strong>the Dean&rsquo;s participation</strong>.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+        <section class="reveal" aria-labelledby="themes-heading">
+            <div class="section-header">
+                <h2 id="themes-heading">The Four Themes</h2><span class="mono-meta">SDGs // VISION 2030</span>
+            </div>
+            <div class="note-grid">
+                <div class="note-card">
+                    <h3>AI in Education</h3>
+                    <p>Transform learning experiences, personalise education, widen accessibility and give students and
+                        educators intelligent tools to work with.</p>
+                    <ul>
+                        <li><span>Focus</span><span>EdTech, learning, accessibility</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>AI in Healthcare</h3>
+                    <p>Improve patient care and diagnostics, accelerate discovery, and make healthcare more efficient,
+                        accurate and reachable.</p>
+                    <ul>
+                        <li><span>Focus</span><span>MedTech, diagnostics, wellness</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>AI for Security</h3>
+                    <p>Strengthen cybersecurity, detect threats in real time, prevent fraud, and protect critical
+                        infrastructure and digital identities.</p>
+                    <ul>
+                        <li><span>Focus</span><span>CyberSec, fraud detection, defence</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>AI for Sustainability</h3>
+                    <p>Apply AI to environmental stewardship, efficient resource use, smarter cities and long-term
+                        resilience.</p>
+                    <ul>
+                        <li><span>Focus</span><span>ESG, climate, smart cities</span></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="mono-meta" style="margin-top: 2rem;">TEAMS MAY PICK ONE OR MORE THEMES. A WORKING FINAL YEAR
+                PROJECT MAY BE SUBMITTED IF IT FITS.</p>
+        </section>
 
-  <div class="divider"></div>
+        <section class="reveal" aria-labelledby="format-heading">
+            <div class="section-header">
+                <h2 id="format-heading">Competition Format</h2><span class="mono-meta">SCREEN → POSTER → PITCH →
+                    AWARD</span>
+            </div>
+            <div class="timeline">
+                <div class="timeline-row">
+                    <div class="year">01</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">INITIAL SCREENING</span><span
+                                class="mono-meta meta-value">PROPOSALS REVIEWED BY ACM PROFESSIONAL CHAPTER CORE
+                                MEMBERS</span></div>
+                    </div>
+                    <div class="timeline-status"><span class="tag">SUBMIT</span></div>
+                </div>
+                <div class="timeline-row">
+                    <div class="year">02</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">POSTER COMPETITION</span><span
+                                class="mono-meta meta-value">SELECTED TEAMS PRESENT ON FREESTANDING POSTERS; COMMITTEE
+                                MEMBERS VISIT EACH ONE</span></div>
+                    </div>
+                    <div class="timeline-status"><span class="tag">PRESENT</span></div>
+                </div>
+                <div class="timeline-row">
+                    <div class="year">03</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">SHORTLISTED PRESENTATIONS</span><span
+                                class="mono-meta meta-value">TOP TEAMS PITCH TO THE JURY IN UP TO FIVE MINUTES</span>
+                        </div>
+                    </div>
+                    <div class="timeline-status"><span class="tag">PITCH</span></div>
+                </div>
+                <div class="timeline-row">
+                    <div class="year">04</div>
+                    <div class="timeline-details">
+                        <div class="timeline-stat"><span class="meta-label">WINNERS ANNOUNCEMENT</span><span
+                                class="mono-meta meta-value">AWARD CEREMONY WITH THE DEAN'S PARTICIPATION</span></div>
+                    </div>
+                    <div class="timeline-status"><span class="tag active">AWARD</span></div>
+                </div>
+            </div>
+            <p class="mono-meta" style="margin-top: 2rem;">SHORTLISTING HAPPENS AT THE END OF EVERY STAGE; ONLY FINAL
+                SHORTLISTED TEAMS COMPETE ON SITE.</p>
+        </section>
 
-  <!-- TEAM COMPOSITION & ELIGIBILITY -->
-  <section id="eligibility">
-    <div class="reveal">
-      <p class="section-label">Team composition</p>
-      <h2 class="section-title">Who Can Join &amp; Team Rules</h2>
-      <p class="section-desc">Teams unite <strong>current PSU students</strong>, <strong>Alumni</strong>, and
-        <strong>COOP students</strong>. Please follow the rules below.
-      </p>
-      <p class="section-desc" style="margin-top:20px">Selection runs across multiple stages: <strong>teams will be
-          shortlisted at the end of each phase</strong> according to that round&rsquo;s criteria. <strong>Only those who
-          reach the final shortlist</strong> will <strong>take part in the on-site competition</strong> and present to
-        the jury.</p>
-    </div>
-    <div class="info-table-wrap reveal">
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Rule</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Team size</td>
-            <td>Maximum <strong>5 members</strong> per team.</td>
-          </tr>
-          <tr>
-            <td>Team leader</td>
-            <td>Must be a <strong>current PSU student</strong>.</td>
-          </tr>
-          <tr>
-            <td>Current students</td>
-            <td>May participate, but the team must include <strong>at least one</strong> Alumni or COOP student.</td>
-          </tr>
-          <tr>
-            <td>Alumni &amp; COOP</td>
-            <td>Encouraged to join teams led by PSU students.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="elig-grid" style="margin-top:36px">
-      <div class="elig-item reveal">
-        <div class="elig-check">&#x2705;</div>
-        <div>
-          <h4>PSU community</h4>
-          <p>Participants must be part of the PSU student, Alumni, or COOP ecosystem as described in the team rules.</p>
-        </div>
-      </div>
-      <div class="elig-item reveal">
-        <div class="elig-check">&#x2705;</div>
-        <div>
-          <h4>Aligned submissions</h4>
-          <p>Projects should fit one or more hackathon themes and competition requirements.</p>
-        </div>
-      </div>
-      <div class="elig-item reveal">
-        <div class="elig-check">&#x2705;</div>
-        <div>
-          <h4>Final year projects</h4>
-          <p>Your <strong>working final year project</strong> may be submitted if it aligns with the themes.</p>
-        </div>
-      </div>
-      <div class="elig-item reveal">
-        <div class="elig-check">&#x2705;</div>
-        <div>
-          <h4>Fair process</h4>
-          <p>Shortlisting at each stage is merit-based; only finalists advance to the live pitch.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+        <section class="reveal" aria-labelledby="teams-heading">
+            <div class="section-header">
+                <h2 id="teams-heading">Who Can Join</h2><span class="mono-meta">STUDENTS × ALUMNI × COOP</span>
+            </div>
+            <div class="note-grid">
+                <div class="note-card">
+                    <h3>Team composition</h3>
+                    <p>Every team is led by a current PSU student and must include at least one Alumni or COOP member.
+                        Alumni and COOP participants are encouraged to join student-led teams rather than compete
+                        separately.</p>
+                    <ul>
+                        <li><span>Team size</span><span>Maximum 5 members</span></li>
+                        <li><span>Team leader</span><span>Current PSU student</span></li>
+                        <li><span>Required</span><span>At least one Alumni or COOP member</span></li>
+                    </ul>
+                </div>
+                <div class="note-card">
+                    <h3>Eligible submissions</h3>
+                    <p>Projects must fit one or more of the four hackathon themes. A working final year project is
+                        eligible if it aligns with a theme and meets the competition requirements.</p>
+                </div>
+                <div class="note-card">
+                    <h3>Built on 2025</h3>
+                    <p>ACM PSU AI Hackathon 2025 drew 19 teams and produced award-winning work in healthcare,
+                        education, assistive technology and smart cities. Edition 2.0 widens that base by bringing
+                        Alumni and COOP students into the same call.</p>
+                </div>
+                <div class="note-card">
+                    <h3>On the day</h3>
+                    <p>The final competition and pitch ran on 2 May 2026 at 11:00 in Building 105, Prince Sultan
+                        University. Light snacks, tea and water were provided on site.</p>
+                </div>
+            </div>
+        </section>
 
-  <div class="divider"></div>
+        <section class="reveal" aria-labelledby="judging-heading">
+            <div class="section-header">
+                <h2 id="judging-heading">Judging Rubric</h2><span class="mono-meta">07 CRITERIA // TOTAL 100%</span>
+            </div>
+            <div class="table-scroll">
+                <table class="results-table">
+                    <caption>Scoring weights, adapted from ACM PSU AI Hackathon 2025</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Criterion</th>
+                            <th scope="col" class="col-score">Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="is-podium">
+                            <td>Technical execution &mdash; AI model effectiveness and implementation</td>
+                            <td class="col-score">30%</td>
+                        </tr>
+                        <tr>
+                            <td>Innovation and creativity &mdash; uniqueness of the solution</td>
+                            <td class="col-score">20%</td>
+                        </tr>
+                        <tr>
+                            <td>Feasibility and scalability &mdash; real-world applicability</td>
+                            <td class="col-score">15%</td>
+                        </tr>
+                        <tr>
+                            <td>Business viability &mdash; market potential</td>
+                            <td class="col-score">10%</td>
+                        </tr>
+                        <tr>
+                            <td>Presentation and storytelling &mdash; clarity and engagement</td>
+                            <td class="col-score">10%</td>
+                        </tr>
+                        <tr>
+                            <td>Ethical integrity &mdash; adherence to AI ethics</td>
+                            <td class="col-score">10%</td>
+                        </tr>
+                        <tr>
+                            <td>Interdisciplinary collaboration &mdash; team diversity</td>
+                            <td class="col-score">5%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-  <!-- JUDGING -->
-  <section id="judging">
-    <div class="center reveal">
-      <p class="section-label">How you are scored</p>
-      <h2 class="section-title">Judging Criteria</h2>
-      <p class="section-desc">Adapted from <strong>ACM PSU AI Hackathon 2025</strong>. Weights total 100%.</p>
-    </div>
-    <div class="info-table-wrap reveal">
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Criterion</th>
-            <th>Weight</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Technical Execution (AI model effectiveness &amp; implementation)</td>
-            <td><strong>30%</strong></td>
-          </tr>
-          <tr>
-            <td>Innovation &amp; Creativity (uniqueness of the solution)</td>
-            <td><strong>20%</strong></td>
-          </tr>
-          <tr>
-            <td>Feasibility &amp; Scalability (real-world applicability)</td>
-            <td><strong>15%</strong></td>
-          </tr>
-          <tr>
-            <td>Business Viability (market potential)</td>
-            <td><strong>10%</strong></td>
-          </tr>
-          <tr>
-            <td>Presentation &amp; Storytelling (clarity and engagement)</td>
-            <td><strong>10%</strong></td>
-          </tr>
-          <tr>
-            <td>Ethical Integrity (adherence to AI ethics)</td>
-            <td><strong>10%</strong></td>
-          </tr>
-          <tr>
-            <td>Interdisciplinary Collaboration (team diversity)</td>
-            <td><strong>5%</strong></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+        <section class="reveal" aria-labelledby="prizes-heading">
+            <div class="section-header">
+                <h2 id="prizes-heading">Prizes &amp; Recognition</h2><span class="mono-meta">SAR 9,000+ TOTAL</span>
+            </div>
+            <div class="stat-strip">
+                <div class="stat-cell stat-cell--accent"><span class="stat-value">5,000</span><span
+                        class="stat-label">1st place, SAR</span></div>
+                <div class="stat-cell"><span class="stat-value">3,000</span><span class="stat-label">2nd place,
+                        SAR</span></div>
+                <div class="stat-cell"><span class="stat-value">2,000</span><span class="stat-label">3rd place,
+                        SAR</span></div>
+                <div class="stat-cell"><span class="stat-value">TOP 3</span><span class="stat-label">Poster
+                        category</span></div>
+                <div class="stat-cell"><span class="stat-value">DEAN</span><span class="stat-label">Choice &amp; support
+                        awards</span></div>
+            </div>
+            <div class="note-grid" style="margin-top: 2rem;">
+                <div class="note-card">
+                    <h3>Award categories</h3>
+                    <p>Cash prizes go to the top three presentations; the poster category is ranked separately. The
+                        Dean's Choice Award recognises the best overall presentation, and Dean's Special Support Awards
+                        back selected innovative projects.</p>
+                </div>
+                <div class="note-card">
+                    <h3>Beyond the prize money</h3>
+                    <p>Selected ideas may receive mentorship and incubation opportunities, and winning teams may be
+                        considered for research collaborations, internships and startup incubation.</p>
+                </div>
+            </div>
+        </section>
 
-  <div class="divider"></div>
+        <section class="reveal" aria-labelledby="organizers-heading">
+            <div class="section-header">
+                <h2 id="organizers-heading">Organisers</h2><span class="mono-meta">PATRONAGE: DEAN OF CCIS</span>
+            </div>
+            <div class="note-grid">
+                <div class="note-card">
+                    <h3>Under the Dean's patronage</h3>
+                    <p>The hackathon ran under the patronage of the Dean of CCIS, Dr. Mohammed Ali Alshara, with the
+                        Dean taking part in the closing award ceremony.</p>
+                </div>
+                <div class="note-card">
+                    <h3>Hosting bodies</h3>
+                    <p>Delivered by the ACM Student Chapter at Prince Sultan University with the ACM Professional
+                        Chapter in Saudi Arabia, under the College of Computer and Information Sciences.</p>
+                    <ul>
+                        <li><span>Host</span><span>ACM Student Chapter, PSU</span></li>
+                        <li><span>Screening</span><span>ACM Professional Chapter core members</span></li>
+                        <li><span>College</span><span>CCIS, Prince Sultan University</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-  <!-- PRIZES -->
-  <section id="prizes">
-    <div class="center reveal">
-      <p class="section-label">Recognition and Rewards</p>
-      <h2 class="section-title">Prizes and Awards</h2>
-      <p class="section-desc">Top presentation teams earn <strong>SAR 5,000</strong>, <strong>SAR 3,000</strong>, and
-        <strong>SAR 2,000</strong> for 1st, 2nd, and 3rd place. We also celebrate <strong>poster category</strong>
-        winners, the <strong>Dean&rsquo;s Choice Award</strong>, and <strong>Dean&rsquo;s Special Support
-          Awards</strong> for selected innovative projects. <strong>Total prizes exceed SAR 9,000.</strong> <strong>Many
-          more prizes and recognitions</strong> may be announced along the way, and we are committed to <strong>helping
-          promote your ideas</strong> through mentorship, visibility, and follow-on opportunities.
-      </p>
-    </div>
-    <div class="awards-block reveal">
-      <h3>Awards &amp; recognitions</h3>
-      <ul>
-        <li><strong>Presentation category:</strong> 1st, 2nd, and 3rd place (cash prizes below)</li>
-        <li><strong>Poster category:</strong> 1st, 2nd, and 3rd place</li>
-        <li><strong>Dean&rsquo;s Choice Award:</strong> Best overall presentation</li>
-        <li><strong>Dean&rsquo;s Special Support Awards:</strong> Selected innovative projects</li>
-      </ul>
-    </div>
-    <div class="prizes-grid">
-      <div class="prize-card reveal">
-        <div class="prize-medal">&#x1F948;</div>
-        <div class="prize-place">2nd Place</div>
-        <div class="prize-award">SAR 3,000</div>
-        <div class="prize-desc">Presentation category &middot; Certificate of Excellence + recognition</div>
-      </div>
-      <div class="prize-card first reveal">
-        <div class="prize-medal">&#x1F947;</div>
-        <div class="prize-place">1st Place</div>
-        <div class="prize-award">SAR 5,000</div>
-        <div class="prize-desc">Presentation category &middot; Trophy + certificate + special recognition</div>
-      </div>
-      <div class="prize-card reveal">
-        <div class="prize-medal">&#x1F949;</div>
-        <div class="prize-place">3rd Place</div>
-        <div class="prize-award">SAR 2,000</div>
-        <div class="prize-desc">Presentation category &middot; Certificate of merit + recognition</div>
-      </div>
-    </div>
-    <div class="extra-info-box reveal">
-      <h3>Additional information</h3>
-      <ul>
-        <li><strong>Refreshments:</strong> Light snacks, tea, and water will be provided.</li>
-        <li><strong>Commercialization:</strong> Selected ideas may receive mentorship, incubation opportunities, and
-          potential internships.</li>
-        <li><strong>Future opportunities:</strong> Winning teams may be considered for research collaborations and
-          startup incubation.</li>
-      </ul>
-    </div>
-  </section>
+        <section class="ending reveal">
+            <p class="ending-desc">SUBMISSIONS CLOSED 25 APRIL 2026 &middot; 11:59 PM</p>
+            <h2 class="ending-title">The Full Event Site.</h2>
+            <p class="hero-desc" style="margin-bottom: 3rem; text-align: center;">The original hackathon site is kept as
+                part of the event record, including the announcement, the organiser logos and the registration form.</p>
+            <a href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html" class="btn btn-primary btn-lg">Open PSU AI
+                Hackathon 2.0 Event Site</a>
+        </section>
+    </main>
 
-  <div class="divider"></div>
-
-  <!-- REGISTER -->
-  <section id="register">
-    <div class="register-box reveal">
-      <p class="section-label" style="text-align:center">Registration closed</p>
-      <h2>How teams registered</h2>
-      <div class="register-deadline">Submissions closed April 25, 2026 &mdash; 11:59 PM</div>
-      <p>Teams formed around a <strong>current PSU student</strong> as leader, added <strong>Alumni</strong> or
-        <strong>COOP</strong> members as required, and submitted through the official Google Form. The form is kept
-        here as part of the event record.
-      </p>
-      <a href="https://forms.gle/fSwvJum59Qd2kDbu6" id="registerBtn" class="btn-primary" target="_blank"
-        rel="noopener noreferrer"
-        style="font-size:clamp(15px,2vw,18px);padding:16px 44px;display:inline-flex;margin-top:8px;">
-        View the registration form
-      </a>
-      <p style="margin-top:18px;font-size:13px;color:var(--muted);">This edition ran under term 252 and has
-        concluded. Current and upcoming ACM PSU events are listed on the
-        <a href="/projects.html" style="color:var(--accent)">chapter projects page</a>.
-      </p>
-    </div>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- CONTACT -->
-  <section id="contact">
-    <div class="center reveal">
-      <p class="section-label">Questions?</p>
-      <h2 class="section-title">Contact</h2>
-      <p class="section-desc"><strong>Join the WhatsApp group</strong> for any queries &mdash; link below:</p>
-      <a href="https://chat.whatsapp.com/FcV1mNj6ntzBKr3vP3gBAx" class="btn-primary" target="_blank"
-        rel="noopener noreferrer" style="margin-top:28px;display:inline-flex;">Open WhatsApp group</a>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-top">
-      <div class="footer-brand">
-        <div class="nav-logo">PSU AI Hackathon 2.0</div>
-        <p><strong>PSU AI Hackathon 2.0</strong> &mdash; Students &amp; Alumni United. Hosted by the ACM Student Chapter
-          at Prince Sultan University.</p>
-      </div>
-      <div class="footer-links">
-        <h4>Quick Links</h4>
-        <ul>
-          <li><a href="#about">About</a></li>
-          <li><a href="#themes">Themes</a></li>
-          <li><a href="#timeline">Timeline</a></li>
-          <li><a href="#structure">Structure</a></li>
-          <li><a href="#eligibility">Teams</a></li>
-          <li><a href="#judging">Judging</a></li>
-          <li><a href="#contact">Contact</a></li>
-          <li><a href="#register">Registration</a></li>
-        </ul>
-      </div>
-      <div class="footer-links">
-        <h4>Event Details</h4>
-        <ul>
-          <li><a href="#timeline">Building 105, PSU &middot; Riyadh</a></li>
-          <li><a href="#timeline">May 2, 2026 &middot; 11:00 AM</a></li>
-          <li><a href="#contact">WhatsApp for queries</a></li>
-          <li><a href="/projects.html">All ACM PSU projects &#x2197;</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 <span class="footer-psu">Prince Sultan University</span> &mdash; All Rights Reserved</p>
-      <p style="color:var(--muted);font-size:12px;">PSU Students, Alumni &amp; COOP &middot; Riyadh, Saudi Arabia</p>
-    </div>
-  </footer>
-
-  <script>
-    function toggleMenu() {
-      document.getElementById('mobileMenu').classList.toggle('open');
-    }
-
-    var reveals = document.querySelectorAll('.reveal');
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('visible'); }
-      });
-    }, { threshold: 0.12 });
-    reveals.forEach(function (el) { observer.observe(el); });
-
-  </script>
+    <footer class="container site-footer mono-meta">
+        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
+        <div class="footer-logos"><img src="assets/img/acm.png" alt="Association for Computing Machinery"><img
+                src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University"><img
+                src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences"></div>
+        <div>EVENT: <span class="accent-text">CONCLUDED</span></div>
+        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
+    </footer>
+    <script src="assets/js/i18n.js?v=20260829-6" defer></script>
+    <script src="assets/js/main.js?v=20260905-1" defer></script>
 </body>
 
 </html>

@@ -39,7 +39,7 @@ const FOLDERS: Record<SheetKey, string[]> = {
 const REGISTRATION_FOLDER = ['Events', 'Registrations'];
 const TIMESTAMP_HEADER = 'Timestamp';
 
-type RegistrationForm = { event_key: string; label: string; headers: string[] };
+type RegistrationForm = { event_key: string; label: string; headers: string[]; is_active: boolean };
 
 /**
  * Public event registrations, one worksheet per event.
@@ -54,9 +54,13 @@ type RegistrationForm = { event_key: string; label: string; headers: string[] };
 async function registrationSheets(
   client: SupabaseClient,
 ): Promise<Array<{ name: string; columns: unknown[]; rows: unknown[][] }>> {
+  // Every form, not only the open ones. Closing registration — or removing the
+  // event entirely — is a statement about whether new signups are accepted; it
+  // must never hide the record of who already signed up. A closed form with no
+  // registrations has nothing to show, so it is dropped below.
   const { data: formData, error: formError } = await client
     .from('event_registration_forms')
-    .select('event_key, label, headers').eq('is_active', true).order('rank');
+    .select('event_key, label, headers, is_active').order('rank');
   if (formError) {
     // The tables arrive with a migration, and this function can be deployed
     // before it is applied. Say which step is missing rather than handing an
@@ -72,7 +76,8 @@ async function registrationSheets(
   if (!forms.length) return [];
 
   const registrations = await rows(client, 'event_registrations');
-  return forms.map((form) => {
+  const hasRows = new Set(registrations.map((row) => row.event_key));
+  return forms.filter((form) => form.is_active || hasRows.has(form.event_key)).map((form) => {
     // 'Registered At' replaces the worksheet's own Timestamp column: the
     // mirror stores it as a real timestamp, which is what dates the row by
     // semester here.
@@ -81,7 +86,9 @@ async function registrationSheets(
       .filter((row) => row.event_key === form.event_key)
       .sort((a, b) => String(b.registered_at).localeCompare(String(a.registered_at)));
     return {
-      name: form.label,
+      // A closed form says so in the tree, so a count that stops growing is
+      // explained rather than looking like a fault.
+      name: form.is_active ? form.label : `${form.label} (closed)`,
       columns: ['Registered At', ...headings, 'Source'],
       rows: mine.map((row) => [
         row.registered_at,
@@ -92,10 +99,26 @@ async function registrationSheets(
   });
 }
 
+/**
+ * Every row of a table, in pages.
+ *
+ * PostgREST caps a response at `db-max-rows` when the project sets one. An
+ * unbounded .select() would then return the first page and say nothing about
+ * it, and a worksheet would silently lose its tail — the kind of gap nobody
+ * notices until the year the club needs the record. Paging explicitly means
+ * the row count is ours rather than the server's, whatever that setting is.
+ */
+const PAGE = 1000;
+
 async function rows(client: SupabaseClient, table: string, columns = '*'): Promise<Row[]> {
-  const { data, error } = await client.from(table).select(columns);
-  if (error) throw new Error(`${table}: ${error.message}`);
-  return (data ?? []) as Row[];
+  const all: Row[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await client.from(table).select(columns).range(from, from + PAGE - 1);
+    if (error) throw new Error(`${table}: ${error.message}`);
+    const page = (data ?? []) as Row[];
+    all.push(...page);
+    if (page.length < PAGE) return all;
+  }
 }
 const byId = (items: Row[]) => new Map(items.map((item) => [item.id, item]));
 const byUser = (items: Row[]) => new Map(items.map((item) => [item.user_id, item]));
@@ -332,6 +355,32 @@ const COLLECT: Record<SheetKey, (client: SupabaseClient) => Promise<Matrix>> = {
   contributions, inquiries, university_export_log: exportLog,
 };
 
+/**
+ * Throttles the one mode a non-admin can reach.
+ *
+ * mode 'application_submitted' runs the full People + Membership Applications
+ * collection under the service role and pushes both to Google. Any applicant
+ * could previously call it in a loop. The counter lives in the database
+ * because Edge Functions scale out, which makes an in-process counter a
+ * per-isolate one; see 20260907130200_rate_limits.sql.
+ *
+ * A failure to reach the limiter denies the request. This path is a
+ * convenience refresh that an admin can always repeat, so failing closed
+ * costs nothing an applicant would notice.
+ */
+async function applicantSyncThrottled(caller: SupabaseClient, userId: string): Promise<boolean> {
+  const { data, error } = await caller.rpc('rate_limit_take', {
+    bucket_key: `sheet_sync:application_submitted:${userId}`,
+    window_seconds: 900,
+    max_hits: 3,
+  });
+  if (error) {
+    console.error('Could not check the applicant sync rate limit:', error.message);
+    return true;
+  }
+  return data !== true;
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const origin = req.headers.get('Origin');
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) });
@@ -342,21 +391,37 @@ Deno.serve(async (req: Request): Promise<Response> => {
   let body: { mode?: string; sheets?: SheetKey[] } = {}; try { body = await req.json(); } catch { /* defaults */ }
   const applicationSubmitted = body.mode === 'application_submitted';
 
+  const website = body.mode === 'website';
+  const full = body.mode === 'full';
+
+  // Who may ask for what.
+  //
+  // Advisory instructors keep every mode they had. Pushing to the workbook is
+  // a deliberate part of their workspace ("Faculty records access" in
+  // admin-advisor.ts), and it is not an escalation: the push writes into a
+  // Google file they are given a link to open, so it shows them nothing they
+  // could not already see there.
+  //
+  // What *was* an escalation is the website view handing that same
+  // service-role collection back over HTTP, to a role whose policies exist to
+  // narrow it. That is fixed where the data is collected, not here — the
+  // website branch below reads as `caller`.
+  const operator = await requireRole(caller,
+    ['super_admin', 'club_admin', 'advisory_instructor']);
+
   // A newly submitted applicant may request only the canonical membership-
   // applications refresh. RLS proves that the caller owns a currently
   // submitted application; they cannot choose another worksheet or supply
   // any sheet data. Every other operation remains staff-only.
-  const synchronizer = await requireRole(caller, ['super_admin', 'club_admin', 'advisory_instructor']);
-  if (!synchronizer && applicationSubmitted) {
+  if (!operator && applicationSubmitted) {
     const { data: ownApplication } = await caller.from('applications').select('id')
       .eq('user_id', auth.user.id).eq('status', 'submitted').limit(1).maybeSingle();
     if (!ownApplication) return fail('A submitted membership application is required.', 403, origin);
-  } else if (!synchronizer) {
+    const throttled = await applicantSyncThrottled(caller, auth.user.id);
+    if (throttled) return fail('This refresh was already requested recently. Try again shortly.', 429, origin);
+  } else if (!operator) {
     return fail('Club admin or advisory instructor access required.', 403, origin);
   }
-
-  const website = body.mode === 'website';
-  const full = body.mode === 'full';
   let requested = applicationSubmitted ? ['people', 'membership_applications'] as SheetKey[]
     : (full || website) ? ORDER : (body.sheets ?? []);
   requested = [...new Set(requested)].filter((key): key is SheetKey => ORDER.includes(key));
@@ -376,10 +441,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // uses the exact same collectors and headings, but returns the current data
   // directly from Supabase without touching Google or consulting the Google
   // Sheets feature flag. The browser never receives service credentials.
+  //
+  // It collects as the *caller*, not as the service role. Everything here is
+  // returned straight to the browser, so the row set has to be the one that
+  // caller's policies allow: a club admin already satisfies is_staff() and
+  // is_club_admin() on every table below, so their view is unchanged, while an
+  // advisory instructor stays narrowed to the projects they organise, which is
+  // the boundary 20260901003800_advisory_instructor_access.sql draws. Reaching
+  // for `service` here would hand an advisor every student ID, inquiry body and
+  // decision note in the database.
   if (website) {
     const sheets: Record<string, { columns: unknown[]; rows: unknown[][]; folder: string[] }> = {};
     for (const key of requested) {
-      const matrix = await COLLECT[key](service);
+      const matrix = await COLLECT[key](caller);
       sheets[NAMES[key]] = {
         columns: matrix[0] ?? [],
         rows: matrix.slice(1),
@@ -392,7 +466,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // page reports the gap and still shows everything else.
     let registrationError: string | undefined;
     try {
-      for (const sheet of await registrationSheets(service)) {
+      for (const sheet of await registrationSheets(caller)) {
         // A collision with a canonical worksheet name would silently replace
         // it. Keep both, and say which one this is.
         const name = sheets[sheet.name] ? `${sheet.name} (registrations)` : sheet.name;
@@ -408,12 +482,34 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }, 200, origin);
   }
 
-  const { data: sheetsEnabled, error: sheetsEnabledError } = await caller.rpc('setting_bool', {
+  // From here on the caller is either an operator running the sync or an
+  // applicant refreshing their own submission. An operator is troubleshooting
+  // and needs the real message; an applicant is a member of the public and must
+  // not be handed the internals of a service-role client, a Google credential
+  // path, or a Postgres error. Every detail below goes through this one
+  // decision, so a later edit cannot leak by forgetting to check.
+  const detail = (error: unknown): string => {
+    const message = error instanceof Error ? error.message
+      : typeof error === 'string' ? error
+      : (error as { message?: string })?.message ?? String(error);
+    if (operator) return message;
+    console.error('club-records-sheet-sync (detail withheld from caller):', message);
+    return 'The records refresh could not be completed. An admin has been notified.';
+  };
+
+  // Read the feature flag as the service, not the caller. It is a switch, not
+  // anyone's data, and the caller reaching this line has already been
+  // authorized above — while an applicant on the 'application_submitted' path
+  // is deliberately not entitled to read private settings for themselves
+  // (see 20260907130400_private_settings.sql).
+  const { data: sheetsEnabled, error: sheetsEnabledError } = await service.rpc('setting_bool', {
     setting_key: 'google_sheets_enabled',
     fallback: false,
   });
   if (sheetsEnabledError) {
-    return fail(`Could not read Google Sheets setting: ${sheetsEnabledError.message}`, 500, origin);
+    return fail(operator
+      ? `Could not read Google Sheets setting: ${detail(sheetsEnabledError)}`
+      : detail(sheetsEnabledError), 500, origin);
   }
   if (sheetsEnabled !== true) return fail('Google Sheets export is disabled in settings.', 409, origin);
 
@@ -423,7 +519,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     .eq('key', 'google_sheets_enabled')
     .maybeSingle();
   if (serviceCheckError) {
-    return fail(`Supabase service connection failed: ${serviceCheckError.message}`, 500, origin);
+    return fail(operator
+      ? `Supabase service connection failed: ${detail(serviceCheckError)}`
+      : detail(serviceCheckError), 500, origin);
   }
 
   const results: Record<string, { rows: number; status: 'updated' | 'failed'; error?: string }> = {};
@@ -450,7 +548,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       results[NAMES[key]] = {
         rows: 0,
         status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
+        error: detail(error),
       };
     }
   }
@@ -463,7 +561,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       results[NAMES.university_export_log] = {
         rows: 0,
         status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
+        error: detail(error),
       };
     }
   }

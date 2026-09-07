@@ -43,6 +43,7 @@ import {
 } from '../lib/admin.js';
 
 import {
+  privateSetting,
   setting,
 } from '../lib/api.js';
 
@@ -61,8 +62,16 @@ interface ExportHistoryRow {
   } | null;
 }
 
-const CLUB_RECORDS_WORKBOOK =
-  'https://docs.google.com/spreadsheets/d/1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s/edit';
+/*
+ * The private club records workbook, read at runtime rather than compiled in.
+ *
+ * A literal here is copied into assets/js/app/admin-university.js, which is
+ * served publicly by GitHub Pages. The workbook holds every student ID the
+ * club keeps, so its id lives in app_settings behind
+ * can_read_private_settings() and the link is simply absent for anyone the
+ * database will not give it to.
+ */
+let clubRecordsWorkbook: string | null = null;
 
 const DATASETS: Array<{
   key: Dataset;
@@ -214,6 +223,8 @@ async function start(): Promise<void> {
       false;
   }
 
+  clubRecordsWorkbook = await privateSetting('club_records_workbook_url');
+
   async function runDatasetExport(
     dataset: Dataset,
     format:
@@ -330,10 +341,12 @@ async function start(): Promise<void> {
           'Private Google workbook',
           h('p', 'Update the private Google workbook with the latest club records.'),
           h('div', { class: 'button-row' },
-            h('a', {
-              class: 'btn-ghost', href: CLUB_RECORDS_WORKBOOK,
-              target: '_blank', rel: 'noopener',
-            }, 'OPEN GOOGLE SHEET'),
+            clubRecordsWorkbook
+              ? h('a', {
+                  class: 'btn-ghost', href: clubRecordsWorkbook,
+                  target: '_blank', rel: 'noopener',
+                }, 'OPEN GOOGLE SHEET')
+              : null,
             h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' },
               'OPEN WEBSITE BACKUP')),
           isSuperAdmin(viewer)

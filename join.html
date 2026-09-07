@@ -4,25 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Content-Security-Policy.
+         GitHub Pages cannot set response headers, so the policy is stated here.
+         The load-bearing directive is script-src 'self': every script on this
+         page is a file in this repository, so a "javascript:" URL or an
+         injected <script> that reaches the DOM through stored content simply
+         does not run. That is the second line of defence behind safeHref()
+         and the database URL constraints, and the one that holds if either is
+         ever bypassed.
+
+         style-src keeps 'unsafe-inline' because the pages and the portal set
+         style attributes directly; inline CSS is not an execution path, and
+         removing it would buy nothing here.
+
+         *.supabase.co rather than the project ref, so moving projects does not
+         mean editing every page; the ref is public in assets/js/app/env.js
+         either way. -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://*.supabase.co;
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+        frame-src 'none';
+    ">
     <title>Initialize Membership — ACM PSU</title>
     <meta name="description"
         content="Apply to join the ACM student chapter at Prince Sultan University for the 2026 cohort.">
 
-    <script>
-        (function () {
-            try {
-                var raw = localStorage.getItem('acm-psu-auth');
-                if (!raw) return;
-                var stored = JSON.parse(raw);
-                var session = stored && (stored.currentSession || stored.session || stored);
-                if (session && session.access_token && session.refresh_token) {
-                    window.location.replace('/portal/index.html');
-                }
-            } catch (_) {
-                /* Invalid or unavailable storage: treat the visitor as signed out. */
-            }
-        }());
-    </script>
+    <script src="/assets/js/signed-in-redirect.js"></script>
 
     <link rel="canonical" href="https://acm-psu.shoug-tech.com/join.html">
     <link rel="icon" href="/assets/img/favicon.ico" sizes="any">

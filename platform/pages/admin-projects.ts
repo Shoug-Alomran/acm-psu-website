@@ -55,6 +55,9 @@ import {
 
 import {
   projects,
+  deletedProjects,
+  deleteProject,
+  restoreProject,
   archiveFolders,
   archiveItems,
   itemUrl,
@@ -227,6 +230,131 @@ async function start(): Promise<void> {
     ).get(
       'project',
     );
+
+  /* Removed projects are hidden until asked for: they are the exception, and
+     an admin looking for one already knows they removed it. */
+  let showRemoved = false;
+
+  /*
+   * Removing a project.
+   *
+   * A soft delete: the row is hidden, and everything attached to it — archive
+   * items, participations, contributions, and any registrations already
+   * recorded — stays exactly where it is. The reason is required because a
+   * project that vanished with no explanation is the record a future committee
+   * will most want and least have.
+   */
+  function deleteProjectDialog(
+    project: Project,
+  ): void {
+    const form = h(
+      'form',
+      {
+        class: 'portal-form',
+        novalidate: true,
+      },
+
+      notice(
+        'warn',
+        `This removes “${project.title}” from the projects list. Nothing attached to it is ` +
+        'deleted: archive items, participation, contributions and any recorded registrations ' +
+        'are all kept, and an admin can restore it from Removed projects.',
+      ),
+
+      notice(
+        'info',
+        'If this event has public registration, its form is closed so no new signups can ' +
+        'arrive. The Google worksheet and every registration already in it are untouched.',
+      ),
+
+      field({
+        label: 'Reason',
+        name: 'reason',
+        type: 'textarea',
+        rows: 3,
+        required: true,
+        placeholder:
+          'Why is this being removed?',
+      }),
+    ) as HTMLFormElement;
+
+    const modal =
+      dialog(
+        `Remove — ${project.title}`,
+
+        form,
+
+        h(
+          'div',
+          {
+            class:
+              'button-row',
+          },
+
+          action(
+            'REMOVE PROJECT',
+
+            async () => {
+              if (
+                !form.reportValidity()
+              ) {
+                return;
+              }
+
+              const reason =
+                textOf(
+                  formValues(form),
+                  'reason',
+                ).trim();
+
+              try {
+                await deleteProject(
+                  project.id,
+                  reason,
+                );
+
+                modal.close();
+
+                toast(
+                  'Project removed. It can be restored from Removed projects.',
+                );
+
+                /* The open detail pane is describing a project that is
+                   no longer listed, so clear the selection with it. */
+                if (
+                  selectedId ===
+                  project.id
+                ) {
+                  selectedId =
+                    null;
+
+                  history.replaceState(
+                    null,
+                    '',
+                    window.location
+                      .pathname,
+                  );
+                }
+
+                await draw();
+              } catch (error) {
+                console.error(
+                  'Could not remove project:',
+                  error,
+                );
+
+                toast(
+                  `Could not remove the project: ${errorMessage(error)}`,
+                  'err',
+                );
+              }
+            },
+
+            'danger',
+          ),
+        ),
+      );
+  }
 
   /*
    * Opening the editor loads the registration context first: the shapes on
@@ -1453,8 +1581,15 @@ async function start(): Promise<void> {
     );
 
     try {
-      const list =
-        await projects();
+      const [list, removed] =
+        await Promise.all([
+          projects(),
+          showRemoved
+            ? deletedProjects()
+            : Promise.resolve(
+              [] as Project[],
+            ),
+        ]);
 
       const selected =
         list.find(
@@ -1655,6 +1790,22 @@ async function start(): Promise<void> {
                       ),
                 },
                 'Edit project',
+              ),
+
+              h(
+                'button',
+                {
+                  type: 'button',
+                  class:
+                    'btn-ghost btn-danger',
+
+                  onclick:
+                    () =>
+                      deleteProjectDialog(
+                        selected,
+                      ),
+                },
+                'Remove project',
               ),
 
               h(
@@ -2254,6 +2405,123 @@ async function start(): Promise<void> {
               'No projects yet.',
               'Create one to start an archive workspace.',
             ),
+        ),
+
+        panel(
+          'Removed projects',
+
+          h(
+            'div',
+            {
+              class:
+                'button-row',
+            },
+
+            h(
+              'button',
+              {
+                type: 'button',
+                class:
+                  'btn-ghost',
+
+                onclick:
+                  () => {
+                    showRemoved =
+                      !showRemoved;
+
+                    void draw();
+                  },
+              },
+              showRemoved
+                ? 'HIDE REMOVED'
+                : 'SHOW REMOVED',
+            ),
+
+            h(
+              'span',
+              {
+                class:
+                  'mono-meta dim-text',
+              },
+              'NOTHING ATTACHED TO A REMOVED PROJECT IS DELETED.',
+            ),
+          ),
+
+          showRemoved
+            ? removed.length
+              ? dataTable(
+                [
+                  'Title',
+                  'Kind',
+                  'Removed',
+                  '',
+                ],
+
+                removed.map(
+                  (
+                    project,
+                  ) => [
+                      h(
+                        'strong',
+                        project.title,
+                      ),
+
+                      h(
+                        'span',
+                        {
+                          class:
+                            'mono-meta',
+                        },
+                        enumLabel(
+                          project.kind,
+                        ),
+                      ),
+
+                      h(
+                        'span',
+                        {
+                          class:
+                            'mono-meta',
+                        },
+                        archiveDate(
+                          project.deleted_at,
+                        ),
+                      ),
+
+                      action(
+                        'RESTORE',
+
+                        async () => {
+                          try {
+                            await restoreProject(
+                              project.id,
+                            );
+
+                            toast(
+                              'Project restored. It comes back archived, with registration still closed.',
+                            );
+
+                            await draw();
+                          } catch (error) {
+                            console.error(
+                              'Could not restore project:',
+                              error,
+                            );
+
+                            toast(
+                              `Could not restore: ${errorMessage(error)}`,
+                              'err',
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                ),
+              )
+              : emptyState(
+                'Nothing has been removed.',
+              )
+            : null,
         ),
 
         ...detail,

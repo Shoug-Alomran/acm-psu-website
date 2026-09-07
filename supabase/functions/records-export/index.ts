@@ -92,7 +92,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     const body = await req.json();
     dataset = body.dataset;
+    // Anything other than 'xlsx' falls through to the CSV branch at the
+    // bottom, so an unrecognised format would silently produce a CSV named
+    // after whatever the caller asked for, and log that name as fact.
     format = body.format ?? 'csv';
+    if (format !== 'csv' && format !== 'xlsx') {
+      return fail(`Unknown format "${body.format}". Expected 'csv' or 'xlsx'.`, 400, origin);
+    }
   } catch {
     return fail('Expected JSON body { dataset, format }.', 400, origin);
   }
@@ -119,8 +125,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       dataset: key, format, row_count: rows, destination, reason: null,
     });
 
+  // Object.hasOwn, not truthiness: `dataset` comes from the request body, and
+  // "constructor" or "toString" resolve off Object.prototype to something
+  // truthy, sail past a `!spec` check and fail later as a 500 on `spec.rpc`.
+  if (!Object.hasOwn(DATASETS, dataset)) return fail(`Unknown dataset "${dataset}".`, 400, origin);
   const spec = DATASETS[dataset];
-  if (!spec) return fail(`Unknown dataset "${dataset}".`, 400, origin);
 
   let collected;
   try {

@@ -4,6 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Content-Security-Policy.
+         GitHub Pages cannot set response headers, so the policy is stated here.
+         The load-bearing directive is script-src 'self': every script on this
+         page is a file in this repository, so a "javascript:" URL or an
+         injected <script> that reaches the DOM through stored content simply
+         does not run. That is the second line of defence behind safeHref()
+         and the database URL constraints, and the one that holds if either is
+         ever bypassed.
+
+         style-src keeps 'unsafe-inline' because the pages and the portal set
+         style attributes directly; inline CSS is not an execution path, and
+         removing it would buy nothing here.
+
+         *.supabase.co rather than the project ref, so moving projects does not
+         mean editing every page; the ref is public in assets/js/app/env.js
+         either way. -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://*.supabase.co;
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+        frame-src 'none';
+    ">
     <title>Technical Collection — ACM PSU</title>
     <meta name="description"
         content="What ACM PSU runs: the AI Programming Jam (JAM.26), the ACM/CyberTech CTF 3.0, the CTF 2.0 results archive, and the workshop programme that leads into each competition.">
@@ -106,7 +135,7 @@
                         <span class="tag">AI / WEB</span>
                         <div class="card-actions"><a href="https://github.com/Shoug-Alomran/acm-programming-jam-2026"
                                 class="view-btn" rel="noopener">GitHub ↗</a><a href="projects/programming-jams/ai-programming-jam-26/"
-                                class="view-btn">View Case Study
+                                class="view-btn">View Event Guide
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" aria-hidden="true">
                                     <path d="M5 12h14M12 5l7 7-7 7" />
@@ -188,8 +217,9 @@
                         pitch, with more than SAR&nbsp;9,000 in prizes.</p>
                     <div class="card-footer">
                         <span class="tag">AI / HACKATHON</span>
-                        <div class="card-actions"><a href="projects/hackathons/psu-ai-hackathon-2.0/"
-                                class="view-btn">View Event Page
+                        <div class="card-actions"><a href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html"
+                                class="view-btn">Event Site</a><a href="projects/hackathons/psu-ai-hackathon-2.0/"
+                                class="view-btn">View Event Guide
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" aria-hidden="true">
                                     <path d="M5 12h14M12 5l7 7-7 7" />

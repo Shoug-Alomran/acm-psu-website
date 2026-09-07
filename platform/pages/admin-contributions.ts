@@ -52,6 +52,7 @@ import { requireClient } from '../lib/supabase.js';
 import {
   archiveDate,
   enumLabel,
+  safeHref,
 } from '../lib/format.js';
 
 import type {
@@ -488,7 +489,7 @@ async function start(): Promise<void> {
                         }
 
                         window.open(
-                          url,
+                          safeHref(url),
                           '_blank',
                           'noopener',
                         );

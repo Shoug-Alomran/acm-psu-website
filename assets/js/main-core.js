@@ -5,6 +5,19 @@
 
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    /* Only http(s) may reach an href — escaping does nothing to a
+       "javascript:" scheme. Mirrors safeHref() in platform/lib/format.ts; kept
+       local because this file is a standalone script with no imports, and a
+       missing dependency must not silently turn the guard off. */
+    function safeHref(value) {
+        var raw = String(value == null ? '' : value).trim();
+        if (!raw) return '#';
+        var bare = raw.replace(/[\u0000-\u0020]/g, '');
+        if (bare.indexOf('//') === 0) return '#';
+        if (/^[a-z][a-z0-9+.-]*:/i.test(bare)) return /^https?:/i.test(bare) ? raw : '#';
+        return raw;
+    }
+
     /* Reveal sections as they scroll into view. */
     var revealables = document.querySelectorAll('.reveal');
 
@@ -273,7 +286,7 @@
             return;
         }
         grid.innerHTML = upcoming.map(function (event) {
-            var href = event.external_url || event.site_path || 'projects.html';
+            var href = safeHref(event.external_url || event.site_path || 'projects.html');
             var target = /^https?:\/\//.test(href) ? ' target="_blank" rel="noopener"' : '';
             var title = isArabic() && event.title_ar ? event.title_ar : event.title;
             return '<article class="upcoming-card">' +
@@ -313,7 +326,7 @@
             var dateMeta = card.querySelector('.meta-item:nth-child(2) .meta-value');
             if (dateMeta && event.starts_on) dateMeta.textContent = formatEventDate(event.starts_on);
             var eventLink = Array.prototype.find.call(card.querySelectorAll('a'), function (a) { return /Event Site/i.test(a.textContent); });
-            if (eventLink && event.external_url) eventLink.href = event.external_url;
+            if (eventLink && event.external_url) eventLink.href = safeHref(event.external_url);
         });
     }
 
