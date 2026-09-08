@@ -3,7 +3,7 @@
 Official website of the ACM Club at Prince Sultan University — the public
 digital archive, plus the member portal and admin console that keep it running.
 
-**Live:** https://acm-psu.shoug-tech.com/
+**Live:** https://acmchapter-psu.github.io/acm-psu-website/
 
 ---
 
