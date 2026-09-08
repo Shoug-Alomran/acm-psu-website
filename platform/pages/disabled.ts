@@ -56,7 +56,7 @@ function errorMessage(
 
 async function start(): Promise<void> {
   let email =
-    'acm@psu.edu.sa';
+    'acmchapter@psu.edu.sa';
 
   if (
     isConfigured
@@ -65,7 +65,7 @@ async function start(): Promise<void> {
       email =
         await setting<string>(
           'club_email',
-          'acm@psu.edu.sa',
+          'acmchapter@psu.edu.sa',
         );
     } catch (error) {
       console.error(

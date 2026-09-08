@@ -61,7 +61,7 @@
             history.push({ role: 'user', content: clean }, { role: 'assistant', content: answer });
             history = history.slice(-6);
         } catch (error) {
-            addMessage('assistant', (error && error.message) || 'I could not answer right now. Please use the contact form or email acm@psu.edu.sa.');
+            addMessage('assistant', (error && error.message) || 'I could not answer right now. Please use the contact form or email acmchapter@psu.edu.sa.');
         } finally {
             setBusy(false);
             input.focus();

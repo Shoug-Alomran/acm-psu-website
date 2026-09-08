@@ -68,6 +68,40 @@
         'Explore Projects': 'تصفّح المشاريع',
         'Join ACM': 'انضم إلى ACM',
 
+        'Charter': 'ميثاق النادي',
+        'CCIS // OFFICIAL CHAPTER MANDATE': 'كلية علوم الحاسب والمعلومات // التفويض الرسمي للنادي',
+        'MISSION': 'الرسالة',
+        'Bridging academia and industry for computing students.': 'نجسر المسافة بين الأكاديميا والصناعة لطلبة الحوسبة.',
+        'The PSU ACM Student Chapter is a platform for professional development, new ideas and working together. It exists to close the gap between university and industry, and to build a community where students can grow, learn and contribute to computing more widely.':
+            'نادي ACM الطلابي في جامعة الأمير سلطان منصة للتطوير المهني والأفكار الجديدة والعمل المشترك. غايته تقريب المسافة بين الجامعة والقطاع، وبناء مجتمع ينمو فيه الطلبة ويتعلّمون ويسهمون في مجال الحوسبة على نطاق أوسع.',
+        'CHARTERED UNDER': 'يتبع لـ',
+        'CHAPTER CHAIRS': 'رؤساء النادي الأكاديميون',
+        'CHAPTER_CHAIRS': 'رؤساء_النادي',
+        'CHAPTER EMAIL': 'بريد النادي',
+        'Dr. Yasir Javed · Dr. Souad Larabi-Marie-Sainte': 'د. ياسر جاويد · د. سعاد العربي ماري سانت',
+        'Talks and discussions': 'المحاضرات وحلقات النقاش',
+        'Open the door to talks, panel discussions and conferences that build the professional skills students need after graduation.':
+            'فتح الباب أمام المحاضرات وحلقات النقاش والمؤتمرات التي تبني المهارات المهنية التي يحتاجها الطلبة بعد التخرج.',
+        'Writing and research': 'الكتابة والبحث',
+        'Give students the chance to write and present technical reports, and to work together on research projects.':
+            'إتاحة الفرصة للطلبة لكتابة التقارير التقنية وتقديمها، وللعمل معًا في مشاريع بحثية.',
+        'New ideas': 'الأفكار الجديدة',
+        'Back new computing programmes and give students room to build things together.':
+            'دعم البرامج الحاسوبية الجديدة وإتاحة المجال للطلبة ليبنوا معًا.',
+        'University and industry': 'الجامعة والقطاع',
+        'Close the gap between university and industry, and put students in front of employers and the people leading the field.':
+            'تقريب المسافة بين الجامعة والقطاع، ووضع الطلبة أمام أرباب العمل وقادة المجال.',
+        'People and mentorship': 'التواصل والإرشاد',
+        'Create chances to meet people, find mentors and keep learning outside the classroom by trading ideas and experience.':
+            'إتاحة فرص للتعرّف على الناس وإيجاد مرشدين ومواصلة التعلّم خارج قاعة الدرس عبر تبادل الأفكار والخبرات.',
+
+        'Faculty Advisors': 'المشرفون الأكاديميون',
+        'FACULTY ADVISOR': 'مشرف أكاديمي',
+        'Dr. Souad Larabi-Marie-Sainte': 'د. سعاد العربي ماري سانت',
+        'Dr. Yasir Javed': 'د. ياسر جاويد',
+        'COLLEGE': 'الكلية',
+        'EMAIL': 'البريد الإلكتروني',
+
         'System Focus': 'مجالات تركيزنا',
         'CORE COMPETENCIES // V.26': 'التخصصات الأساسية // إصدار 26',
         'AI-Assisted Engineering': 'الهندسة بمساعدة الذكاء الاصطناعي',
@@ -406,12 +440,12 @@
         '[ ] FORM SUBMITTED': '[ ] تم إرسال النموذج',
 
         'TRANSMITTING...': 'جارٍ الإرسال...',
-        'FORM BACKEND NOT CONFIGURED — applications are not being received yet. Please email acm@psu.edu.sa with your answers in the meantime.':
-            'لم يُربط النموذج بعد — الطلبات غير مستلمة حاليًا. يرجى إرسال إجاباتك إلى acm@psu.edu.sa في هذه الأثناء.',
+        'FORM BACKEND NOT CONFIGURED — applications are not being received yet. Please email acmchapter@psu.edu.sa with your answers in the meantime.':
+            'لم يُربط النموذج بعد — الطلبات غير مستلمة حاليًا. يرجى إرسال إجاباتك إلى acmchapter@psu.edu.sa في هذه الأثناء.',
         'HANDSHAKE COMPLETE — application received. We will be in touch.':
             'تم الإرسال بنجاح — استلمنا طلبك وسنتواصل معك قريبًا.',
-        'TRANSMISSION FAILED — please retry, or email acm@psu.edu.sa.':
-            'فشل الإرسال — يرجى المحاولة مجددًا أو مراسلتنا على acm@psu.edu.sa.',
+        'TRANSMISSION FAILED — please retry, or email acmchapter@psu.edu.sa.':
+            'فشل الإرسال — يرجى المحاولة مجددًا أو مراسلتنا على acmchapter@psu.edu.sa.',
 
         /* --- 404 --- */
         'Record Not Found': 'الصفحة غير موجودة',

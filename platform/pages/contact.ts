@@ -44,8 +44,8 @@ async function start(): Promise<void> {
   if (!host) return;
 
   const clubEmail = isConfigured
-    ? await setting<string>('club_email', 'acm@psu.edu.sa').catch(() => 'acm@psu.edu.sa')
-    : 'acm@psu.edu.sa';
+    ? await setting<string>('club_email', 'acmchapter@psu.edu.sa').catch(() => 'acmchapter@psu.edu.sa')
+    : 'acmchapter@psu.edu.sa';
 
   if (!isConfigured) {
     render(host, notice('info',
@@ -161,7 +161,7 @@ void start().catch((error) => {
       notice('err', 'The form could not be loaded.'),
       h('p', { style: { marginTop: '1rem' } },
         'Please email ',
-        h('a', { class: 'accent-text', href: 'mailto:acm@psu.edu.sa' }, 'acm@psu.edu.sa'),
+        h('a', { class: 'accent-text', href: 'mailto:acmchapter@psu.edu.sa' }, 'acmchapter@psu.edu.sa'),
         ' and we will pick it up from there.'));
   }
 });

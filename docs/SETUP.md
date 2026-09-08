@@ -328,7 +328,7 @@ that were written but never marked as sent, so nothing silently goes unanswered.
 1. Choose a transactional email provider — **Resend** is the simplest for this
    (generous free tier, one API call). SendGrid, Postmark or Amazon SES work
    equally well.
-2. Verify the sending domain so mail from `acm@psu.edu.sa` (or a club
+2. Verify the sending domain so mail from `acmchapter@psu.edu.sa` (or a club
    subdomain) is not treated as spam. **This needs DNS access and is the part
    that actually takes time** — SPF, DKIM and DMARC records at the domain
    registrar. Ask whoever administers `psu.edu.sa`; if that is not possible,
@@ -336,7 +336,7 @@ that were written but never marked as sent, so nothing silently goes unanswered.
 3. Store the API key as an Edge Function secret:
 
    ```sh
-   npx supabase secrets set RESEND_API_KEY=... ACM_FROM_EMAIL='ACM PSU <acm@psu.edu.sa>'
+   npx supabase secrets set RESEND_API_KEY=... ACM_FROM_EMAIL='ACM PSU <acmchapter@psu.edu.sa>'
    ```
 
 4. Add a `send-inquiry-response` Edge Function that re-checks the caller is

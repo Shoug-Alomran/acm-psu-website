@@ -853,6 +853,43 @@ html[dir="rtl"] select {
 }
 
 /* --------------------------------------------------------------------------
+   Home — charter (the chapter mandate as stated by CCIS). Separate cards
+   rather than the focus-grid's one-pixel-gap trick, because five goals in a
+   multi-column grid always leave an empty cell and that cell would render as
+   a block of border colour.
+   -------------------------------------------------------------------------- */
+
+.charter-intro {
+    margin-bottom: 1.5rem;
+}
+
+/* minmax is wide enough that the five goals wrap 3 + 2 rather than 4 + 1,
+   which leaves a less lopsided gap on a desktop width. */
+.charter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.25rem;
+}
+
+.charter-item {
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    padding: 1.75rem;
+}
+
+.charter-item .focus-num {
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+}
+
+.charter-text {
+    margin-top: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+
+/* --------------------------------------------------------------------------
    Home — team preview
    -------------------------------------------------------------------------- */
 
@@ -1172,6 +1209,14 @@ html[dir="rtl"] select {
     justify-content: space-between;
     align-items: flex-end;
     gap: 1rem;
+}
+
+/* The roster is assembled from two sources: the chapter markup in team.html and
+   the groups public-roster.ts prepends (Faculty Advisors). A heading that lands
+   under a preceding grid needs air above it — the first heading in the roster
+   does not, because the page header is already above it. */
+#roster .section-label:not(:first-child) {
+    margin-top: 4.5rem;
 }
 
 .section-label h2 {

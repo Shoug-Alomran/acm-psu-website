@@ -32,7 +32,7 @@ async function start(): Promise<void> {
 
   const [application, clubEmail, decisions] = await Promise.all([
     myApplication(viewer.userId),
-    setting<string>('club_email', 'acm@psu.edu.sa'),
+    setting<string>('club_email', 'acmchapter@psu.edu.sa'),
     myDecisions(20).catch(() => []),
   ]);
 
